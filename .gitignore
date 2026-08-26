@@ -1,11 +1,13 @@
-# Data & artifacts (generated at runtime)
-data/
+# Data & artifacts (generated at runtime) — exclude everything, then re-include
+# the documentation-critical artifact JSONs/PNGs and the real-data README.
+# NOTE: use `dir/*` + `!dir/file` form — plain `dir/` stops git from descending,
+# so negations never get evaluated.
+data/*
 !data/real/
 !data/real/README.md
-artifacts/
+artifacts/*
 !artifacts/*.json
 !artifacts/*.png
-!artifacts/reports/
 
 # Python
 __pycache__/

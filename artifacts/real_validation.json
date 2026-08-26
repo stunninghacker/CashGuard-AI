@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-08-26T12:38:25.998948",
+  "harness": "ready",
+  "real_files_found": [],
+  "status": "PENDING_REAL_DATA",
+  "note": "data/real/ is empty \u2014 drop a CSV (district, date, complaint_count) to validate.",
+  "spearman_rho": null,
+  "n_real_rows": 0
+}

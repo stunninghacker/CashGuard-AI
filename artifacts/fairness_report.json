@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-08-26T12:39:51.972631",
+  "alerts_total": 26,
+  "alerts_per_district": {
+    "Northsagar": 14,
+    "District-3": 5,
+    "Eastvale": 3,
+    "Metro-West": 2,
+    "Greenfield": 2
+  },
+  "top_district_share_pct": 53.8,
+  "gini_concentration": 0.4154,
+  "note": "Geography-only concentration monitor (no demographic dimensions \u2014 anti-profiling by design). Advisory: review if any district's share persistently dominates or Gini trends upward.",
+  "ethics_banner": "No automated enforcement \u2014 advisory only; audited human decision required."
+}

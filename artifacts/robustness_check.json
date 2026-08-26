@@ -1,0 +1,35 @@
+[
+  {
+    "label": "Base calibration",
+    "precision_at_20": 1.0,
+    "precision_at_50": 1.0,
+    "precision_at_100": 1.0,
+    "precision_at_500": 0.934,
+    "precision_at_1000": 0.8,
+    "precision_at_threshold_0p7": 0.8116,
+    "roc_auc": 0.9366,
+    "positive_share": 0.0687
+  },
+  {
+    "label": "Perturbed -30%",
+    "precision_at_20": 1.0,
+    "precision_at_50": 1.0,
+    "precision_at_100": 1.0,
+    "precision_at_500": 0.944,
+    "precision_at_1000": 0.82,
+    "precision_at_threshold_0p7": 0.7763,
+    "roc_auc": 0.9352,
+    "positive_share": 0.0736
+  },
+  {
+    "label": "Perturbed +30%",
+    "precision_at_20": 1.0,
+    "precision_at_50": 1.0,
+    "precision_at_100": 1.0,
+    "precision_at_500": 0.886,
+    "precision_at_1000": 0.738,
+    "precision_at_threshold_0p7": 0.8145,
+    "roc_auc": 0.9366,
+    "positive_share": 0.0656
+  }
+]
