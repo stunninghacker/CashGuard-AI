@@ -1,0 +1,16 @@
+services:
+  cashguard-ai:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/data/cashguard.db
+      - RISK_THRESHOLD=0.7
+      - SCHEDULER_INTERVAL_MINUTES=60
+    volumes:
+      - cashguard-data:/app/data
+      - cashguard-artifacts:/app/artifacts
+
+volumes:
+  cashguard-data:
+  cashguard-artifacts:

@@ -1,0 +1,30 @@
+# CashGuard AI — Smart India Hackathon prototype
+# Versions below are the exact set this codebase was tested against.
+
+# Core web framework
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+python-dotenv==1.2.3
+pydantic-settings==2.15.0
+
+# Data / ML stack
+pandas==3.0.5
+numpy==2.5.2
+scikit-learn==1.9.0
+xgboost==3.4.1
+joblib==1.5.3
+
+# Database ORM (SQLite now, PostgreSQL in production via DATABASE_URL)
+SQLAlchemy==2.0.52
+
+# Auth (bcrypt hashing + JWT via python-jose)
+bcrypt==4.3.0
+python-jose[cryptography]==3.4.0
+
+# Outbound webhooks (real path -> local mock inbox) + PDF reports
+httpx==0.28.1
+reportlab==4.4.2
+
+# Calibration config + robustness chart
+PyYAML==6.0.3
+matplotlib==3.11.1

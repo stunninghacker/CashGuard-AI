@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CashGuard AI — Predictive Fraud Withdrawal Intelligence</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="style.css?v=6" />
+  <script>
+    /* Stale-cache self-healing: if the dashboard JS failed to load (old cached
+       app.js), show a clear banner instead of a dead Sign-in button. */
+    window.__cashguardReady = false;
+    window.addEventListener('error', function (e) {
+      var el = document.getElementById('js-error-banner');
+      if (!el) { el = document.createElement('div'); el.id = 'js-error-banner'; document.body.prepend(el); }
+      el.textContent = 'Frontend script error detected — press Ctrl+F5 to reload the fresh dashboard.';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:#fff;padding:10px;text-align:center;font:600 13px sans-serif;';
+      e.preventDefault();
+    });
+  </script>
+</head>
+<body>
+  <!-- Login modal (real JWT auth — Phase 3) -->
+  <div id="login-modal" class="modal">
+    <div class="modal-card">
+      <div class="logo-badge">🛡️</div>
+      <h1>CashGuard <span>AI</span></h1>
+      <p class="sub">Predictive Analytics Framework — Forecast Likely Cash Withdrawal Locations from Cybercrime Complaints</p>
+      <label for="login-username">Username</label>
+      <input id="login-username" type="text" placeholder="e.g. officer.district1" autocomplete="off" />
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){window.cashguardLogin();}" />
+      <button id="btn-login" class="btn primary" onclick="window.cashguardLogin();">Sign in</button>
+      <p id="login-status" class="login-status">Ready — enter a demo credential above and press Sign in.</p>
+      <div class="demo-users">
+        <b>Demo users</b>
+        <span class="du">🚔 officer.statea / PoliceStateA!1 <i>(State-A police)</i></span>
+        <span class="du">🚔 officer.district1 / District1!1 <i>(Northsagar police)</i></span>
+        <span class="du">🏦 bank.hdfc / HdfcBank!1 <i>(HDFC Bank)</i></span>
+        <span class="du">🏛️ i4c.admin / I4cAdmin!1 <i>(national)</i></span>
+      </div>
+      <p class="hint">Hackathon prototype — bcrypt + JWT (access/refresh); production: OAuth2/OIDC + org SSO</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="logo-badge">🛡️</div>
+      <div>
+        <h1>CashGuard <span>AI</span></h1>
+        <p>I4C · Cybercrime Withdrawal Intelligence</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span id="as-of" class="pill info">Forecast as of —</span>
+      <span id="role-badge" class="pill">—</span>
+      <button id="btn-cycle" class="btn accent" title="Run the alert engine now (demo)">⚡ Run Alert Cycle</button>
+      <button id="btn-refresh" class="btn">⟳ Refresh</button>
+      <button id="btn-switch" class="btn ghost">Switch User</button>
+    </div>
+  </header>
+
+  <!-- Police dashboard -->
+  <main id="dash-police" class="dash hidden">
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <h2>Risk Heatmap — Predicted Fraud Withdrawal Hotspots (next 24h)</h2>
+        <div class="legend">
+          <span class="lg low">● Low</span><span class="lg med">● Medium</span>
+          <span class="lg high">● High</span><span class="lg crit">● Critical</span>
+          <span class="lg orange">◌ Complaint heat</span>
+        </div>
+      </div>
+      <!-- Drill-down filter panel (deliverable b: time / location / category) -->
+      <div class="drilldown">
+        <select id="dd-state"><option value="All">State: All</option></select>
+        <select id="dd-city"><option value="All">City: All</option></select>
+        <select id="dd-bank"><option value="All">Bank: All</option></select>
+        <span class="dd-label">Crime category</span>
+        <div class="city-chips" id="category-chips"></div>
+        <span class="dd-label">Time (as-of replay)</span>
+        <input type="date" id="asof-date" class="date-input" title="Replay the forecast for a past date" />
+        <button id="btn-replay" class="btn small">⟲ Replay</button>
+        <button id="btn-live" class="btn small">Live</button>
+        <label class="dd-toggle"><input type="checkbox" id="toggle-heat" checked /> Complaint heat</label>
+        <label class="dd-toggle"><input type="checkbox" id="toggle-forecast" checked /> Forecast risk</label>
+      </div>
+      <div id="map"></div>
+    </section>
+    <div class="two-col">
+      <section class="panel">
+        <div class="panel-head"><h2>Top High-Risk ATMs — Next 24h</h2><span class="pill info" id="hotspot-count"></span></div>
+        <table id="hotspot-table" class="data-table">
+          <thead><tr><th>#</th><th>ATM</th><th>Bank / Branch</th><th>City</th><th>Risk</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket)</span></h2><span class="pill warn" id="alert-count"></span></div>
+        <table id="alert-table" class="data-table">
+          <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <!-- Bank dashboard -->
+  <main id="dash-bank" class="dash hidden">
+    <section class="panel">
+      <div class="panel-head"><h2>Bank Branch Intelligence</h2><span class="pill info" id="bank-summary"></span></div>
+    </section>
+    <div class="two-col">
+      <section class="panel">
+        <div class="panel-head"><h2>Your ATMs — Risk Scores</h2></div>
+        <table id="bank-atm-table" class="data-table">
+          <thead><tr><th>ATM</th><th>Branch</th><th>City</th><th>Risk</th><th>Suggested Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Fund-Block Recommendations (CFCFRMS loop)</h2></div>
+        <div id="recovery-queue"></div>
+        <div class="panel-head" style="margin-top:14px"><h2>Recovery Funnel <span class="ev-notice">(synthetic outcomes)</span></h2></div>
+        <div id="bank-funnel"></div>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="panel-head"><h2>Alerts for Your Branches</h2></div>
+      <table id="bank-alert-table" class="data-table">
+        <thead><tr><th>Time</th><th>ATM</th><th>Risk</th><th>Action</th><th>Status</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- I4C dashboard -->
+  <main id="dash-i4c" class="dash hidden">
+    <section class="stats-grid" id="i4c-stats"></section>
+    <section class="panel">
+      <div class="panel-head"><h2>Recovery Funnel (flagged → held → recovered)</h2><span class="ev-notice">synthetic/illustrative — CFCFRMS APIs are Tier 2</span></div>
+      <div id="i4c-funnel"></div>
+    </section>
+    <div class="two-col">
+      <section class="panel">
+        <div class="panel-head"><h2>Complaints by City</h2></div>
+        <div id="city-bars"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Model Performance</h2><span id="i4c-audit"></span></div>
+        <div id="model-metrics"></div>
+      </section>
+    </div>
+    <div class="two-col">
+      <section class="panel">
+        <div class="panel-head"><h2>Ledger (tamper-evident hash chain)</h2><span id="ledger-badge"></span></div>
+        <div class="ledger-actions">
+          <button id="btn-ledger-verify" class="btn small">Verify Ledger</button>
+          <button id="btn-ledger-tamper" class="btn small warn">Tamper-demo (flip a block)</button>
+          <button id="btn-sit-report" class="btn small accent">Generate Situational Report (PDF)</button>
+        </div>
+        <div id="ledger-preview" class="muted"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>I4C Inbox (received via webhook)</h2><span class="ev-notice">real POST path → local mock receiver</span></div>
+        <div id="inbox-panel" class="inbox"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Alert evidence modal (3-field panel) -->
+  <div id="evidence-modal" class="modal hidden">
+    <div class="modal-card wide">
+      <div class="modal-head">
+        <h2>Alert Evidence <span class="pill info" id="ev-alert-id"></span></h2>
+        <span id="ev-audit"></span>
+        <button class="btn ghost" id="ev-close">✕ Close</button>
+      </div>
+      <div id="ev-body"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>CashGuard AI · Smart India Hackathon · I4C · NCRP · CFCFRMS</span>
+    <span class="banner-warn">Hackathon Prototype — Synthetic Data. Locations are fictionalized for demonstration.</span>
+    <span class="banner-warn">Advisory only — no automated enforcement; audited human decision required.</span>
+  </footer>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="app.js?v=7"></script>
+</body>
+</html>
