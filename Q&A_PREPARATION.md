@@ -108,3 +108,37 @@ All numbers are artifact-backed (synthetic evaluation unless stated).
     demo; permissioned ledger anchoring is the documented Tier-2 upgrade.
 40. **Why do you need it?** — Chain-of-custody for court-facing inter-agency
     decisions: every alert, decision, and report is attributable and tamper-evident.
+
+## RED-TEAM ADDITIONS (41–50)
+
+41. **How do you know you beat a simple 'busiest ATM' rule?** — Measured on the
+    identical split (baseline_war.json): AUC 0.926 vs 0.56; P@100 0.86 vs 0.03;
+    intervention capture at K=10 is 5.5% vs 0.5% (11×). NOT claimed: beat every
+    conceivable heuristic.
+42. **What is the intervention cost?** — False interventions are counted and
+    reported per K (242 at K=10), plus ₹/intervention efficiency (₹41k) —
+    the priority score trades K against cost. No real costs claimed (synthetic).
+43. **What if a competitor has real bank data?** — They would win the data
+    dimension; we win the governance dimension (evidence/uncertainty/audit/
+    pilot protocol). The gap is external and explicit. NOT claimed: parity on
+    data.
+44. **Why not train on NPCI/UPI data?** — No authorized access; NPCI feeds are
+    an integration point (PRODUCTION_DATA_INTEGRATION.md), not a claim.
+45. **Can the cache serve stale scores?** — Fixed: TTL + single-flight + data
+    stamp on the split cache; invalidation verified live (drip → recompute →
+    payload changes). Verified byte-identical on cache hits.
+46. **What if the model file is missing on stage?** — Kill-tested: DEMO_MODE
+    serves everything from cache with no model loaded (risk-scores/alerts/
+    evidence/horizons/stats — all 200). Restore = copy model back.
+47. **What did the red team actually break?** — An IDOR on single-alert reads
+    (fixed + retested) and a stale split cache (fixed with data stamps) —
+    both documented in FINAL_EXTERNAL_JUDGE_AUDIT.md with retest evidence.
+48. **Does the pilot risk creating a policing loop?** — Architecture cannot
+    close the loop (interventions never features, no auto-retraining);
+    repeat-targeting monitor + randomized review sample (PREDICTIVE_FEEDBACK_LOOP.md).
+49. **Why should MHA adopt rather than build in-house?** — The framework is
+    the spec: protocol, shadow mode, HOLD policy, audit chain, monitored
+    rollback — an adoption-ready contract, not a black box.
+50. **What is the single most honest weakness?** — No authorized real data has
+    been evaluated; everything above is synthetic-label measurement. That is
+    why the pilot protocol exists and why no real-world number is claimed.

@@ -16,15 +16,21 @@ Artifacts: `artifacts/deep_eval/fairness_groups.json` (reproducible via
 
 | Group | Positive rate | Alert rate (≥0.7) | False-positive rate | Precision | Recall |
 |---|---|---|---|---|---|
-| all_jurisdictions | 0.084 | 0.018 | 0.005 | 0.744 | 0.161 |
-| District-3 | 0.084 | 0.015 | 0.005 | 0.682 | 0.124 |
-| Eastvale | 0.069 | 0.011 | 0.004 | 0.688 | 0.113 |
-| Greenfield District | 0.069 | 0.016 | 0.006 | 0.621 | 0.142 |
-| Metro-West | 0.073 | 0.014 | 0.004 | 0.705 | 0.138 |
-| Northsagar | 0.127 | 0.034 | 0.005 | 0.862 | 0.234 |
+| all | 0.062 | 0.010 | 0.004 | 0.624 | 0.103 |
+| District-3 | 0.057 | 0.010 | 0.005 | 0.516 | 0.087 |
+| Eastvale | 0.057 | 0.008 | 0.003 | 0.632 | 0.087 |
+| Greenfield District | 0.057 | 0.009 | 0.003 | 0.635 | 0.098 |
+| Metro-West | 0.060 | 0.009 | 0.004 | 0.598 | 0.089 |
+| Northsagar | 0.079 | 0.016 | 0.005 | 0.692 | 0.140 |
+| complaint_area low | 0.058 | 0.008 | 0.003 | 0.614 | 0.088 |
+| complaint_area mid | 0.057 | 0.010 | 0.005 | 0.516 | 0.087 |
+| complaint_area high | 0.068 | 0.012 | 0.004 | 0.672 | 0.123 |
+| atm_volume low | 0.056 | 0.005 | 0.002 | 0.709 | 0.067 |
+| atm_volume mid | 0.069 | 0.012 | 0.004 | 0.680 | 0.117 |
+| atm_volume high | 0.060 | 0.013 | 0.006 | 0.539 | 0.121 |
 
 ## Findings (honest)
-1. **False-positive rate is flat across groups (0.004–0.005)** — the strongest
+1. **False-positive rate is flat across groups (0.0015–0.0062)** — the strongest
    fairness signal: no group is over-flagged relative to another.
 2. **Alert rates track positive rates** (Northsagar carries the synthetic final
    wave → higher alert rate and recall). This is scenario-driven, not

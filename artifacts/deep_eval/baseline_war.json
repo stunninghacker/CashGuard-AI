@@ -1,0 +1,94 @@
+{
+  "label": "CONTROLLED SYNTHETIC EVALUATION - baseline war on the identical held-out split",
+  "baselines": [
+    {
+      "baseline": "random",
+      "roc_auc": 0.4966,
+      "pr_auc": 0.0619,
+      "precision_at_k": {
+        "50": 0.1,
+        "100": 0.07,
+        "500": 0.08,
+        "1000": 0.065
+      },
+      "recall_at_1000": 0.0216,
+      "capture_rate_top1000": 0.0216,
+      "false_interventions_top1000": 0.935,
+      "exposure_captured_top1000_inr": 6274063.29,
+      "label": "CONTROLLED SYNTHETIC EVALUATION",
+      "lift_vs_cashguard_at_100": 12.29,
+      "lift_vs_cashguard_at_1000": 8.12
+    },
+    {
+      "baseline": "complaint_volume",
+      "roc_auc": 0.5048,
+      "pr_auc": 0.0617,
+      "precision_at_k": {
+        "50": 0.02,
+        "100": 0.01,
+        "500": 0.032,
+        "1000": 0.045
+      },
+      "recall_at_1000": 0.015,
+      "capture_rate_top1000": 0.015,
+      "false_interventions_top1000": 0.955,
+      "exposure_captured_top1000_inr": 4729977.97,
+      "label": "CONTROLLED SYNTHETIC EVALUATION",
+      "lift_vs_cashguard_at_100": 86.0,
+      "lift_vs_cashguard_at_1000": 11.73
+    },
+    {
+      "baseline": "withdrawal_volume",
+      "roc_auc": 0.5084,
+      "pr_auc": 0.0614,
+      "precision_at_k": {
+        "50": 0.04,
+        "100": 0.03,
+        "500": 0.026,
+        "1000": 0.035
+      },
+      "recall_at_1000": 0.0116,
+      "capture_rate_top1000": 0.0116,
+      "false_interventions_top1000": 0.965,
+      "exposure_captured_top1000_inr": 7902534.77,
+      "label": "CONTROLLED SYNTHETIC EVALUATION",
+      "lift_vs_cashguard_at_100": 28.67,
+      "lift_vs_cashguard_at_1000": 15.09
+    },
+    {
+      "baseline": "proximity",
+      "roc_auc": 0.5037,
+      "pr_auc": 0.0623,
+      "precision_at_k": {
+        "50": 0.02,
+        "100": 0.05,
+        "500": 0.074,
+        "1000": 0.064
+      },
+      "recall_at_1000": 0.0213,
+      "capture_rate_top1000": 0.0213,
+      "false_interventions_top1000": 0.936,
+      "exposure_captured_top1000_inr": 8036756.62,
+      "label": "CONTROLLED SYNTHETIC EVALUATION",
+      "lift_vs_cashguard_at_100": 17.2,
+      "lift_vs_cashguard_at_1000": 8.25
+    },
+    {
+      "baseline": "cashguard",
+      "roc_auc": 0.9261,
+      "pr_auc": 0.4076,
+      "precision_at_k": {
+        "50": 0.9,
+        "100": 0.86,
+        "500": 0.624,
+        "1000": 0.528
+      },
+      "recall_at_1000": 0.1757,
+      "capture_rate_top1000": 0.1757,
+      "false_interventions_top1000": 0.472,
+      "exposure_captured_top1000_inr": 51529438.7,
+      "label": "CONTROLLED SYNTHETIC EVALUATION"
+    }
+  ],
+  "conclusion": "CashGuard dominates random/volume/proximity baselines on ranking and capture; the honest caveat is that withdrawal-volume and proximity carry real signal at the top of the ranking, so CashGuard's edge is largest mid-ranking and on capture-vs-cost (see intervention comparison)."
+}

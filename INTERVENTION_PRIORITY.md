@@ -51,3 +51,16 @@ P = (0.40·p + 0.25·E + 0.15·U + 0.20·S) · Q
   inference time (data freshness shown separately).
 - The confidence weight uses probability bands, not the full uncertainty block;
   the evidence panel still shows the complete uncertainty metadata.
+
+## Formal decision policy: ACT / REVIEW / HOLD
+
+| Decision | Requires | Else |
+|---|---|---|
+| **HOLD** | evidence strength < 3/5 · OR risk in the 0.70–0.78 weak band · OR data stale (data_freshness_hours) · OR model disagreement |A−B| > 0.35 · OR drift REDUCED · OR short-horizon confidence INSUFFICIENT | no recommendation beyond review; UI shows HOLD ACTION |
+| **REVIEW** | risk ≥ 0.7 with adequate evidence/confidence but below the ACT bar | human review; graded response playbook; dismiss/escalate require a reason |
+| **ACT** | risk ≥ 0.85 · evidence ≥ 3/5 · confidence not downgraded · disagreement ≤ 0.20 · data fresh · drift OK · horizon confidence MEDIUM+ | bank monitoring + branch verification pre-position (still human-gated; never autonomous) |
+
+The policy maximizes *useful interventions*, not alert volume: dedup
+suppresses repeats, HOLD absorbs weak-evidence noise, and only ACT-level
+alerts reach the strongest recommendations. Every decision lands on the
+audit chain.

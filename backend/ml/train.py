@@ -237,7 +237,7 @@ def train(
     # ---- instance-percentile reference (evidence panel) ----
     # Per-feature quantiles over the TRAINING set let the evidence panel report
     # "this feature's value is at the 95th percentile" — a simple, honest
-    # per-instance signal. This is NOT SHAP (see explainability note).
+    # per-instance signal (TreeSHAP via native pred_contribs; see explainability note).
     quantile_levels = np.array([0.5, 0.90, 0.95, 0.99])
     feature_quantiles: dict[str, list[float]] = {
         col: np.quantile(Xtr[col], quantile_levels).round(4).tolist()

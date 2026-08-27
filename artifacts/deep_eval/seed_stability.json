@@ -1,0 +1,112 @@
+{
+  "label": "CONTROLLED SYNTHETIC EVALUATION",
+  "model_seed_variation": {
+    "rows": [
+      {
+        "seed": 0,
+        "roc_auc": 0.9269,
+        "precision_at_100": 0.82,
+        "precision_at_1000": 0.517
+      },
+      {
+        "seed": 1,
+        "roc_auc": 0.9264,
+        "precision_at_100": 0.8,
+        "precision_at_1000": 0.518
+      },
+      {
+        "seed": 2,
+        "roc_auc": 0.9273,
+        "precision_at_100": 0.8,
+        "precision_at_1000": 0.522
+      },
+      {
+        "seed": 3,
+        "roc_auc": 0.9273,
+        "precision_at_100": 0.82,
+        "precision_at_1000": 0.525
+      },
+      {
+        "seed": 4,
+        "roc_auc": 0.9273,
+        "precision_at_100": 0.83,
+        "precision_at_1000": 0.525
+      }
+    ],
+    "summary": {
+      "roc_auc": {
+        "min": 0.9264,
+        "max": 0.9273,
+        "spread": 0.0009,
+        "mean": 0.927
+      },
+      "precision_at_100": {
+        "min": 0.8,
+        "max": 0.83,
+        "spread": 0.03,
+        "mean": 0.814
+      },
+      "precision_at_1000": {
+        "min": 0.517,
+        "max": 0.525,
+        "spread": 0.008,
+        "mean": 0.5214
+      }
+    }
+  },
+  "generator_seed_variation": {
+    "rows": [
+      {
+        "seed": 0,
+        "roc_auc": 0.9228,
+        "precision_at_100": 0.55,
+        "precision_at_1000": 0.364
+      },
+      {
+        "seed": 1,
+        "roc_auc": 0.9201,
+        "precision_at_100": 0.53,
+        "precision_at_1000": 0.369
+      },
+      {
+        "seed": 2,
+        "roc_auc": 0.9247,
+        "precision_at_100": 0.55,
+        "precision_at_1000": 0.341
+      },
+      {
+        "seed": 3,
+        "roc_auc": 0.9232,
+        "precision_at_100": 0.69,
+        "precision_at_1000": 0.353
+      },
+      {
+        "seed": 4,
+        "roc_auc": 0.9231,
+        "precision_at_100": 0.59,
+        "precision_at_1000": 0.341
+      }
+    ],
+    "summary": {
+      "roc_auc": {
+        "min": 0.9201,
+        "max": 0.9247,
+        "spread": 0.0046,
+        "mean": 0.9228
+      },
+      "precision_at_100": {
+        "min": 0.53,
+        "max": 0.69,
+        "spread": 0.16,
+        "mean": 0.582
+      },
+      "precision_at_1000": {
+        "min": 0.341,
+        "max": 0.369,
+        "spread": 0.028,
+        "mean": 0.3536
+      }
+    }
+  },
+  "conclusion": "Small model-seed spread shows the pipeline is deterministic-stable; generator-seed spread quantifies how much metric variation comes from the data draw itself. Reported, not hidden."
+}

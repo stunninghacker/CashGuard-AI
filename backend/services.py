@@ -1001,11 +1001,17 @@ from .data.synthetic_data import CITIES as CITIES_STATE  # noqa: E402  (state lo
 
 # -------------------------------- Statistics --------------------------------
 def summary_stats(db: Session, k: int = 20, user=None) -> dict:
-    now = resolve_as_of(db)
-    h24 = now - timedelta(hours=24)
-    d7 = now - timedelta(days=7)
+    from .config import DEMO_MODE
 
-    scores = get_risk_scores(db, as_of=now, user=user)
+    if DEMO_MODE:
+        cached = read_demo_cache("risk-scores")
+        scores = cached if cached is not None else []
+        now = datetime.utcnow()
+    else:
+        now = resolve_as_of(db)
+        scores = get_risk_scores(db, as_of=now, user=user)
+    h24 = datetime.utcnow() - timedelta(hours=24)
+    d7 = datetime.utcnow() - timedelta(days=7)
     hotspots = sorted(scores, key=lambda s: s["risk_score"], reverse=True)[:k]
     high_risk_atms = sum(1 for s in scores if s["risk_score"] >= RISK_THRESHOLD)
     high_by_city: dict[str, int] = {}

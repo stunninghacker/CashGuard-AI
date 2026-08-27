@@ -85,7 +85,7 @@ def run_alerts_now(
 
 @router.get("/{alert_id}", response_model=AlertOut)
 def get_alert(alert_id: str, user=Depends(require_auth()), db: Session = Depends(get_db)):
-    alert = repo.get_alert(db, alert_id)
+    alert = repo.get_alert(db, alert_id, user=user)
     if alert is None:
         raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
     return alert
@@ -101,7 +101,7 @@ def alert_evidence(
     cached = services.read_demo_cache("evidence")
     if cached is not None and alert_id in cached:
         return cached[alert_id]
-    alert = repo.get_alert(db, alert_id)
+    alert = repo.get_alert(db, alert_id, user=user)
     if alert is None:
         raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
     try:
@@ -117,7 +117,7 @@ def update_alert(
     user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")),
     db: Session = Depends(get_db),
 ):
-    alert = repo.get_alert(db, alert_id)
+    alert = repo.get_alert(db, alert_id, user=user)
     if alert is None:
         raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
     try:

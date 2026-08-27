@@ -413,23 +413,52 @@ def load_split_cached(engine, cache_path: Path | None = None, force_rebuild: boo
     FAST_EVAL (Phase 12): cache the main-DB feature matrix + masks so developer
     iteration runs in minutes, not tens of minutes. The cache stores INPUT
     features only — labels are recomputed on load (never reuse cached labels).
+    A data-version stamp (row counts + latest timestamp of each source table)
+    guards against silently serving a stale split after the DB changed.
     """
     cache_path = cache_path or (OUT / "main_split_cache.npz")
+    stamp = _data_stamp(engine)
     if cache_path.exists() and not force_rebuild:
         z = np.load(cache_path, allow_pickle=True)
-        X = pd.DataFrame(z["X"], columns=z["feature_names"])
-        y = z["y"]
-        meta = pd.DataFrame(z["meta"], columns=z["meta_names"])
-        m_tr, m_val, m_te = z["m_tr"], z["m_val"], z["m_te"]
-        return X, meta, y, m_tr, m_val, m_te
+        if z["data_stamp"] == stamp:
+            X = pd.DataFrame(z["X"], columns=z["feature_names"])
+            y = z["y"]
+            meta = pd.DataFrame(z["meta"], columns=z["meta_names"])
+            m_tr, m_val, m_te = z["m_tr"], z["m_val"], z["m_te"]
+            return X, meta, y, m_tr, m_val, m_te
+        log("cache stale (data changed) — rebuilding split cache")
     X, meta, y, m_tr, m_val, m_te = load_split(engine)
     np.savez_compressed(
         cache_path,
         X=X.to_numpy(), feature_names=np.array(FEATURE_COLUMNS),
         meta=meta.to_numpy(), meta_names=np.array(meta.columns),
         y=y, m_tr=m_tr, m_val=m_val, m_te=m_te,
+        data_stamp=stamp,
     )
     return X, meta, y, m_tr, m_val, m_te
+
+
+def _data_stamp(engine) -> str:
+    """Short fingerprint of source-table state (row counts + latest timestamps)."""
+    import hashlib
+
+    from backend.database import SessionLocal
+    from backend import models
+
+    db = SessionLocal()
+    try:
+        parts = [
+            db.query(models.Complaint).count(),
+            db.query(models.Withdrawal).count(),
+            db.query(models.Account).count(),
+            db.query(models.ATM).count(),
+        ]
+        latest_c = db.query(models.Complaint.filing_timestamp).order_by(models.Complaint.filing_timestamp.desc()).first()
+        latest_w = db.query(models.Withdrawal.timestamp).order_by(models.Withdrawal.timestamp.desc()).first()
+        parts += [str(latest_c[0]) if latest_c else "", str(latest_w[0]) if latest_w else ""]
+        return hashlib.sha256("|".join(map(str, parts)).encode()).hexdigest()[:16]
+    finally:
+        db.close()
 
 
 def main(fast: bool = False):

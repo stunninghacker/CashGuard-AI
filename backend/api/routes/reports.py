@@ -32,7 +32,7 @@ PDF_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/hotspot/{alert_id}")
 def hotspot_report(alert_id: str, user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")), db: Session = Depends(get_db)):
-    alert = repo.get_alert(db, alert_id)
+    alert = repo.get_alert(db, alert_id, user=user)
     if alert is None:
         raise HTTPException(status_code=404, detail="Alert not found")
     report = services.build_hotspot_report(db, alert, user)

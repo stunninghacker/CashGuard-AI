@@ -1,10 +1,10 @@
 {
   "model_a": "xgboost",
   "model_b": "logistic-statistical-baseline",
-  "model_a_roc_auc": 0.9308,
-  "model_b_roc_auc": 0.8764,
-  "median_abs_disagreement": 0.0191,
-  "p95_abs_disagreement": 0.2747,
+  "model_a_roc_auc": 0.9261,
+  "model_b_roc_auc": 0.8687,
+  "median_abs_disagreement": 0.0115,
+  "p95_abs_disagreement": 0.1378,
   "disagreement_rule": "Confidence downgraded one level when |A-B| > 0.20; HOLD ACTION when |A-B| > 0.35.",
   "b_features": [
     "withdrawals_24h",

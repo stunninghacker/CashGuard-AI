@@ -234,8 +234,13 @@ def list_alerts(
     return list(db.scalars(stmt).all())
 
 
-def get_alert(db: Session, alert_id: str) -> models.Alert | None:
-    return db.scalar(select(models.Alert).where(models.Alert.alert_id == alert_id))
+def get_alert(db: Session, alert_id: str, user=None) -> models.Alert | None:
+    stmt = select(models.Alert).where(models.Alert.alert_id == alert_id)
+    if user is not None:
+        scoped = _scoped_alert_stmt(user)
+        if scoped is not None:
+            stmt = stmt.where(scoped)
+    return db.scalar(stmt)
 
 
 def update_alert_status(db: Session, alert: models.Alert, status: str, reason: str = "") -> models.Alert:

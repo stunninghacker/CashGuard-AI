@@ -57,3 +57,11 @@ committed to this repository)
 |---------|---------|----------|
 | Alert dedup rule (`ALERT_COOLDOWN_HOURS`=6, `ALERT_DEDUP_RISK_DELTA`=0.1) | **PASS** | After closing all open alerts (7 actioned), cycle 1 created **3 alerts** (skipped 0); immediate cycle 2 created **0** (skipped 3) — repeat alerts for the same ATM are suppressed within the window; the risk-escalation bypass (>0.1 rise) is enforced in `run_alert_cycle` (`backend/services.py`). Documented in OPERATIONAL_IMPACT.md "Alert fatigue mitigation". |
 | Risk-score inference cache (TTL + single-flight) | **PASS** | Live sequence (2026-08-27): cold call **8.9 s** → cached calls **45–52 ms** with byte-identical payloads (sha 9afde28e) → drip ingest invalidates: next call recomputes (**6.3 s**, payload sha changes) → 8-user concurrency in the load test dropped from **73.6 s to 5.5 s wall** (per-user p95 71.9 s → 5.5 s). Implemented in `get_risk_scores` (`backend/services.py`), documented in LOAD_TEST.md. |
+## Red-team probe results (2026-08-27, afternoon)
+
+| Probe | Outcome | Evidence |
+|-------|---------|----------|
+| IDOR: cross-district/cross-bank single-alert read | **PASS after fix** | Probe found GET /alerts/{id} + /alerts/{id}/evidence unscoped (district read a Metro-West alert, 200). Fixed: row-scoping in 
+epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest: foreign alert → 404 (district + bank), own-district alert + evidence → 200 (positive control). |
+| Missing-model kill test (DEMO_MODE=true, model.joblib deleted) | **PASS after fix** | risk-scores/alerts/evidence/horizons served from cache (15–52 ms, no model loaded); /stats/summary initially 500 (uncached inference path) — fixed to read the demo cache; retest: all endpoints 200. Model restored. |
+| Split-cache staleness | **PASS after fix** | main_split_cache.npz served a stale split (pos-rate 0.084 vs 0.062). Fixed: data-stamp guard auto-rebuilds on data change; baseline_war regenerated on the fresh split (P@100 0.86). |
