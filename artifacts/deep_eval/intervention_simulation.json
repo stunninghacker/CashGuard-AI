@@ -1,0 +1,57 @@
+{
+  "label": "CONTROLLED SYNTHETIC SIMULATION \u2014 not a real-world loss claim",
+  "method": "test-period forecast days; top-K per day by calibrated score; jittered scores across 10 seeds; 24h capture window",
+  "baseline": {
+    "interventions": 0,
+    "loss_prevented_pct": 0.0,
+    "exposure_total_inr": 445382314.66
+  },
+  "by_k": [
+    {
+      "k": 5,
+      "capture_rate_mean_ci95": [
+        0.034,
+        0.033,
+        0.035
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        3.184,
+        3.082,
+        3.273
+      ],
+      "efficiency_inr_per_intervention_mean": 52536.14,
+      "time_to_intervention_median_h": 13.9
+    },
+    {
+      "k": 10,
+      "capture_rate_mean_ci95": [
+        0.052,
+        0.051,
+        0.052
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        4.736,
+        4.667,
+        4.77
+      ],
+      "efficiency_inr_per_intervention_mean": 39065.04,
+      "time_to_intervention_median_h": 14.6
+    },
+    {
+      "k": 20,
+      "capture_rate_mean_ci95": [
+        0.08,
+        0.079,
+        0.08
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        7.288,
+        7.25,
+        7.353
+      ],
+      "efficiency_inr_per_intervention_mean": 30059.1,
+      "time_to_intervention_median_h": 15.7
+    }
+  ],
+  "conclusion": "Under the simulated assumptions, intervening on top-K captures a material share of fraud exposure vs doing nothing (capture/loss-prevention improve with K; efficiency declines). Real-world validation requires the pilot."
+}

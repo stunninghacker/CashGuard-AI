@@ -1,0 +1,56 @@
+[
+  {
+    "jurisdiction_group": "all_jurisdictions",
+    "rows": 48600,
+    "positive_rate": 0.0841,
+    "alert_rate_0p7": 0.0182,
+    "false_positive_rate_0p7": 0.0047,
+    "precision_0p7": 0.7441,
+    "recall_0p7": 0.1608
+  },
+  {
+    "jurisdiction_group": "District-3",
+    "rows": 9720,
+    "positive_rate": 0.0835,
+    "alert_rate_0p7": 0.0152,
+    "false_positive_rate_0p7": 0.0048,
+    "precision_0p7": 0.6824,
+    "recall_0p7": 0.1244
+  },
+  {
+    "jurisdiction_group": "Eastvale",
+    "rows": 9720,
+    "positive_rate": 0.0685,
+    "alert_rate_0p7": 0.0112,
+    "false_positive_rate_0p7": 0.0035,
+    "precision_0p7": 0.6881,
+    "recall_0p7": 0.1126
+  },
+  {
+    "jurisdiction_group": "Greenfield District",
+    "rows": 9720,
+    "positive_rate": 0.0687,
+    "alert_rate_0p7": 0.0157,
+    "false_positive_rate_0p7": 0.006,
+    "precision_0p7": 0.6209,
+    "recall_0p7": 0.1422
+  },
+  {
+    "jurisdiction_group": "Metro-West",
+    "rows": 9720,
+    "positive_rate": 0.0729,
+    "alert_rate_0p7": 0.0143,
+    "false_positive_rate_0p7": 0.0042,
+    "precision_0p7": 0.705,
+    "recall_0p7": 0.1382
+  },
+  {
+    "jurisdiction_group": "Northsagar",
+    "rows": 9720,
+    "positive_rate": 0.1266,
+    "alert_rate_0p7": 0.0344,
+    "false_positive_rate_0p7": 0.0047,
+    "precision_0p7": 0.8623,
+    "recall_0p7": 0.234
+  }
+]

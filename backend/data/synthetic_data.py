@@ -236,19 +236,38 @@ def generate_withdrawals(
     burst_prob = cfg["scenario"]["mule_burst_prob"]
     same_atm_prob = cfg["scenario"]["mule_same_atm_prob"]
     random_atm_prob = cfg["scenario"]["random_atm_fraud_prob"]
+    rotation_days = cfg["scenario"]["hot_rotation_days"]
+    busy_share = cfg["scenario"]["busy_atm_share"]
+    amount_sigma = cfg["scenario"]["amount_noise_sigma"]
+    hour_jitter_prob = cfg["scenario"]["hour_jitter_prob"]
 
     city_atms: dict[str, list[models.ATM]] = {}
     for a in atms:
         city_atms.setdefault(a.city, []).append(a)
 
-    hot_atms: dict[str, list[models.ATM]] = {}
-    hot_weights: dict[str, np.ndarray] = {}
-    for city, atms_c in city_atms.items():
-        hot = rng.sample(atms_c, max(6, int(len(atms_c) * cfg["clustering"]["hot_atm_fraction"])))
-        hot_atms[city] = hot
-        hot_weights[city] = _pareto_weights(rng, len(hot), skew)
-
     span_hours = int((end - start).total_seconds() // 3600)
+
+    # ROTATION: hot-ATM membership is re-sampled every `hot_rotation_days`
+    # (mule networks rotate ATMs) — no static "these ATMs are hot forever"
+    # set the model could memorize from any historical period.
+    # BUSY ATMs: high-traffic legit sites, never in any hot set, never fraud
+    # targets — false-positive-prone cases (volume + complaint-adjacent city
+    # context, but no mule cash-out) the model must learn to handle.
+    span_days = span_hours // 24
+    n_windows = max(1, span_days // max(1, rotation_days)) + 1
+    hot_atms: dict[str, dict[int, list[models.ATM]]] = {}
+    hot_weights: dict[str, dict[int, np.ndarray]] = {}
+    busy_atms: dict[str, set[str]] = {}
+    non_busy: dict[str, list[models.ATM]] = {}
+    for city, atms_c in city_atms.items():
+        busy_ids = {a.atm_id for a in rng.sample(atms_c, int(len(atms_c) * busy_share))}
+        busy_atms[city] = busy_ids
+        non_busy[city] = [a for a in atms_c if a.atm_id not in busy_ids]
+        for w in range(n_windows):
+            hot = rng.sample(non_busy[city], max(6, int(len(atms_c) * cfg["clustering"]["hot_atm_fraction"])))
+            hot_atms.setdefault(city, {})[w] = hot
+            hot_weights.setdefault(city, {})[w] = _pareto_weights(rng, len(hot), skew)
+
     withdrawals: list[models.Withdrawal] = []
     n_fraud = int(n_total * fraud_share)
     n_legit = n_total - n_fraud
@@ -259,16 +278,36 @@ def generate_withdrawals(
     # weight (heavy tail) so legit volume overlaps fraud volumes — otherwise
     # "busy ATM" trivially equals "fraud ATM" (baseline lift = 1.0 = leak).
     city_atms_flat = [a for atms_c in city_atms.values() for a in atms_c]
+    busy_flat = [1.0 if a.atm_id in busy_atms.get(a.city, set()) else 0.0 for a in city_atms_flat]
     traffic_weights = np.clip(
         np.random.lognormal(0.0, 0.9, size=len(city_atms_flat)), 0.25, 9.0
     )
+    traffic_weights = np.clip(
+        np.random.lognormal(0.0, 0.9, size=len(city_atms_flat)), 0.25, 9.0
+    )
+    traffic_weights = traffic_weights * (1.0 + 3.0 * np.array(busy_flat))
     traffic_weights = traffic_weights / traffic_weights.sum()
     atm_cdf = np.cumsum(traffic_weights)
 
     # ~25% of legit withdrawals come from complaint-linked (mule) accounts at
     # RANDOM ATMs — mule accounts have normal banking history AND their presence
     # is noisier (no trivial "linked account here = fraud" leak).
-    legit_ts = pd.date_range(start, end - timedelta(minutes=1), periods=n_legit)
+        # BUSY-ATM bulk-cash events: multi-txn same-day legit clusters at
+    # high-traffic legit ATMs - false-positive cases with elevated
+    # frequency/volume features but NO fraud label.
+    n_legit_cluster = int(n_legit * cfg["scenario"]["busy_chunk_share"] / 4.5)
+    cluster_rows: list[tuple] = []
+    for _ in range(n_legit_cluster):
+        city = rng.choice(list(city_atms.keys()))
+        busy_list = [a for a in city_atms[city] if a.atm_id in busy_atms[city]]
+        if not busy_list:
+            continue
+        atm = rng.choice(busy_list)
+        base_ts = start + timedelta(days=rng.randint(0, span_days - 1), hours=rng.randint(9, 20), minutes=rng.randint(0, 59))
+        for j2 in range(rng.randint(3, 6)):
+            cluster_rows.append((base_ts + timedelta(minutes=rng.randint(1, 9) * j2), atm, pii.account(_account_raw(rng)), round(rng.uniform(2000, 90000), 2)))
+
+    legit_ts = pd.date_range(start, end - timedelta(minutes=1), periods=max(0, n_legit - len(cluster_rows)))
     for ts in legit_ts:
         atm = city_atms_flat[int(np.searchsorted(atm_cdf, rng.random()))]
         if rng.random() < 0.25:
@@ -282,6 +321,16 @@ def generate_withdrawals(
             atm_id=atm.atm_id,
             account_token=account,
             amount=round(rng.uniform(500, 20000), 2),
+            channel="ATM",
+            is_fraud_withdrawal=False,
+        ))
+    for ts_j, atm, acct, amt in cluster_rows:
+        withdrawals.append(models.Withdrawal(
+            transaction_id=_rid("TXN", 12),
+            timestamp=ts_j,
+            atm_id=atm.atm_id,
+            account_token=acct,
+            amount=amt,
             channel="ATM",
             is_fraud_withdrawal=False,
         ))
@@ -311,15 +360,18 @@ def generate_withdrawals(
         hour_idx = int(rng.choices(range(24), weights=HOUR_WEIGHTS_BASE * np.array(
             [night_w if h in NIGHT_HOURS else 1.0 for h in range(24)]
         ))[0])
+        if rng.random() < hour_jitter_prob:
+            hour_idx = (hour_idx + rng.choice([-2, -1, 1, 2])) % 24
         ts = start + timedelta(days=day, hours=hour_idx, minutes=rng.randint(0, 59))
         if ts.weekday() >= 5 and rng.random() < (1 - 1 / weekend_w):
             ts -= timedelta(days=rng.choice([2, 1]))
 
-        def _draw_atm():
+        def _draw_atm(city: str, day: int) -> models.ATM:
             if rng.random() < hot_prob:
-                pool, weights = hot_atms[city], hot_weights[city]
+                w = min(day // max(1, rotation_days), n_windows - 1)
+                pool, weights = hot_atms[city][w], hot_weights[city][w]
                 return pool[int(np.searchsorted(np.cumsum(weights), rng.random()))]
-            return rng.choice(city_atms[city])
+            return rng.choice(non_busy[city])
 
         # Chunked cash-out: a bursting mule reuses the SAME ATM within MINUTES
         # (real cash-out chunks) — the chunk stays on one day, so per-ATM
@@ -329,32 +381,37 @@ def generate_withdrawals(
         # matches the feature distribution the model saw in training.
         in_final_wave = final_city is not None and city == final_city and day >= span_hours // 24 - 6
         effective_same_atm = 0.70 if in_final_wave else same_atm_prob
-        if last_mule is not None and rng.random() < burst_prob and last_ts is not None:
+        in_final_wave = final_city is not None and city == final_city and day >= span_hours // 24 - 6
+        effective_same_atm = 0.55 if in_final_wave else same_atm_prob
+        # blocked (prevented) cash-out chunks run LONGER - full-strength mule
+        # runs with no fraud label, competing for the top of the ranking
+        cont_prob = 0.62 if burst_blocked else burst_prob
+        if last_mule is not None and rng.random() < cont_prob and last_ts is not None:
             mule = last_mule
             if last_atm is not None and rng.random() < effective_same_atm:
                 atm = last_atm
             else:
-                atm = _draw_atm()
+                atm = _draw_atm(city, day)
                 for _ in range(3):
                     if atm.atm_id != last_atm.atm_id:
                         break
-                    atm = _draw_atm()
+                    atm = _draw_atm(city, day)
             ts = last_ts + timedelta(minutes=rng.randint(1, 9))  # chunk: minutes apart
         else:
             # new burst starts — with blocked_burst_prob it is a full-strength
             # mule chunk pattern that carries NO fraud label (prevented cash-out)
             mule = mule_tokens[i % len(mule_tokens)]
-            atm = _draw_atm()
+            atm = _draw_atm(city, day)
             burst_blocked = rng.random() < cfg["scenario"]["blocked_burst_prob"]
             if burst_blocked:
                 n_blocked += 1
         last_mule, last_atm, last_ts = mule, atm, ts
 
-        # DETUNE: some fraud lands at genuinely random (non-hot) ATMs
+        # DETUNE: some fraud lands at genuinely random (non-hot, non-busy) ATMs
         if not burst_blocked and rng.random() < random_atm_prob:
-            atm = rng.choice(city_atms[city])
+            atm = rng.choice(non_busy[city])
 
-        amount = abs(float(rng.lognormvariate(np.log(mule_velocity[mule] / 2.0), 0.5)))
+        amount = abs(float(rng.lognormvariate(np.log(mule_velocity[mule] / 2.0), amount_sigma)))
         if rng.random() < round_bias:
             amount = round(amount / 1000.0) * 1000.0
         withdrawals.append(models.Withdrawal(

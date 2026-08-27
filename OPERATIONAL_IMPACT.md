@@ -14,24 +14,26 @@ the generator's assumptions — NOT real-world loss prevention.
 - Baseline = no intervention (100% of fraud exposure is a loss).
 - 10 seeds (score jitter) → mean and 95% CI.
 
-## Results
+## Results (regenerated on the de-separated iteration-4 generator)
 
 | Strategy | Fraud events captured | Loss prevented (% of exposure) | 95% CI | Efficiency (₹ prevented / intervention) | Time-to-intervention (median) |
 |---|---|---|---|---|---|
 | Baseline (do nothing) | 0% | 0% | — | 0 | — |
-| Top-5 / day | 8.6% | 8.5% | [7.7, 9.2] | ~₹/int. | ~14h |
-| **Top-10 / day** | 12.4% | **12.3%** | [11.7, 13.0] | ~₹/int. | ~14h |
-| Top-20 / day | 15.8% | 15.8% | [15.1, 16.1] | ~₹/int. | ~14h |
+| Top-5 / day | 3.4% | 3.2% | [3.1, 3.3] | ₹52,536 | 13.9 h |
+| **Top-10 / day** | 5.2% | 4.7% | [4.7, 4.8] | ₹39,065 | 14.6 h |
+| Top-20 / day | 8.0% | 7.3% | [7.2, 7.4] | ₹30,059 | 15.7 h |
 
-(Exact efficiency values are in the artifact; the exposure total is the
-simulated test-period fraud amount.)
+(Exact values in the artifact; exposure total = simulated test-period fraud
+amount ₹455M.)
 
 ## Honest interpretation
-- Under the simulated assumptions, **top-K intervention captures ~12–16% of
+- Under the simulated assumptions, **top-K intervention captures ~3–8% of
   fraud exposure with ~5–20 daily actions** — better than doing nothing, and
-  the gain is bounded by how concentrated fraud is (our synthetic world spreads
-  fraud across ~10–15% of ATMs daily; a more concentrated real world would
-  change the numbers — hence the pilot).
+  the gain is bounded by how concentrated fraud is. Note the capture rates are
+  LOWER than the previous (pre-de-separation) simulation: the iteration-4
+  generator removed the artificially clean separability, so the simulation now
+  measures the model's honest edge. The intervention priority score is the
+  lever that trades K against efficiency.
 - Efficiency declines with K (more interventions per rupee prevented) — this is
   the trade-off the Intervention Priority score is designed to optimize.
 - **What this does NOT claim**: no real loss was prevented; real-world capture

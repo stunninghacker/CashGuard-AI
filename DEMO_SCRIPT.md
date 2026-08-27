@@ -80,3 +80,52 @@ the walkthrough continues seamlessly. Never set `DEMO_MODE=true` in production.
 | `http://localhost:8000/recovery/funnel` | Recovery funnel (JSON) |
 | `http://localhost:8000/mock-i4c-inbox` | I4C inbox (webhook receiver) |
 | `ws://localhost:8000/ws/alerts` | Live alert push (WebSocket) |
+
+## 6. Rehearsed audience Q&A (preparation — internal)
+
+**Q1 — "How do we know this isn't circular — synthetic labels proving your own patterns?"**
+Every generator parameter is source-tagged verified-vs-assumed and cited (I4C Suspect
+Registry, IBA mule characteristics, RBI time-delay direction). The model must beat TWO
+naive baselines — recent-volume ranking (lift 14–18×) and complaint-proximity ranking
+(17× at P@100) — on a time-based split with a validation slice that early stopping never
+touches. The `real_data_harness` is runnable today: drop a district-level complaint CSV
+in `data/real/` and it validates the predicted hotspot density against real complaint
+density. Status is honestly PENDING_REAL_DATA until then.
+
+**Q2 — "What's genuinely novel here?"**
+A self-exciting (Hawkes) temporal intensity over complaint timestamps — λ(t) = μ +
+Σα·exp(−β(t−tᵢ)) over PAST complaints only, fitted per location, future-free by
+construction (asserted by a unit test). We disclose honestly that the XGB+Hawkes
+ensemble does NOT beat pure XGBoost (Precision@100 0.41 vs 0.83) and that the feature
+alone has 0.51 AUC — it earns its place inside the model, not as a headline. The
+headline is the loop: prediction → evidence → graded response playbook → recovery
+funnel → tamper-evident ledger.
+
+**Q3 — "Isn't counterparty_count_24h the fraud label in disguise?"**
+It counts complaint-linked accounts at the ATM in the trailing 24h — complaints are
+filed before cash-out, so it's available at prediction time; its window ends before the
+forecast point; its single-feature AUC is 0.8447, not 1.0; and the ranking decays to
+0.52 at K=1000 — a real leak stays ≈1.0 throughout. (CALIBRATION_NOTES has the full
+four-point rebuttal.)
+
+**Q4 — "An officer gets an alert — then what?"**
+The alert carries a graded response playbook (notify branch → heighten monitoring →
+CCTV/pre-position → tighten withdrawal verification) with an evidence panel and feature
+contributions (global importance + percentile — not SHAP); the Bank dashboard shows the
+CFCFRMS fund-block queue and recovery funnel. Everything is advisory — a human action
+is required and every action lands on the tamper-evident ledger.
+
+**Q5 — "Why 'Blockchain & Cybersecurity' — is this a real blockchain?"**
+Honest label: it's an append-only SHA-256 hash chain giving tamper-evidence and
+chain-of-custody across agencies — the property a court-facing LEA system needs. We
+demo it live: run alert cycle → verify chain ✓ → flip one block → verify fails ✗.
+Anchoring to a permissioned ledger (Hyperledger Fabric) is the documented Tier-2 upgrade.
+
+## 7. Team ownership (every member owns a slice)
+
+| Member | Owns | Be ready for |
+|--------|------|--------------|
+| **A — ML** | features, Hawkes, ensemble, baselines, metrics, leakage rebuttal, de-separation story (MODEL_CARD "Why precision@K is not artificially perfect") | Q1, Q2, Q3 |
+| **B — Security** | JWT/RBAC, ledger, tamper demo, evidence chain-of-custody | Q5, access-control questions |
+| **C — Data & privacy** | synthetic generator, calibration notes, PII pseudonymization, real-data harness | Q1 follow-ups, DPDP/anti-profiling |
+| **D — Product/demo lead** | dashboard flow, recovery funnel, response playbook, demo timekeeping | Q4, "what changed vs yesterday" |

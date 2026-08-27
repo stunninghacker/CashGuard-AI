@@ -8,6 +8,11 @@ data/*
 artifacts/*
 !artifacts/*.json
 !artifacts/*.png
+!artifacts/deep_eval/
+!artifacts/deep_eval/*.json
+!artifacts/deep_eval/*.png
+artifacts/deep_eval/*.npz
+!artifacts/reports/
 
 # Python
 __pycache__/
@@ -22,4 +27,5 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Presentations / docs are tracked; prompt archives are tracked for provenance
+# Presentations / docs are tracked; prompt archives are tracked for provenance/internal/
+# internal-only planning docs (never commit)

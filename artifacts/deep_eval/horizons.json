@@ -1,0 +1,62 @@
+{
+  "label": "CONTROLLED SYNTHETIC EVALUATION",
+  "model": "24h-trained XGBoost, evaluated per horizon",
+  "confidence_rule": "HIGH >=0.70 | MEDIUM >=0.45 | INSUFFICIENT otherwise (HOLD ACTION for horizon-based recs)",
+  "horizons": [
+    {
+      "horizon_hours": 2,
+      "roc_auc": 0.9212,
+      "pr_auc": 0.0393,
+      "precision_at_1000_horizon": 0.04,
+      "recall_at_1000_horizon": 0.2667,
+      "capture_rate_top1000": 0.2667,
+      "false_alert_rate_0p7_horizon": 0.9477,
+      "horizon_event_rate": 0.0031,
+      "confidence": "INSUFFICIENT CONFIDENCE \u2014 HOLD ACTION for horizon-based recommendations"
+    },
+    {
+      "horizon_hours": 6,
+      "roc_auc": 0.9168,
+      "pr_auc": 0.0763,
+      "precision_at_1000_horizon": 0.082,
+      "recall_at_1000_horizon": 0.2799,
+      "capture_rate_top1000": 0.2799,
+      "false_alert_rate_0p7_horizon": 0.8893,
+      "horizon_event_rate": 0.006,
+      "confidence": "INSUFFICIENT CONFIDENCE \u2014 HOLD ACTION for horizon-based recommendations"
+    },
+    {
+      "horizon_hours": 12,
+      "roc_auc": 0.9159,
+      "pr_auc": 0.1568,
+      "precision_at_1000_horizon": 0.18,
+      "recall_at_1000_horizon": 0.2256,
+      "capture_rate_top1000": 0.2256,
+      "false_alert_rate_0p7_horizon": 0.7646,
+      "horizon_event_rate": 0.0164,
+      "confidence": "INSUFFICIENT CONFIDENCE \u2014 HOLD ACTION for horizon-based recommendations"
+    },
+    {
+      "horizon_hours": 24,
+      "roc_auc": 0.9261,
+      "pr_auc": 0.4075,
+      "precision_at_1000_horizon": 0.528,
+      "recall_at_1000_horizon": 0.1758,
+      "capture_rate_top1000": 0.1758,
+      "false_alert_rate_0p7_horizon": 0.3763,
+      "horizon_event_rate": 0.0618,
+      "confidence": "MEDIUM"
+    },
+    {
+      "horizon_hours": 48,
+      "roc_auc": 0.7346,
+      "pr_auc": 0.3463,
+      "precision_at_1000_horizon": 0.577,
+      "recall_at_1000_horizon": 0.1038,
+      "capture_rate_top1000": 0.1038,
+      "false_alert_rate_0p7_horizon": 0.3421,
+      "horizon_event_rate": 0.1143,
+      "confidence": "MEDIUM"
+    }
+  ]
+}

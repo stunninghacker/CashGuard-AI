@@ -42,18 +42,19 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
 7. `/docs` — full REST API (integration-ready contracts).
 
 ## Slide 4 — The Numbers (30 sec)
-- 200k transactions, 12k complaints, 900 ATMs, 5 **fictional** cities, 6 months.
-- **ROC-AUC 0.9366 · lift vs volume 1.111–2.041× · lift vs proximity >=50 (baseline ~0.00-0.02)×** (the
-  model crushes both naive baselines, disclosed) · **median lead-time 13.5 h**
+- 200k transactions, 12.4k complaints, 900 ATMs, 5 **fictional** cities, 6 months.
+- **ROC-AUC 0.927 · lift vs volume 14–18× · lift vs proximity 17× at P@100** (the
+  model crushes both naive baselines, disclosed) · **median lead-time 14.9 h**
   — annotated as horizon-dependent, a design property not an accuracy claim.
+- **Precision@K is honest by construction**: 0.90/0.90/0.83 at
+  K = 20/50/100, decaying to 0.52 at K = 1000; threshold(≥0.7) precision 0.66,
+  false-alert rate 0.34. We deliberately de-separated the generator (hot-ATM
+  rotation, prevented cash-outs, busy-ATM false-positive cases) because a
+  perfect top-K is a red flag, not a selling point — full investigation in
+  MODEL_CARD.md "Why precision@K is not artificially perfect".
 - **Novelty**: Hawkes self-exciting intensity over past complaints
-  (single-feature AUC 0.52 — leak-free). The ensemble is honestly disclosed as
-  NOT beating pure XGBoost (0.8143 vs 0.9366) — active model = xgboost.
-- **Leak-free metrics (from `artifacts/metrics.json`)**: `precision@20/50/100/
-  1000 = 1.0/1.0/1.0/0.8; threshold(≥0.7) precision = 0.81; max single-feature
-  AUC = 0.85 (counterparty_count_24h, complaint-linked activity — available at
-  prediction time)`. Residual top-K certainty is disclosed as a known
-  limitation, not claimed as a virtue.
+  (single-feature AUC 0.51 — leak-free). The ensemble is honestly disclosed as
+  NOT beating pure XGBoost (Precision@100 0.41 vs 0.83) — active model = xgboost.
 - Every metric is measured on **synthetic labels** — lead with that, always.
 - **Real-data harness**: `backend/eval/real_data_harness.py` is runnable
   today; status PENDING_REAL_DATA until a real aggregate CSV is supplied —
@@ -70,9 +71,9 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
 (a) Built from complaint-linked accounts — complaints are filed *before*
 cash-out, so the signal is available at prediction time; (b) it is a
 trailing-window aggregate ending before the forecast point, not the label
-window; (c) its single-feature AUC is **0.8466**, not 1.0 — no single feature
-is decisive; (d) the ranking decays to **0.8 at K=1000** (threshold ≥0.7
-precision 0.8116) — a genuine leak would stay ≈1.0 throughout.
+window; (c) its single-feature AUC is **0.8447**, not 1.0 — no single feature
+is decisive; (d) the ranking decays to **0.52 at K=1000** (threshold ≥0.7
+precision 0.66) — a genuine leak would stay ≈1.0 throughout.
 
 ## Closing (15 sec)
 "CashGuard AI doesn't react to crime — it **intercepts the cash before the criminal can touch it**.
@@ -80,7 +81,7 @@ Proactive policing, funded-loss prevention, and a data-driven defense for India'
 
 ---
 
-### Judge Q&A cheat sheet
+### Expected audience questions (preparation)
 - **Why XGBoost?** Tabular spatio-temporal data, fast training, built-in early stopping; histogram trees handle 160k rows in seconds; interpretable via feature importance.
 - **Why not deep learning?** Hackathon scope — classical ML with engineered features gives better explainability to LEAs and needs no GPU.
 - **How is this different from a fraud-detection system?** Fraud detection flags *past* transactions; we predict *future locations* and drive *deployments*.

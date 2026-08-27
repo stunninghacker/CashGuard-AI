@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import math
+import uuid
 from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
@@ -722,7 +723,9 @@ def drip_ingest(db: Session, rng, cfg: dict) -> int:
     now = datetime.utcnow()
     city = rng.choice(list(CITIES.keys()))
     meta = CITIES[city]
-    pii = Pseudonymizer()
+    # per-drip salt: repeat runs (e.g. load tests) must never regenerate the
+    # same PII tokens and hit UNIQUE constraints — tokens stay vault-consistent
+    pii = Pseudonymizer(salt=f"drip-{uuid.uuid4().hex}")
     raw_acct = _account_raw(rng)
     token = pii.account(raw_acct)
     db.add_all(pii.vault_rows(now))
@@ -767,7 +770,7 @@ def build_hotspot_report(db: Session, alert, generating_user) -> dict:
         if _haversine_km(atm.latitude, atm.longitude, c.victim_lat, c.victim_lon) <= 2.0:
             complaints_near.append(c)
     report = {
-        "report_id": f"RPT-HS-{alert.atm_id}-{ref.strftime('%Y%m%d%H%M')}",
+        "report_id": f"RPT-HS-{alert.atm_id}-{ref.strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:4]}",
         "report_type": "hotspot",
         "title": f"Intelligence Report — {alert.atm_id}",
         "created_at": datetime.utcnow().isoformat(),
@@ -802,7 +805,7 @@ def build_situational_report(db: Session, generating_user, as_of: datetime | Non
     h24 = ref - timedelta(hours=24)
     d7 = ref - timedelta(days=7)
     report = {
-        "report_id": f"RPT-SIT-{ref.strftime('%Y%m%d%H%M')}",
+        "report_id": f"RPT-SIT-{ref.strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:4]}",
         "report_type": "situational",
         "title": "I4C Situational Report",
         "created_at": datetime.utcnow().isoformat(),
@@ -932,8 +935,10 @@ def verify_ledger_chain(db: Session) -> dict:
 
 def tamper_demo_record(db: Session) -> dict:
     """DEMO ONLY (ALLOW_TAMPER_DEMO=true): flip one ledger payload so the chain
-    integrity check detects it. Never enabled in production."""
-    from .config import ALLOW_TAMPER_DEMO
+    integrity check detects it. The original hash is backed up so
+    scripts/restore_ledger.py can restore the chain exactly (the demo's
+    'restore story'). Never enabled in production."""
+    from .config import ALLOW_TAMPER_DEMO, ARTIFACT_DIR
 
     if not ALLOW_TAMPER_DEMO:
         return {"error": "tamper demo disabled (set ALLOW_TAMPER_DEMO=true)"}
@@ -941,6 +946,8 @@ def tamper_demo_record(db: Session) -> dict:
     if not records:
         return {"error": "ledger empty"}
     target = records[-1]
+    backup = {"index": target.index, "original_payload_hash": target.payload_hash}
+    (ARTIFACT_DIR / "ledger_tamper_backup.json").write_text(json.dumps(backup), encoding="utf-8")
     target.payload_hash = ("0" * 64) if target.payload_hash != ("0" * 64) else ("1" * 64)
     db.commit()
     return {"tampered": target.entity_id, "note": "payload_hash flipped — /ledger/verify will now fail"}

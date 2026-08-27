@@ -1,61 +1,152 @@
 {
   "label": "CONTROLLED SYNTHETIC EVALUATION \u2014 not real-world accuracy",
   "operational": {
-    "roc_auc": 0.9348,
-    "pr_auc": 0.5547,
-    "precision_at_100": 1.0,
-    "precision_at_500": 0.908,
-    "precision_at_1000": 0.775,
-    "threshold_precision_0p7": 0.7861,
-    "alert_volume_0p7": 949,
-    "false_alert_rate_0p7": 0.2139,
-    "capture_rate_top1000": 0.1897,
-    "brier": 0.0541,
+    "roc_auc": 0.9261,
+    "pr_auc": 0.4076,
+    "precision_at_100": 0.86,
+    "precision_at_500": 0.624,
+    "precision_at_1000": 0.528,
+    "threshold_precision_0p7": 0.6237,
+    "alert_volume_0p7": 497,
+    "false_alert_rate_0p7": 0.3763,
+    "capture_rate_top1000": 0.1757,
+    "brier": 0.0467,
     "label": "CONTROLLED SYNTHETIC EVALUATION",
-    "model_version": "2026-08-26T18:11:56.634646",
+    "model_version": "2026-08-27T05:33:56.330906",
     "n_test_rows": 48600,
-    "positive_rate": 0.0841
+    "positive_rate": 0.0618
   },
-  "ablation": [],
+  "ablation": [
+    {
+      "model": "A_complaint_only",
+      "roc_auc": 0.4964,
+      "pr_auc": 0.0607,
+      "precision_at_1000": 0.05
+    },
+    {
+      "model": "B_plus_geography",
+      "roc_auc": 0.4598,
+      "pr_auc": 0.0548,
+      "precision_at_1000": 0.027
+    },
+    {
+      "model": "C_plus_financial",
+      "roc_auc": 0.9265,
+      "pr_auc": 0.3945,
+      "precision_at_1000": 0.528
+    },
+    {
+      "model": "D_plus_temporal",
+      "roc_auc": 0.4306,
+      "pr_auc": 0.0521,
+      "precision_at_1000": 0.031
+    },
+    {
+      "model": "E_full_model",
+      "roc_auc": 0.9274,
+      "pr_auc": 0.4041,
+      "precision_at_1000": 0.524
+    }
+  ],
   "cold_location": {
-    "status": "skipped_fast_mode"
+    "roc_auc": 0.9244,
+    "pr_auc": 0.4626,
+    "precision_at_100": 0.71,
+    "precision_at_500": 0.498,
+    "precision_at_1000": 0.397,
+    "threshold_precision_0p7": 0.6424,
+    "alert_volume_0p7": 151,
+    "false_alert_rate_0p7": 0.3576,
+    "capture_rate_top1000": 0.5149,
+    "brier": 0.0564,
+    "label": "CONTROLLED SYNTHETIC EVALUATION",
+    "held_out_city": "Northsagar",
+    "train_cities": [
+      "District-3",
+      "Eastvale",
+      "Greenfield District",
+      "Metro-West"
+    ],
+    "n_test_rows": 9720,
+    "positive_rate_test": 0.0793
   },
-  "adversarial_worlds": [],
+  "adversarial_worlds": [
+    {
+      "world": "normal",
+      "roc_auc": 0.852,
+      "precision_at_1000": 0.654
+    },
+    {
+      "world": "geo_shift",
+      "roc_auc": 0.8526,
+      "precision_at_1000": 0.634
+    },
+    {
+      "world": "temporal_shift",
+      "roc_auc": 0.8482,
+      "precision_at_1000": 0.642
+    },
+    {
+      "world": "atm_preference_shift",
+      "roc_auc": 0.8726,
+      "precision_at_1000": 0.635
+    },
+    {
+      "world": "reporting_delay",
+      "roc_auc": 0.8571,
+      "precision_at_1000": 0.657
+    },
+    {
+      "world": "volume_shift",
+      "roc_auc": 0.897,
+      "precision_at_1000": 0.468
+    },
+    {
+      "world": "pattern_drift",
+      "roc_auc": 0.845,
+      "precision_at_1000": 0.589
+    },
+    {
+      "world": "sparse_data",
+      "roc_auc": 0.8038,
+      "precision_at_1000": 0.727
+    }
+  ],
   "counterfactual": {
     "label": "CONTROLLED SYNTHETIC EVALUATION",
     "n_rows": 2000,
-    "mean_score_baseline": 0.0776,
-    "mean_score_surge_plus50": 0.0859,
-    "mean_score_surge_minus50": 0.0582,
-    "delta_plus50": 0.0083,
-    "delta_minus50": -0.0194,
-    "pct_rows_moved_above_0p7_on_surge": 0.0065,
+    "mean_score_baseline": 0.0602,
+    "mean_score_surge_plus50": 0.0618,
+    "mean_score_surge_minus50": 0.0662,
+    "delta_plus50": 0.0016,
+    "delta_minus50": 0.006,
+    "pct_rows_moved_above_0p7_on_surge": 0.002,
     "interpretation": "A +50% complaint-surge moves mean risk by <delta_plus50> \u2014 sensitivity direction is correct (surge increases risk); magnitude is modest, consistent with a calibrated model where mule-behaviour dominates."
   },
   "horizons": [
     {
       "horizon_hours": 6,
-      "precision_at_1000_horizon": 0.163,
-      "capture_rate_top1000": 0.3536,
-      "horizon_event_rate": 0.0095
+      "precision_at_1000_horizon": 0.082,
+      "capture_rate_top1000": 0.2799,
+      "horizon_event_rate": 0.006
     },
     {
       "horizon_hours": 12,
-      "precision_at_1000_horizon": 0.37,
-      "capture_rate_top1000": 0.2882,
-      "horizon_event_rate": 0.0264
+      "precision_at_1000_horizon": 0.18,
+      "capture_rate_top1000": 0.2256,
+      "horizon_event_rate": 0.0164
     },
     {
       "horizon_hours": 24,
-      "precision_at_1000_horizon": 0.775,
-      "capture_rate_top1000": 0.1897,
-      "horizon_event_rate": 0.0841
+      "precision_at_1000_horizon": 0.528,
+      "capture_rate_top1000": 0.1758,
+      "horizon_event_rate": 0.0618
     },
     {
       "horizon_hours": 48,
-      "precision_at_1000_horizon": 0.797,
-      "capture_rate_top1000": 0.111,
-      "horizon_event_rate": 0.1477
+      "precision_at_1000_horizon": 0.577,
+      "capture_rate_top1000": 0.1038,
+      "horizon_event_rate": 0.1143
     }
   ]
 }

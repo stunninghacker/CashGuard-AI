@@ -1,0 +1,48 @@
+{
+  "label": "CONTROLLED SYNTHETIC EVALUATION",
+  "feature_importance_top": [
+    {
+      "feature": "counterparty_count_24h",
+      "share_pct": 32.9
+    },
+    {
+      "feature": "transaction_frequency_24h",
+      "share_pct": 13.5
+    },
+    {
+      "feature": "linked_proportion_24h",
+      "share_pct": 10.4
+    },
+    {
+      "feature": "distinct_accounts_24h",
+      "share_pct": 8.8
+    },
+    {
+      "feature": "withdrawals_24h",
+      "share_pct": 6.2
+    },
+    {
+      "feature": "day_of_week",
+      "share_pct": 5.1
+    },
+    {
+      "feature": "amount_sum_24h",
+      "share_pct": 2.7
+    },
+    {
+      "feature": "fund_velocity_24h",
+      "share_pct": 1.6
+    }
+  ],
+  "top1_share_pct": 32.9,
+  "top3_share_pct": 56.8,
+  "single_feature_auc": {
+    "counterparty_count_24h": 0.8447,
+    "transaction_frequency_24h": 0.4462,
+    "linked_proportion_24h": 0.5699,
+    "distinct_accounts_24h": 0.7133,
+    "withdrawals_24h": 0.5574,
+    "day_of_week": 0.4751
+  },
+  "model_auc": 0.9274
+}

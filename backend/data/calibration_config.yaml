@@ -1,113 +1,104 @@
-﻿# =============================================================================
-# CashGuard AI — Calibration Configuration (synthetic data generator)
-# =============================================================================
-# Every generative parameter carries:
-#   source_status: verified_pattern | assumption_general_literature
-#   citation:      where the pattern/parameter comes from (or "no India-specific
-#                  public statistic found — general literature/modelling choice")
-# Full methodology: CALIBRATION_NOTES.md. THIS FILE IS THE SINGLE SOURCE OF TRUTH.
-#
-# HONESTY FIXES (do not regress):
-#   * RBI is cited by DIRECTION only (time-delays/holds create an interception
-#     window); NO specific hold duration/threshold is asserted as fact.
-#   * Nuh/Jamtara are cited as documented SCAM-ORIGIN hubs — NOT withdrawal hubs.
-#   * Exact skew/latency/night coefficients are assumptions (no granular public data).
-# =============================================================================
-
 dataset:
   months: 6
   n_complaints: 12000
   n_atms_per_city: 180
   n_withdrawals: 200000
-  fraud_share: 0.10
+  fraud_share: 0.1
   fraud_share_source_status: assumption_general_literature
-  fraud_share_citation: "Synthetic label density; real-world per-withdrawal fraud rate is not public."
-  complaint_types: [phishing, investment_fraud, job_fraud, upi_fraud, digital_arrest, sextortion]
-
-# ---------------------------------------------------------------------------
-# Geographic / institutional clustering (Pareto-like heavy tail)
-# ---------------------------------------------------------------------------
+  fraud_share_citation: Synthetic label density; real-world per-withdrawal fraud rate
+    is not public.
+  complaint_types:
+  - phishing
+  - investment_fraud
+  - job_fraud
+  - upi_fraud
+  - digital_arrest
+  - sextortion
 clustering:
   hot_atm_fraction: 0.12
   hot_atm_fraction_source_status: assumption_general_literature
-  hot_atm_fraction_citation: "Direction verified (I4C Suspect Registry + public reporting: mule activity and cash-out concentrate in few hubs/institutions); exact share not public."
+  hot_atm_fraction_citation: 'Direction verified (I4C Suspect Registry + public reporting:
+    mule activity and cash-out concentrate in few hubs/institutions); exact share
+    not public.'
   pareto_skew: 1.8
   pareto_skew_source_status: assumption_general_literature
-  pareto_skew_citation: "No granular per-ATM public data; heavy-tailed direction verified only."
+  pareto_skew_citation: No granular per-ATM public data; heavy-tailed direction verified
+    only.
   clustering_direction_source_status: verified_pattern
-  clustering_direction_citation: "I4C Suspect Registry (launched 2024, bank/FI participation) and public reporting document concentration of mule activity. NOTE: Nuh/Jamtara are documented SCAM-ORIGIN hubs, not cash-WITHDRAWAL hubs — withdrawal geography may differ."
-
-# ---------------------------------------------------------------------------
-# Mule-account behavioural signature (IBA / RBI commentary)
-# ---------------------------------------------------------------------------
+  clustering_direction_citation: 'I4C Suspect Registry (launched 2024, bank/FI participation)
+    and public reporting document concentration of mule activity. NOTE: Nuh/Jamtara
+    are documented SCAM-ORIGIN hubs, not cash-WITHDRAWAL hubs — withdrawal geography
+    may differ.'
 behaviour:
   mule_velocity_mean_inr_h: 60000
   mule_velocity_source_status: verified_pattern
-  mule_velocity_citation: "IBA/RBI commentary on mule accounts: rapid fund movement (velocity). Direction verified; magnitude is a modelling choice."
+  mule_velocity_citation: 'IBA/RBI commentary on mule accounts: rapid fund movement
+    (velocity). Direction verified; magnitude is a modelling choice.'
   mule_counterparty_min: 5
   mule_counterparty_source_status: verified_pattern
-  mule_counterparty_citation: "IBA mule-account red flags: unusually high counterparty count. Direction verified."
+  mule_counterparty_citation: 'IBA mule-account red flags: unusually high counterparty
+    count. Direction verified.'
   mule_txn_frequency_min: 3
   mule_txn_frequency_source_status: verified_pattern
-  mule_txn_frequency_citation: "IBA mule-account red flags: frequent transactions. Direction verified."
+  mule_txn_frequency_citation: 'IBA mule-account red flags: frequent transactions.
+    Direction verified.'
   night_weight: 2.0
   night_weight_source_status: assumption_general_literature
-  night_weight_citation: "No India-specific public statistic; general fraud literature."
+  night_weight_citation: No India-specific public statistic; general fraud literature.
   weekend_weight: 1.9
   weekend_weight_source_status: assumption_general_literature
-  weekend_weight_citation: "No India-specific public statistic; general fraud literature."
-  round_amount_bias: 0.40
+  weekend_weight_citation: No India-specific public statistic; general fraud literature.
+  round_amount_bias: 0.4
   round_amount_source_status: assumption_general_literature
-  round_amount_citation: "Structured/round denominations; no India-specific statistic."
-
-# ---------------------------------------------------------------------------
-# Timing distribution (fraud -> cash-out latency)
-# ---------------------------------------------------------------------------
+  round_amount_citation: Structured/round denominations; no India-specific statistic.
 timing:
   fraud_to_cashout_mean_hours: 18
   fraud_to_cashout_source_status: assumption_general_literature
-  fraud_to_cashout_citation: "Right-skewed (most withdrawals soon after fraud, long tail); no India-specific public statistic."
+  fraud_to_cashout_citation: Right-skewed (most withdrawals soon after fraud, long
+    tail); no India-specific public statistic.
   horizon_hours: 24
   horizon_source_status: verified_pattern
-  horizon_citation: "RBI direction: time-delays/holds on certain UPI transfers create a fraud-interception window before funds move — making a 6-24h prediction horizon operationally relevant. Specific hold values are NOT asserted (confirm against the exact RBI circular)."
-
-# ---------------------------------------------------------------------------
-# Scenario shaping (ongoing wave for the live forecast) + detune controls
-# ---------------------------------------------------------------------------
+  horizon_citation: 'RBI direction: time-delays/holds on certain UPI transfers create
+    a fraud-interception window before funds move — making a 6-24h prediction horizon
+    operationally relevant. Specific hold values are NOT asserted (confirm against
+    the exact RBI circular).'
 scenario:
-  final_wave_share: 0.12
+  final_wave_share: 0.06
   final_wave_share_source_status: assumption_general_literature
-  final_wave_share_citation: "Demo scenario shaping (an ongoing wave makes the live forecast hot); no real-world equivalent."
-  hot_atm_use_prob: 0.45            # DETUNE: lower = noisier persistence (honest P@K ~0.75-0.90)
+  final_wave_share_citation: Demo scenario shaping (an ongoing wave makes the live
+    forecast hot); no real-world equivalent.
+  hot_atm_use_prob: 0.4
   hot_atm_use_prob_source_status: assumption_general_literature
-  hot_atm_use_prob_citation: "Modelling choice; tuned so precision@K is strong-but-imperfect (label-leak guardrail)."
-  mule_burst_prob: 0.30
+  hot_atm_use_prob_citation: Modelling choice; tuned so precision@K is strong-but-imperfect
+    (label-leak guardrail).
+  mule_burst_prob: 0.42
   mule_burst_prob_source_status: assumption_general_literature
-  mule_burst_prob_citation: "Modelling choice for bursty cash-out patterns."
-  mule_same_atm_prob: 0.15          # DETUNE: chunks spread across ATMs more
+  mule_burst_prob_citation: Modelling choice for bursty cash-out patterns.
+  mule_same_atm_prob: 0.15
   mule_same_atm_prob_source_status: assumption_general_literature
-  mule_same_atm_prob_citation: "Modelling choice; lowered to avoid near-perfect persistence."
-  random_atm_fraud_prob: 0.15       # DETUNE: some fraud at non-hot ATMs
+  mule_same_atm_prob_citation: Modelling choice; lowered to avoid near-perfect persistence.
+  random_atm_fraud_prob: 0.15
   random_atm_fraud_prob_source_status: assumption_general_literature
-  random_atm_fraud_prob_citation: "Modelling choice; adds noise for honest separability."
-  blocked_burst_prob: 0.10          # DETUNE: full-strength mule bursts with NO fraud label
+  random_atm_fraud_prob_citation: Modelling choice; adds noise for honest separability.
+  blocked_burst_prob: 0.36
   blocked_burst_prob_source_status: assumption_general_literature
-  blocked_burst_prob_citation: "Modelling choice; simulates prevented cash-outs (mule detected / account frozen / limits) creating realistic near-miss ATM-days."
-
-# ---------------------------------------------------------------------------
-# PII handling
-# ---------------------------------------------------------------------------
+  blocked_burst_prob_citation: Modelling choice; simulates prevented cash-outs (mule
+    detected / account frozen / limits) creating realistic near-miss ATM-days.
+  hot_rotation_days: 14
+  busy_atm_share: 0.08
+  busy_chunk_share: 0.018
+  amount_noise_sigma: 0.7
+  hour_jitter_prob: 0.2
 pii:
-  pseudonymize: true                # accounts/phones stored as salted tokens; raw in mock vault
+  pseudonymize: true
   pseudonymize_source_status: verified_pattern
-  pseudonymize_citation: "DPDP-Act-aligned data minimization; NCRP/CFCFRMS practice; govt scoring concern."
-  anti_profiling: true              # NO demographic/community/religion/caste features anywhere
+  pseudonymize_citation: DPDP-Act-aligned data minimization; NCRP/CFCFRMS practice;
+    govt scoring concern.
+  anti_profiling: true
   anti_profiling_source_status: verified_pattern
-  anti_profiling_citation: "Risk = transaction behaviour + complaint linkage + transaction geography only (enforced in code; see LIMITATIONS.md)."
-
-# ---------------------------------------------------------------------------
-# Demo / UI policy
-# ---------------------------------------------------------------------------
+  anti_profiling_citation: Risk = transaction behaviour + complaint linkage + transaction
+    geography only (enforced in code; see LIMITATIONS.md).
 ui:
   fictional_locations: true
-  footer_banner: "Hackathon Prototype — Synthetic Data. Locations are fictionalized for demonstration."
+  footer_banner: Hackathon Prototype — Synthetic Data. Locations are fictionalized
+    for demonstration.

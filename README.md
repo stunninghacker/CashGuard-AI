@@ -20,8 +20,8 @@ alert banks **before** the withdrawal happens.
 
 | # | Stage | What happens |
 |---|-------|--------------|
-| 1 | **Synthetic Data** | 12,000+ complaints, 900 ATMs (5 **fictional** cities), 200,000 withdrawals (10% fraud) â€” every generator parameter source-tagged (`verified_pattern` vs `assumption_general_literature`) in `calibration_config.yaml` + `CALIBRATION_NOTES.md` |
-| 2 | **ML Engine** | XGBoost + Platt calibration â€” P(fraud withdrawal at ATM in next 24h) â€” **ROC-AUC 0.96, Precision@20/50/100 = 100%** on held-out time; **robustness check** (precision@K stable under Â±30% calibration perturbation, see `artifacts/robustness_check.png`) |
+| 1 | **Synthetic Data** | 12,426 complaints, 900 ATMs (5 **fictional** cities), 200,404 withdrawals (5.4% fraud) — every generator parameter source-tagged (`verified_pattern` vs `assumption_general_literature`) in `calibration_config.yaml` + `CALIBRATION_NOTES.md` |
+| 2 | **ML Engine** | XGBoost + Platt calibration — P(fraud withdrawal at ATM in next 24h) — **ROC-AUC 0.927, Precision@100 = 0.83 (top-1000: 0.52)** on held-out time — honest numbers by design: the generator is deliberately de-separated (hot-ATM rotation, prevented cash-outs, busy-ATM false-positive cases) so precision@K is strong-but-imperfect. See "Why precision@K is not artificially perfect" in `MODEL_CARD.md`. **Robustness check**: AUC stable (0.923–0.932) under ±30% calibration perturbation (`artifacts/robustness_check.png`) |
 | 3 | **Risk Heatmap Dashboard** | Leaflet GIS map, ATMs colored by risk, fictional jurisdiction fields, top-K hotspot lists, **drill-down filters by city / time (as-of replay) / crime category** |
 | 4 | **Role-based Views** | ðŸš” Police (hotspots + alert actions + **3-field evidence panel** + intelligence reports), ðŸ¦ Bank (own ATMs + suggested actions), ðŸ›ï¸ I4C-beta (aggregate stats + audit chain) |
 | 5 | **Alert Engine** | APScheduler hourly cycle â†’ threshold 0.7 â†’ alerts + mock SMS/email logs + **I4C dispatch webhook log** (all labelled "Simulated"), acknowledge/actioned workflow, **hash-chained audit trail** (Blockchain & Cybersecurity theme) |
@@ -85,6 +85,7 @@ docker compose up --build      # full pipeline inside a container, http://localh
 ## 5. Demo Script (5 Minutes for Judges)
 
 Full click-by-click walkthrough + failure contingency: **`DEMO_SCRIPT.md`**.
+| `VERIFICATION_LOG.md` | Manual end-to-end verification of every demo-claimed feature (dated outcomes) |
 
 **Four demo users (bcrypt + JWT auth, Phase 3):**
 
@@ -143,14 +144,18 @@ accounts in the generator carry normal banking history so "linked account presen
 a trivially lagged fraud label.
 **Split**: chronological 70/30. **Model**: XGBoost (hist, early stopping, AUC-PR eval) +
 Platt sigmoid calibration (the 0.7 alert threshold is a true probability).
-**Metrics**: ROC-AUC 0.96, Precision@20/50/100 = 1.0 (operational: police deploy to top-K).
-**Robustness**: precision@K unchanged under Â±30% perturbation of clustering/timing/behaviour
+**Metrics** (CONTROLLED SYNTHETIC EVALUATION): ROC-AUC 0.927; Precision@100 = 0.83, @500 = 0.61,
+@1000 = 0.52 (operational: police deploy to top-K). Threshold-0.7 precision 0.62 with the
+false-alert rate (0.38) surfaced honestly — see "Why precision@K is not artificially perfect"
+in `MODEL_CARD.md` for the investigation that produced these numbers.
+**Robustness**: ROC-AUC stable (0.923–0.932) under ±30% perturbation of clustering/timing/behaviour
 parameters (`artifacts/robustness_check.png`).
 
 **Explainability** (evidence panel): global XGBoost `feature_importances_` + instance
 percentile vs. the training set â€” **explicitly NOT SHAP**. Every contributing signal is
 source-tagged `verified_pattern` / `assumption_general_literature` in the alert detail view
 (see `CALIBRATION_NOTES.md`).
+| `MODEL_CARD.md` | Model facts + "Why precision@K is not artificially perfect" (leak-guard investigation) |
 
 ## 8. Security (prototype-grade, honest)
 
@@ -245,7 +250,7 @@ CashGuard AI/
 â”‚   â”œâ”€â”€ alerts/scheduler.py   # APScheduler alert engine
 â”‚   â””â”€â”€ api/                  # FastAPI app + REST routes
 â”œâ”€â”€ frontend/                 # dashboard (HTML/CSS/JS + Leaflet, no build step)
-â”œâ”€â”€ scripts/                  # generate_data Â· train_model Â· robustness_check Â· cache_demo_mode Â· run_scheduler
+â”œâ”€â”€ scripts/                  # generate_data · train_model · robustness_check · cache_demo_mode · fairness_audit · model_disagreement · drift_eval · horizon_eval · intervention_simulation · load_test · run_scheduler
 â”œâ”€â”€ artifacts/                # model.joblib Â· metrics.json Â· robustness_check.png
 â”œâ”€â”€ data/                     # cashguard.db Â· CSVs Â· demo_cache/ (golden path)
 â””â”€â”€ presentation/PITCH.md     # 5-minute judge pitch outline

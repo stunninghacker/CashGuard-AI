@@ -1,0 +1,82 @@
+{
+  "rule": "Drift-confidence: REDUCED if world ROC-AUC < 0.85 or threshold precision < 0.75. REDUCED confidence is surfaced with the forecast (no aggressive recommendations).",
+  "worlds": [
+    {
+      "world": "normal",
+      "roc_auc": 0.9309,
+      "precision_at_1000": 0.419,
+      "threshold_precision": 0.5882,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "geo_shift",
+      "roc_auc": 0.9209,
+      "precision_at_1000": 0.333,
+      "threshold_precision": 0.56,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "temporal_shift",
+      "roc_auc": 0.9274,
+      "precision_at_1000": 0.36,
+      "threshold_precision": 0.6761,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "atm_preference_shift",
+      "roc_auc": 0.9349,
+      "precision_at_1000": 0.375,
+      "threshold_precision": 0.8264,
+      "drift_flag": "OK"
+    },
+    {
+      "world": "reporting_delay",
+      "roc_auc": 0.9203,
+      "precision_at_1000": 0.332,
+      "threshold_precision": 0.7333,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "volume_shift",
+      "roc_auc": 0.9221,
+      "precision_at_1000": 0.348,
+      "threshold_precision": 0.614,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "pattern_drift",
+      "roc_auc": 0.9108,
+      "precision_at_1000": 0.264,
+      "threshold_precision": null,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "sparse_data",
+      "roc_auc": 0.8606,
+      "precision_at_1000": 0.37,
+      "threshold_precision": 0.6667,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "fraud_rate_shift",
+      "roc_auc": 0.9169,
+      "precision_at_1000": 0.517,
+      "threshold_precision": 0.7358,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "mule_network_topology",
+      "roc_auc": 0.9323,
+      "precision_at_1000": 0.338,
+      "threshold_precision": 0.6078,
+      "drift_flag": "REDUCED"
+    },
+    {
+      "world": "coordinated_adaptation",
+      "roc_auc": 0.9319,
+      "precision_at_1000": 0.431,
+      "threshold_precision": 0.6835,
+      "drift_flag": "REDUCED"
+    }
+  ]
+}

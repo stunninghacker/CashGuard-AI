@@ -1,6 +1,6 @@
 # SECURITY_AUDIT.md — Final Security Checklist (Phase 16)
 
-Date of audit: iteration 3. Status per control: ✅ verified / ⚠️ documented gap / ❌ open.
+Date of audit: 2026-08. Status per control: ✅ verified / ⚠️ documented gap / ❌ open.
 
 | Control | Status | Evidence |
 |---|---|---|
