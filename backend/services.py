@@ -41,11 +41,46 @@ def resolve_as_of(db: Session, as_of: str | None = None) -> datetime:
 
 
 # ------------------------------ Risk scoring --------------------------------
+# Short-TTL inference cache: risk scores are valid within a window (the alert
+# cycle recomputes hourly), so repeated reads within SCORE_CACHE_SECONDS are
+# served without re-running inference — this is the documented production
+# caching requirement (LOAD_TEST.md), implemented for the demo stack.
+# A single-flight lock prevents cache stampedes: under concurrency only one
+# thread computes while the others wait for the shared result.
+import threading as _threading
+
+_score_cache: dict = {"key": None, "payload": None, "expires_at": None}
+_score_cache_lock = _threading.Lock()
+
+
+def _invalidate_score_cache() -> None:
+    _score_cache["key"] = None
+    _score_cache["payload"] = None
+    _score_cache["expires_at"] = None
+
+
 def get_risk_scores(db: Session, as_of: datetime | None = None, city: str | None = None, user=None) -> list[dict]:
     """Compute P(fraud withdrawal in next 24h) for every ATM, as of `as_of`.
-    RBAC: scores are row-scoped to the caller's jurisdiction (repo layer)."""
+    RBAC: scores are row-scoped to the caller's jurisdiction (repo layer).
+    The full score set is cached (TTL SCORE_CACHE_SECONDS, single-flight) and
+    invalidated on any data change (drip ingest / alert cycle)."""
+    from .config import SCORE_CACHE_SECONDS
+
     ref = as_of or resolve_as_of(db)
-    scores = inference.predict_risk(ref)
+    key = f"{city or '*'}|{ref.isoformat()}"
+    now = datetime.utcnow()
+    if _score_cache["key"] == key and _score_cache["expires_at"] is not None and now < _score_cache["expires_at"]:
+        cached = _score_cache["payload"]
+    else:
+        with _score_cache_lock:
+            if _score_cache["key"] != key or _score_cache["expires_at"] is None or now >= _score_cache["expires_at"]:
+                cached = inference.predict_risk(ref)
+                _score_cache["key"] = key
+                _score_cache["payload"] = cached
+                _score_cache["expires_at"] = now + timedelta(seconds=SCORE_CACHE_SECONDS)
+            else:
+                cached = _score_cache["payload"]
+    scores = [dict(s) for s in cached]  # copy: callers may mutate
     if city:
         scores = [s for s in scores if s["city"] == city]
     if user is not None:
@@ -191,6 +226,7 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
             })
         created += 1
 
+    _invalidate_score_cache()
     return {"checked": len(scores), "flagged": len(flagged), "created": created, "skipped": skipped}
 
 
@@ -757,6 +793,7 @@ def drip_ingest(db: Session, rng, cfg: dict) -> int:
             channel="ATM", is_fraud_withdrawal=False,
         ))
     db.commit()
+    _invalidate_score_cache()
     return 1 + 3  # complaint + withdrawals inserted
 
 
