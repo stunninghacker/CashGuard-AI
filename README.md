@@ -164,7 +164,7 @@ source-tagged `verified_pattern` / `assumption_general_literature` in the alert 
   (risk scores, alerts, evidence, reports, audit, recovery) enforce authentication and
   role via FastAPI dependencies — verified live (401 without token, 403 for wrong role,
   row-level scoping per role). Only `DEMO_MODE=true` serves pre-computed cache data.
-- Full control inventory: `FINAL_SECURITY_AUDIT.md` (auth, authorization, JWT expiry,
+- Full control inventory: `docs/audits/FINAL_SECURITY_AUDIT.md` (auth, authorization, JWT expiry,
   refresh, CORS, rate limiting, WebSocket auth, report access, PII, training, audit,
   model, and mock endpoints).
 - Production replaces the prototype token scheme with OAuth2.0/OIDC against MHA/I4C

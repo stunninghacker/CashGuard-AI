@@ -46,6 +46,25 @@ def ledger_verify(user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "
 
 
 @router.post("/tamper-demo")
+@router.get("/network")
+def ledger_network(user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN"))):
+    """Replicated-ledger status (demo-grade 3-node replication; see
+    BLOCKCHAIN_JUSTIFICATION.md for what is real vs simulated)."""
+    from ...database import SessionLocal
+    from ...ledger_replication import ReplicaNetwork
+    from ... import repositories as repo
+
+    db = SessionLocal()
+    try:
+        records = repo.ledger_chain(db)
+    finally:
+        db.close()
+    net = ReplicaNetwork()
+    for r in records:
+        net.replicate(r.actor, r.event_type, r.payload_hash)
+    return net.network_status()
+
+
 def ledger_tamper_demo(user=Depends(require_auth("I4C_ADMIN")), db: Session = Depends(get_db)):
     """Flip one record's payload hash — the next /ledger/verify must fail."""
     return services.tamper_demo_record(db)

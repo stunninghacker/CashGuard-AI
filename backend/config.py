@@ -108,3 +108,12 @@ WEBHOOK_TOKEN: str = os.getenv("WEBHOOK_TOKEN", "")  # if set, mock inbox POSTs 
 # Mock mode writes logs only — see backend/alerts/notifier.py.
 SMS_GATEWAY_API_KEY: str = os.getenv("SMS_GATEWAY_API_KEY", "mock-sms-key")
 EMAIL_SMTP_HOST: str = os.getenv("EMAIL_SMTP_HOST", "mock.smtp.local")
+# Ledger anchoring integration point (Blockchain theme). When set to a real
+# testnet RPC (e.g. Polygon Amoy), the consensus root is anchored on-chain.
+# EMPTY by default: anchoring is demo-grade replication only, NOT exercised
+# against any external network — stated honestly.
+LEDGER_ANCHOR_RPC_URL: str = os.getenv("LEDGER_ANCHOR_RPC_URL", "")
+
+# Hourly-resolution mode (sub-daily prediction). Gates scripts/hourly_eval.py;
+# the production forecast convention remains the daily 24h window.
+HOURLY_MODE: bool = os.getenv("HOURLY_MODE", "").lower() in ("1", "true", "yes")

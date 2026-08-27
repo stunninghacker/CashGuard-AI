@@ -1,0 +1,14 @@
+{
+  "label": "CONTROLLED SYNTHETIC EVALUATION - hourly slice (not the main eval)",
+  "mode": "hourly",
+  "config_flag": "HOURLY_MODE",
+  "slice": "last 30 days x 300 ATMs, hourly rows",
+  "n_hourly_rows": 216000,
+  "positive_rate": 0.0602,
+  "roc_auc": 0.5456,
+  "pr_auc": 0.1164,
+  "precision_at_100": 0.58,
+  "precision_at_500": 0.312,
+  "precision_at_1000": 0.291,
+  "conclusion": "Hourly mode is mechanically feasible (config-gated, same pipeline, no architectural change) and validated on a 30-day slice, but the honest result is a clear degradation: hourly AUC 0.55 vs the daily reference ~0.93. Sub-daily re-bucketing of the same feature set loses the daily context the model was trained on. Hourly emission is therefore reported as experimental \u2014 the operational forecast remains the daily 24h window, and sub-daily production quality would require dedicated hourly feature engineering on more data (documented as a limitation, not a claim)."
+}

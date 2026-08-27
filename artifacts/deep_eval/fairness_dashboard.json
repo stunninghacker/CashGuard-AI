@@ -1,0 +1,144 @@
+{
+  "label": "CONTROLLED SYNTHETIC EVALUATION - live dashboard risk-score outputs",
+  "source": "the exact /risk-scores payload (as_of = latest data)",
+  "n_atms": 900,
+  "threshold": 0.7,
+  "groups": [
+    {
+      "group": "jurisdiction:District-3",
+      "atms": 180,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "jurisdiction:Eastvale",
+      "atms": 180,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "jurisdiction:Greenfield District",
+      "atms": 180,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "jurisdiction:Metro-West",
+      "atms": 180,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "jurisdiction:Northsagar",
+      "atms": 180,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0167,
+      "false_positive_rate_0p7": 0.0167,
+      "precision_0p7": 0.0,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "complaint_area:low",
+      "atms": 360,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "atm_volume:low",
+      "atms": 300,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "atm_age:low",
+      "atms": 300,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "complaint_area:mid",
+      "atms": 180,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0,
+      "false_positive_rate_0p7": 0.0,
+      "precision_0p7": null,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "atm_volume:mid",
+      "atms": 302,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0033,
+      "false_positive_rate_0p7": 0.0033,
+      "precision_0p7": 0.0,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "atm_age:mid",
+      "atms": 300,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0067,
+      "false_positive_rate_0p7": 0.0067,
+      "precision_0p7": 0.0,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "complaint_area:high",
+      "atms": 360,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0083,
+      "false_positive_rate_0p7": 0.0083,
+      "precision_0p7": 0.0,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "atm_volume:high",
+      "atms": 298,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0067,
+      "false_positive_rate_0p7": 0.0067,
+      "precision_0p7": 0.0,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "atm_age:high",
+      "atms": 300,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0033,
+      "false_positive_rate_0p7": 0.0033,
+      "precision_0p7": 0.0,
+      "recall_0p7": NaN
+    },
+    {
+      "group": "all",
+      "atms": 900,
+      "positive_rate": 0.0,
+      "alert_rate_0p7": 0.0033,
+      "false_positive_rate_0p7": 0.0033,
+      "precision_0p7": 0.0,
+      "recall_0p7": NaN
+    }
+  ],
+  "conclusion": "Live single-day dashboard snapshot: 3 alerts (rate 0.0033), all false alarms on this day (precision 0.0) - a single day is too small to be statistically meaningful, reported as-is. FPR spread across groups 0-0.017 on this snapshot. The statistically meaningful audit is the full-period dashboard-scoring evaluation (fairness_groups.json, 15 groups, FPR flat 0.0015-0.0062). Both artifacts use the same /risk-scores pipeline the dashboard shows."
+}

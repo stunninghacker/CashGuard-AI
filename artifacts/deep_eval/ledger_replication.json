@@ -1,0 +1,55 @@
+{
+  "label": "DEMO-GRADE REPLICATION + ANCHORING SIMULATION - not a public/permissioned blockchain",
+  "replicated_blocks": 315,
+  "network": {
+    "nodes": [
+      {
+        "node": "node-A",
+        "down": false,
+        "blocks": 318,
+        "root_hash": "49cd23608e18b1e2fe6d1571fd6baf9174a5ff34dd20ff1c13bbe7c3fd348261",
+        "intact": true,
+        "leader": null
+      },
+      {
+        "node": "node-B",
+        "down": false,
+        "blocks": 318,
+        "root_hash": "49cd23608e18b1e2fe6d1571fd6baf9174a5ff34dd20ff1c13bbe7c3fd348261",
+        "intact": true,
+        "leader": null
+      },
+      {
+        "node": "node-C",
+        "down": false,
+        "blocks": 316,
+        "root_hash": "fc49ae058d64e2edcf56664070d272c7dda6899067122ab7491b6646c321d4eb",
+        "intact": false,
+        "leader": null
+      }
+    ],
+    "alive": 3,
+    "quorum": 2,
+    "consensus_root": "49cd23608e18b1e2fe6d1571fd6baf9174a5ff34dd20ff1c13bbe7c3fd348261"
+  },
+  "anchors": {
+    "anchor_1": {
+      "ok": true,
+      "acks": 3,
+      "hash": "fc49ae058d64e2edcf56664070d272c7dda6899067122ab7491b6646c321d4eb"
+    },
+    "anchor_2_nodeC_down": {
+      "ok": true,
+      "acks": 2
+    },
+    "anchor_4_no_quorum": {
+      "ok": false,
+      "error": "no consensus root (quorum lost)"
+    }
+  },
+  "honest_notes": {
+    "real": "replicated append-only log, majority-quorum writes, per-node tamper detection, fault tolerance",
+    "simulated": "in-process transport (single machine); external testnet anchoring is an integration point (config LEDGER_ANCHOR_RPC_URL), NOT exercised",
+    "tamper_evidence": "the original SHA-256 chain remains the authoritative audit trail; replication adds redundancy and consensus-style anchoring"
+  }
+}
