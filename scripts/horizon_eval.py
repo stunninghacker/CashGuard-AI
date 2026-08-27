@@ -24,7 +24,7 @@ from backend.eval.deep_evaluation import load_split, OUT  # noqa: E402
 from backend.ml.features import load_dataframes  # noqa: E402
 from backend.ml.inference import load_pipeline  # noqa: E402
 
-HORIZONS = [2, 6, 12, 24, 48]
+HORIZONS = [2, 6, 12, 24, 48, 72]
 
 
 def confidence_label(h: dict) -> str:

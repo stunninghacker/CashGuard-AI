@@ -47,3 +47,25 @@ All data access flows through `backend/repositories.py` — the single swap poin
   auto-labelled HOLD ACTION (prototype implements the freshness flag).
 - **Privacy**: providers deliver pseudonymized tokens, not raw identifiers
   (see PRIVACY_MODEL.md).
+
+## Architecture status matrix (explicit, never mixed)
+
+| Component | Status | Evidence / notes |
+|---|---|---|
+| Synthetic generator (NCRP-style complaints, bank feeds) | **IMPLEMENTED** | backend/data/synthetic_data.py |
+| FastAPI + SQLAlchemy repository layer | **IMPLEMENTED** | routes + repositories.py (single data door) |
+| JWT + bcrypt auth, RBAC, row-level scoping | **IMPLEMENTED** | security.py; 14 regression tests pass |
+| Alert engine + dedup + WebSocket push | **IMPLEMENTED** | scheduler/services/realtime |
+| Tamper-evident SHA-256 audit chain | **IMPLEMENTED** | ledger endpoints; tamper demo verified |
+| Short-TTL single-flight inference cache | **IMPLEMENTED** | services.py; 8-user concurrency 5.5s |
+| DEMO_MODE deterministic fallback (no model needed) | **IMPLEMENTED** | kill-tested with model file deleted |
+| NCRP portal ingestion | **SIMULATED** (adapter + schema contract) → **PLANNED** (authorized access) | repositories swap point; REAL_DATA_VALIDATION_PROTOCOL.md |
+| CFCFRMS fund-block / recovery integration | **SIMULATED** (mock webhook receiver, queue) → **PLANNED** (real API) | mock-i4c-inbox verified with real HTTP POSTs |
+| Bank/NPCI withdrawal feeds | **SIMULATED** (generator) → **PLANNED** | schema-compatible ETL path |
+| MHA/I4C identity (OAuth2.0/OIDC, SSO) | **PLANNED** | integration point marked in security.py |
+| PostgreSQL | **PLANNED** (one config value; not measured here) | LOAD_TEST.md documents why |
+| Redis/distributed cache | **PLANNED** (same single-flight semantics) | LOAD_TEST.md |
+| Notification gateway (NIC SMS / SendGrid / webhook) | **SIMULATED** (mock channels) → **PLANNED** | alerts/notifier.py swap point |
+| Permissioned-ledger anchoring | **PLANNED** (Tier 2) | NOVELTY.md |
+
+Nothing marked PLANNED is claimed as working.

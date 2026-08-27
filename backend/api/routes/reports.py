@@ -57,10 +57,35 @@ def situational_report(user=Depends(require_auth("I4C_ADMIN")), db: Session = De
     return {"report_id": stored.report_id, "pdf": str(pdf), "ledger_hash": fingerprint}
 
 
+def _report_in_scope(report, user) -> bool:
+    """Row-level scope for reports. Situational reports are I4C-national;
+    hotspot reports are scoped by their jurisdiction fields."""
+    if user.role == "I4C_ADMIN":
+        return True
+    payload = {}
+    try:
+        payload = json.loads(report.payload or "{}")
+    except Exception:
+        pass
+    if report.report_type == "situational":
+        return False  # national aggregate — police/bank may not read it
+    j = payload.get("jurisdiction", {}) or {}
+    atm = payload.get("atm", {}) or {}
+    if user.role == "BANK":
+        return atm.get("bank_name") == user.scope
+    if user.role == "POLICE_DISTRICT":
+        return j.get("district") == user.scope
+    if user.role == "POLICE_STATE":
+        return j.get("state") == user.scope
+    return False
+
+
 @router.get("/{report_id}")
 def get_report(report_id: str, user=Depends(require_auth()), db: Session = Depends(get_db)):
     report = repo.get_report(db, report_id)
     if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if not _report_in_scope(report, user):
         raise HTTPException(status_code=404, detail="Report not found")
     return json.loads(report.payload)
 
@@ -69,6 +94,8 @@ def get_report(report_id: str, user=Depends(require_auth()), db: Session = Depen
 def download_report(report_id: str, user=Depends(require_auth()), db: Session = Depends(get_db)):
     report = repo.get_report(db, report_id)
     if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if not _report_in_scope(report, user):
         raise HTTPException(status_code=404, detail="Report not found")
     path = Path(report.pdf_path)
     if not path.exists():

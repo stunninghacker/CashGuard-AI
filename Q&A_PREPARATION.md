@@ -142,3 +142,32 @@ All numbers are artifact-backed (synthetic evaluation unless stated).
 50. **What is the single most honest weakness?** — No authorized real data has
     been evaluated; everything above is synthetic-label measurement. That is
     why the pilot protocol exists and why no real-world number is claimed.
+
+
+## FINAL KILL-TEST ADDITIONS (51–75)
+
+51. **Could the model be memorizing generator assumptions?** — Permutation tests (permutation_tests.json): label shuffle collapses AUC to 0.475 (chance); features contain NO ATM/city/district identity columns; row-order shuffle leaves AUC identical. The model cannot be memorizing identities.
+52. **Could it be learning reporting behaviour, not fraud?** — Complaints-only ablation AUC 0.50; city-feature permutation changes AUC by <0.001; the decisive features are withdrawal-side mule signals (LABEL_VALIDITY.md).
+53. **What is your label, who made it, can it leak?** — Generator-set `is_fraud_withdrawal` at creation; label-only in the feature module (grep-verified); windows end before the forecast point (LABEL_VALIDITY.md).
+54. **Do you generalize to new ATMs?** — Cold-ATM split AUC 0.918 (behavioural features transfer); cold-city 0.924. Honest ceiling: new-high-volume ATMs are the weak split (AUC 0.76, ECE 0.13) — reported, not hidden (generalization_splits.json).
+55. **Why is historical hotspot not enough?** — Measured: historical-hotspot AUC 0.685 / P@100 0.25 vs CashGuard 0.926 / 0.86; at K=10 CashGuard captures 2.9× more exposure than historical targeting (baseline_war.json).
+56. **Why does the model beat logistic regression?** — Logistic AUC 0.49 vs XGBoost 0.926: the decision surface needs nonlinear interactions of behavioural signals; disclosed, not assumed.
+57. **What do the ablation variants show?** — XGB without spatial features 0.9272; without complaint features 0.9276 — the value is in withdrawal/mule behaviour; complaints and geometry are secondary (baseline_war.json).
+58. **How did you test for temporal leakage?** — Chronological splits in train/eval; the split cache is data-stamped; permutation of day-of-week changes AUC by <0.002.
+59. **What happens at 72h?** — P@1000 0.608, MEDIUM — precision rises but recall decays (event rate is lower per day); shown in horizons.json, not hidden.
+60. **What is the ECE at 24h?** — 0.0156 (main split); reported per split in generalization_splits.json (worst case: new-hotspot 0.128 — surfaced).
+61. **Can one district see another district's report?** — Fixed and regression-tested: situational reports are I4C-only; hotspot reports scoped by jurisdiction; foreign → 404, own → 200 (test_security_regression.py).
+62. **Can a forged token escalate role?** — Regression test: bank-signed I4C claim → 403 on /train and /stats (fail-safe, not trust-the-claim).
+63. **What happens if the model file is corrupted?** — Clean EOFError on load (no silent wrong predictions); DEMO_MODE serves everything from cache; restore = copy back (failure-engineering pass).
+64. **What happens if the database is unavailable?** — SQLite is the demo store; a DB outage surfaces as clean 500s, never fabricated data; DEMO_MODE serves the golden path without the DB for read-only flows. PostgreSQL failover is a production requirement (PLANNED, not claimed).
+65. **Can attackers game the demo-mode?** — DEMO_MODE is a read-only cache path with auth still enforced (regression-tested); it is not a privilege-escalation route.
+66. **What if attackers deliberately avoid flagged ATMs?** — World-tested: risk_avoidance world (hot use 15%) AUC 0.930, no collapse; REDUCED confidence flagged honestly (drift.json).
+67. **What if fraud migrates to new cities?** — Cold-city split AUC 0.924; new-city coverage is behavioural (no identity features); the pilot re-validates.
+68. **Who makes the final decision?** — Always a human: ACT/REVIEW/HOLD policy (INTERVENTION_PRIORITY.md); no autonomous action exists; dismiss/escalate require reasons.
+69. **Can the AI order police action?** — No. Recommendation language is review-oriented; the strongest output is a recommendation + evidence for a human.
+70. **What is your false-positive cost?** — Disclosed: 38% at the 0.7 threshold; dedup + HOLD bands reduce noise; false interventions are counted per K in the intervention evaluation (242/day at K=10).
+71. **How do you protect PII?** — Tokens everywhere, vault-gated re-identification, DPDP-aligned minimization, no demographic features; role-scoped access verified at API level.
+72. **What is genuinely novel?** — The closed evidence-driven loop with honest uncertainty and audit, adversarial validation, and a mechanical real-data path — not the ML components (NOVELTY.md says exactly this).
+73. **Why should SIH choose you over a bank's internal fraud team?** — Different decision surface (proactive location forecasting vs reactive transaction scoring), plus an adoption-ready contract: protocol, shadow mode, HOLD policy, monitored rollback.
+74. **What is your weakest result?** — New-hotspot generalization (AUC 0.76, ECE 0.128) and short horizons (2h P@1000 0.04) — both published with the HOLD policy they drive.
+75. **What did your own red team break?** — An IDOR on single-alert reads and report scoping (both fixed + regression-tested), a stale split cache (data-stamped), DEMO_MODE stats needing the model (cache-backed), and a mislabeled-SHAP documentation bug — all recorded in FINAL_EXTERNAL_JUDGE_AUDIT.md / FINAL_KILL_TEST_AUDIT.md.

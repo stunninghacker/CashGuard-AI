@@ -67,6 +67,19 @@
       "horizon_event_rate": 0.1143,
       "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
       "confidence": "MEDIUM"
+    },
+    {
+      "horizon_hours": 72,
+      "roc_auc": 0.6611,
+      "pr_auc": 0.3442,
+      "brier": 0.1361,
+      "precision_at_1000_horizon": 0.608,
+      "recall_at_1000_horizon": 0.0775,
+      "capture_rate_top1000": 0.0775,
+      "false_alert_rate_0p7_horizon": 0.3078,
+      "horizon_event_rate": 0.1614,
+      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
+      "confidence": "MEDIUM"
     }
   ]
 }

@@ -89,14 +89,10 @@ docker compose up --build      # full pipeline inside a container, http://localh
 Full click-by-click walkthrough + failure contingency: **`DEMO_SCRIPT.md`**.
 | `VERIFICATION_LOG.md` | Manual end-to-end verification of every demo-claimed feature (dated outcomes) |
 
-**Four demo users (bcrypt + JWT auth, Phase 3):**
-
-| Username | Password | Role | Scope |
-|---|---|---|---|
-| `officer.statea` | `PoliceStateA!1` | POLICE_STATE | State-A |
-| `officer.district1` | `District1!1` | POLICE_DISTRICT | Northsagar |
-| `bank.hdfc` | `HdfcBank!1` | BANK | HDFC Bank |
-| `i4c.admin` | `I4cAdmin!1` | I4C_ADMIN | national |
+**Four demo users (bcrypt + JWT auth, Phase 3)** — synthetic demo credentials
+only; see [`docs/DEMO_CREDENTIALS.md`](docs/DEMO_CREDENTIALS.md)
+(**NOT FOR PRODUCTION** — production replaces this scheme with OAuth2.0/OIDC
+against MHA/I4C identity providers).
 
 1. `python run.py` — watch the calibration summary, then training (with
    **baseline lift + lead-time** metrics).

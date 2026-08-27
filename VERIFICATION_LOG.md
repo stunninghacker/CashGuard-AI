@@ -65,3 +65,12 @@ committed to this repository)
 epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest: foreign alert → 404 (district + bank), own-district alert + evidence → 200 (positive control). |
 | Missing-model kill test (DEMO_MODE=true, model.joblib deleted) | **PASS after fix** | risk-scores/alerts/evidence/horizons served from cache (15–52 ms, no model loaded); /stats/summary initially 500 (uncached inference path) — fixed to read the demo cache; retest: all endpoints 200. Model restored. |
 | Split-cache staleness | **PASS after fix** | main_split_cache.npz served a stale split (pos-rate 0.084 vs 0.062). Fixed: data-stamp guard auto-rebuilds on data change; baseline_war regenerated on the fresh split (P@100 0.86). |
+
+## Kill-test security probes (2026-08-27, final pass)
+
+| Probe | Outcome | Evidence |
+|-------|---------|----------|
+| JWT tamper / expired token / forged role | **PASS** | tampered → 401; forged past-exp → 401; bank-signed I4C claim → 403 on /train and /stats |
+| Report scoping | **PASS after fix** | district read of a situational report was 200 → fixed (`_report_in_scope`); retest: situational → 404, own-district hotspot → 200, foreign-bank → 404 |
+| Corrupt model file | **PASS (safe failure)** | clean EOFError on load, no silent wrong predictions; DEMO_MODE unaffected; restore → 200 |
+| Regression suite | **PASS** | `scripts/test_security_regression.py` — 14/14 (anon, JWT, expiry, forged role, WS, RBAC, IDOR + control, report scope, traversal, train role, demo auth) |

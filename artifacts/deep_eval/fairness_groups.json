@@ -106,5 +106,32 @@
     "false_positive_rate_0p7": 0.0062,
     "precision_0p7": 0.5392,
     "recall_0p7": 0.1212
+  },
+  {
+    "group": "atm_age:low",
+    "rows": 16200,
+    "positive_rate": 0.0577,
+    "alert_rate_0p7": 0.0104,
+    "false_positive_rate_0p7": 0.0043,
+    "precision_0p7": 0.5858,
+    "recall_0p7": 0.106
+  },
+  {
+    "group": "atm_age:mid",
+    "rows": 16200,
+    "positive_rate": 0.0622,
+    "alert_rate_0p7": 0.0104,
+    "false_positive_rate_0p7": 0.0043,
+    "precision_0p7": 0.5893,
+    "recall_0p7": 0.0982
+  },
+  {
+    "group": "atm_age:high",
+    "rows": 16200,
+    "positive_rate": 0.0656,
+    "alert_rate_0p7": 0.0099,
+    "false_positive_rate_0p7": 0.003,
+    "precision_0p7": 0.7,
+    "recall_0p7": 0.1054
   }
 ]

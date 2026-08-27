@@ -70,6 +70,16 @@ for level in ["low", "mid", "high"]:
     if r:
         rows.append(r)
 
+# ATM age: first-withdrawal-date terciles (new / mid / old ATMs)
+first_wd = wd.groupby("atm_id")["timestamp"].min()
+age_terc = terc(first_wd)
+for level in ["low", "mid", "high"]:
+    atms_a = age_terc[age_terc == level].index
+    m = meta_te["atm_id"].isin(atms_a).values if len(atms_a) else np.zeros(len(meta_te), dtype=bool)
+    r = group_row(f"atm_age:{level}", m)
+    if r:
+        rows.append(r)
+
 r_all = group_row("all", np.ones(len(yte), dtype=bool))
 out = [r_all] + rows
 OUT.write_text(json.dumps(out, indent=2), encoding="utf-8")

@@ -28,6 +28,9 @@ Artifacts: `artifacts/deep_eval/fairness_groups.json` (reproducible via
 | atm_volume low | 0.056 | 0.005 | 0.002 | 0.709 | 0.067 |
 | atm_volume mid | 0.069 | 0.012 | 0.004 | 0.680 | 0.117 |
 | atm_volume high | 0.060 | 0.013 | 0.006 | 0.539 | 0.121 |
+| atm_age low | 0.058 | 0.010 | 0.004 | 0.586 | 0.106 |
+| atm_age mid | 0.062 | 0.010 | 0.004 | 0.589 | 0.098 |
+| atm_age high | 0.066 | 0.010 | 0.003 | 0.700 | 0.105 |
 
 ## Findings (honest)
 1. **False-positive rate is flat across groups (0.0015–0.0062)** — the strongest

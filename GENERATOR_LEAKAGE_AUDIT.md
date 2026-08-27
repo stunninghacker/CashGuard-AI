@@ -42,6 +42,16 @@ construction rules? This audit attacks the generator + pipeline directly.
 Threshold precision varies 0.55–0.83 across worlds; REDUCED confidence is
 flagged — the system degrades honestly instead of overclaiming.
 
+## 6. Permutation tests (artifact: `permutation_tests.json`)
+- Label shuffle → AUC **0.475** (chance) — the pipeline cannot memorize arbitrary labels.
+- Features contain **NO ATM/city/district identity columns** (identity lives in meta only);
+  row-order shuffle → AUC identical (0.9265 vs 0.9274) — no order/identity memorization.
+- City-feature permutation: negligible (<0.001) — behavioural features carry the signal.
+
+## 7. Spatial generalization (artifact: `generalization_splits.json`)
+random 0.931 · time-forward 0.927 · cold-ATM 0.918 · cold-city/district 0.924 ·
+**new-hotspot 0.764 (ECE 0.128) — the honest weak split; failures are reported, not averaged away.**
+
 ## Verdict
 **No target-rediscovery leak found.** The strongest features are
 operationally legitimate and prediction-time-safe; the model beats simple

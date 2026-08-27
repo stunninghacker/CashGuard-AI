@@ -188,6 +188,96 @@
       "time_to_intervention_median_h": 16.2
     },
     {
+      "strategy": "historical",
+      "k": 5,
+      "capture_rate_mean_ci95": [
+        0.012,
+        0.012,
+        0.012
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        1.18,
+        1.18,
+        1.18
+      ],
+      "false_interventions_mean": 210.0,
+      "missed_events_mean": 10540.0,
+      "efficiency_inr_per_intervention_mean": 19514.33,
+      "time_to_intervention_median_h": 17.0
+    },
+    {
+      "strategy": "historical",
+      "k": 10,
+      "capture_rate_mean_ci95": [
+        0.019,
+        0.019,
+        0.019
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        1.8,
+        1.8,
+        1.8
+      ],
+      "false_interventions_mean": 432.0,
+      "missed_events_mean": 10473.0,
+      "efficiency_inr_per_intervention_mean": 14846.28,
+      "time_to_intervention_median_h": 19.1
+    },
+    {
+      "strategy": "historical",
+      "k": 20,
+      "capture_rate_mean_ci95": [
+        0.035,
+        0.035,
+        0.035
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        3.27,
+        3.27,
+        3.27
+      ],
+      "false_interventions_mean": 868.0,
+      "missed_events_mean": 10299.0,
+      "efficiency_inr_per_intervention_mean": 13477.52,
+      "time_to_intervention_median_h": 17.9
+    },
+    {
+      "strategy": "historical",
+      "k": 50,
+      "capture_rate_mean_ci95": [
+        0.076,
+        0.076,
+        0.077
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        7.264,
+        7.23,
+        7.313
+      ],
+      "false_interventions_mean": 2198.3,
+      "missed_events_mean": 9857.1,
+      "efficiency_inr_per_intervention_mean": 11985.84,
+      "time_to_intervention_median_h": 17.4
+    },
+    {
+      "strategy": "historical",
+      "k": 100,
+      "capture_rate_mean_ci95": [
+        0.117,
+        0.116,
+        0.117
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        11.187,
+        11.155,
+        11.21
+      ],
+      "false_interventions_mean": 4547.4,
+      "missed_events_mean": 9425.2,
+      "efficiency_inr_per_intervention_mean": 9227.92,
+      "time_to_intervention_median_h": 17.8
+    },
+    {
       "strategy": "cashguard",
       "k": 5,
       "capture_rate_mean_ci95": [
@@ -283,7 +373,8 @@
     "volume_capture": 0.005,
     "random_capture": 0.004,
     "cashguard_vs_volume": 11.0,
-    "cashguard_vs_random": 13.75
+    "cashguard_vs_random": 13.75,
+    "cashguard_vs_historical": 2.89
   },
-  "conclusion": "At every intervention budget, forecast-driven (CashGuard) intervention captures more fraud events and exposure per intervention than volume-based or random targeting; efficiency declines with K for all strategies. Real-world validation requires the pilot."
+  "conclusion": "At every intervention budget, forecast-driven (CashGuard) intervention captures more fraud events and exposure per intervention than volume-, historical-, or random-based targeting; efficiency declines with K for all strategies. Real-world validation requires the pilot."
 }
