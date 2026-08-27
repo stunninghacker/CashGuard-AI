@@ -46,7 +46,14 @@ beforehand — static PNG for the deck.)
     FP/FN, drift).
 11. **I4C**: national stats + model monitoring + **Verify Ledger ✓** → **Tamper-demo** → **Verify ✗**.
 12. **PDF Intelligence Report** (ledger-fingerprinted) + **Situational Report**.
-13. Live WebSocket toast on new alerts.
+13. Live WebSocket toast on new alerts. **Sequencing note — important**: the
+    alert engine deduplicates repeat alerts for the same ATM within 6h
+    (`ALERT_COOLDOWN_HOURS`) unless risk rises by >0.1. If you click
+    **⚡ Run Alert Cycle** twice in quick succession, the second run may fire
+    no new alerts and push no WS event — that is the dedup working, not a
+    broken live push. Either trigger the cycle **once** during the walkthrough
+    (recommended), or narrate it if you trigger it twice: *"notice this second
+    alert didn't fire — that's the dedup logic working, not a bug."*
 14. Drill-downs: category chips, date replay, state→city→bank cascade, heat-vs-forecast toggle.
 15. Deep-eval artifacts shown: ablation, adversarial worlds, horizons, calibration (ECE/Brier).
 16. Close on the honesty opening (§0).
