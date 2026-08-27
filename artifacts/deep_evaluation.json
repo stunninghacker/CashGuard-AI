@@ -1,0 +1,61 @@
+{
+  "label": "CONTROLLED SYNTHETIC EVALUATION \u2014 not real-world accuracy",
+  "operational": {
+    "roc_auc": 0.9348,
+    "pr_auc": 0.5547,
+    "precision_at_100": 1.0,
+    "precision_at_500": 0.908,
+    "precision_at_1000": 0.775,
+    "threshold_precision_0p7": 0.7861,
+    "alert_volume_0p7": 949,
+    "false_alert_rate_0p7": 0.2139,
+    "capture_rate_top1000": 0.1897,
+    "brier": 0.0541,
+    "label": "CONTROLLED SYNTHETIC EVALUATION",
+    "model_version": "2026-08-26T18:11:56.634646",
+    "n_test_rows": 48600,
+    "positive_rate": 0.0841
+  },
+  "ablation": [],
+  "cold_location": {
+    "status": "skipped_fast_mode"
+  },
+  "adversarial_worlds": [],
+  "counterfactual": {
+    "label": "CONTROLLED SYNTHETIC EVALUATION",
+    "n_rows": 2000,
+    "mean_score_baseline": 0.0776,
+    "mean_score_surge_plus50": 0.0859,
+    "mean_score_surge_minus50": 0.0582,
+    "delta_plus50": 0.0083,
+    "delta_minus50": -0.0194,
+    "pct_rows_moved_above_0p7_on_surge": 0.0065,
+    "interpretation": "A +50% complaint-surge moves mean risk by <delta_plus50> \u2014 sensitivity direction is correct (surge increases risk); magnitude is modest, consistent with a calibrated model where mule-behaviour dominates."
+  },
+  "horizons": [
+    {
+      "horizon_hours": 6,
+      "precision_at_1000_horizon": 0.163,
+      "capture_rate_top1000": 0.3536,
+      "horizon_event_rate": 0.0095
+    },
+    {
+      "horizon_hours": 12,
+      "precision_at_1000_horizon": 0.37,
+      "capture_rate_top1000": 0.2882,
+      "horizon_event_rate": 0.0264
+    },
+    {
+      "horizon_hours": 24,
+      "precision_at_1000_horizon": 0.775,
+      "capture_rate_top1000": 0.1897,
+      "horizon_event_rate": 0.0841
+    },
+    {
+      "horizon_hours": 48,
+      "precision_at_1000_horizon": 0.797,
+      "capture_rate_top1000": 0.111,
+      "horizon_event_rate": 0.1477
+    }
+  ]
+}

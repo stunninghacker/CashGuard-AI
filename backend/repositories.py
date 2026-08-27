@@ -187,6 +187,30 @@ def create_alert(db: Session, **kwargs) -> models.Alert:
     return alert
 
 
+def get_alert_by_atm_recent(db: Session, atm_id: str, since: datetime) -> models.Alert | None:
+    return db.scalar(
+        select(models.Alert)
+        .where(models.Alert.atm_id == atm_id, models.Alert.created_at >= since)
+        .order_by(models.Alert.created_at.desc()).limit(1)
+    )
+
+
+def create_alert_outcome(db: Session, **kwargs) -> models.AlertOutcome:
+    outcome = models.AlertOutcome(**kwargs)
+    db.add(outcome)
+    db.commit()
+    db.refresh(outcome)
+    return outcome
+
+
+def get_alert_outcome(db: Session, alert_id: str) -> models.AlertOutcome | None:
+    return db.scalar(select(models.AlertOutcome).where(models.AlertOutcome.alert_id == alert_id))
+
+
+def list_alert_outcomes(db: Session, limit: int = 500) -> list[models.AlertOutcome]:
+    return list(db.scalars(select(models.AlertOutcome).order_by(models.AlertOutcome.evaluated_at.desc()).limit(limit)))
+
+
 def list_alerts(
     db: Session,
     status: str | None = None,
@@ -214,9 +238,11 @@ def get_alert(db: Session, alert_id: str) -> models.Alert | None:
     return db.scalar(select(models.Alert).where(models.Alert.alert_id == alert_id))
 
 
-def update_alert_status(db: Session, alert: models.Alert, status: str) -> models.Alert:
+def update_alert_status(db: Session, alert: models.Alert, status: str, reason: str = "") -> models.Alert:
     now = datetime.utcnow()
     alert.status = status
+    if reason:
+        alert.decision_reason = reason
     if status == "acknowledged" and alert.acknowledged_at is None:
         alert.acknowledged_at = now
     if status == "actioned":

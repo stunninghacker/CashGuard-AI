@@ -43,14 +43,14 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
 
 ## Slide 4 — The Numbers (30 sec)
 - 200k transactions, 12k complaints, 900 ATMs, 5 **fictional** cities, 6 months.
-- **ROC-AUC 0.9362 · lift vs volume 1.176–2.128× · lift vs proximity 8.333–10.0×** (the
-  model crushes both naive baselines, disclosed) · **median lead-time 14.1 h**
+- **ROC-AUC 0.9366 · lift vs volume 1.111–2.041× · lift vs proximity >=50 (baseline ~0.00-0.02)×** (the
+  model crushes both naive baselines, disclosed) · **median lead-time 13.5 h**
   — annotated as horizon-dependent, a design property not an accuracy claim.
 - **Novelty**: Hawkes self-exciting intensity over past complaints
   (single-feature AUC 0.52 — leak-free). The ensemble is honestly disclosed as
-  NOT beating pure XGBoost (0.8153 vs 0.9362) — active model = xgboost.
+  NOT beating pure XGBoost (0.8143 vs 0.9366) — active model = xgboost.
 - **Leak-free metrics (from `artifacts/metrics.json`)**: `precision@20/50/100/
-  1000 = 1.0/1.0/1.0/0.782; threshold(≥0.7) precision = 0.81; max single-feature
+  1000 = 1.0/1.0/1.0/0.8; threshold(≥0.7) precision = 0.81; max single-feature
   AUC = 0.85 (counterparty_count_24h, complaint-linked activity — available at
   prediction time)`. Residual top-K certainty is disclosed as a known
   limitation, not claimed as a virtue.
@@ -70,9 +70,9 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
 (a) Built from complaint-linked accounts — complaints are filed *before*
 cash-out, so the signal is available at prediction time; (b) it is a
 trailing-window aggregate ending before the forecast point, not the label
-window; (c) its single-feature AUC is **0.8457**, not 1.0 — no single feature
-is decisive; (d) the ranking decays to **0.782 at K=1000** (threshold ≥0.7
-precision 0.7927) — a genuine leak would stay ≈1.0 throughout.
+window; (c) its single-feature AUC is **0.8466**, not 1.0 — no single feature
+is decisive; (d) the ranking decays to **0.8 at K=1000** (threshold ≥0.7
+precision 0.8116) — a genuine leak would stay ≈1.0 throughout.
 
 ## Closing (15 sec)
 "CashGuard AI doesn't react to crime — it **intercepts the cash before the criminal can touch it**.

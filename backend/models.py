@@ -157,13 +157,38 @@ class Alert(Base):
     state: Mapped[str] = mapped_column(String(64), default="")          # jurisdiction awareness
     police_station_area: Mapped[str] = mapped_column(String(64), default="")  # jurisdiction awareness
     risk_score: Mapped[float] = mapped_column(Float, default=0.0)
-    recommended_action: Mapped[str] = mapped_column(String(128), default="Enhanced monitoring")
-    status: Mapped[str] = mapped_column(String(24), default="new", index=True)  # new / acknowledged / actioned
+    recommended_action: Mapped[str] = mapped_column(String(160), default="Enhanced monitoring")
+    status: Mapped[str] = mapped_column(String(24), default="new", index=True)  # new / acknowledged / actioned / dismissed / escalated / monitoring / review_requested
+    decision_reason: Mapped[str] = mapped_column(String(256), default="")  # mandatory for dismiss/escalate
+    model_version: Mapped[str] = mapped_column(String(32), default="")
     sms_log: Mapped[str] = mapped_column(Text, default="")
     email_log: Mapped[str] = mapped_column(Text, default="")
     dispatch_log: Mapped[str] = mapped_column(Text, default="")  # I4C / state-LEA webhook (mock)
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     actioned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class AlertOutcome(Base):
+    """
+    Closed-loop outcome store (Phase 9): predicted risk vs observed outcome.
+
+    After the 24h horizon, an outcome record is written: did a fraud withdrawal
+    actually occur at the flagged ATM within the window? Used for model
+    monitoring (FP/FN, calibration drift). Never auto-retrains on tiny data.
+    """
+
+    __tablename__ = "alert_outcomes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    alert_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    atm_id: Mapped[str] = mapped_column(String(32), index=True)
+    predicted_risk: Mapped[float] = mapped_column(Float, default=0.0)
+    actual_fraud_happened: Mapped[str] = mapped_column(String(16), default="unknown")  # yes / no / unknown
+    prediction_error: Mapped[float] = mapped_column(Float, default=0.0)  # |actual - predicted|
+    is_false_positive: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_false_negative: Mapped[bool] = mapped_column(Boolean, default=False)
+    evaluated_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    model_version: Mapped[str] = mapped_column(String(32), default="")
 
 
 class AuditRecord(Base):

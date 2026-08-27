@@ -62,6 +62,20 @@ function fmtMetric(v, dp = 2) {
   return String(v);
 }
 
+function emergingBadge(h) {
+  /* Emerging vs historical: 'risk rising fast' vs 'usually risky' (Phase 8). */
+  const e = h.emerging_risk || 0;
+  if (e >= 0.6) return `<span class="pill bad">▲ Emerging ${(e * 100).toFixed(0)}%</span>`;
+  if (e >= 0.35) return `<span class="pill warn">▲ rising ${(e * 100).toFixed(0)}%</span>`;
+  return `<span class="pill info">● historical</span>`;
+}
+
+function priorityBadge(h) {
+  const pr = h.intervention_priority || 0;
+  const cls = pr >= 0.6 ? "bad" : pr >= 0.4 ? "warn" : "info";
+  return `<span class="pill ${cls}" title="E=${h.priority_exposure} U=${h.priority_urgency} S=${h.priority_evidence} Q=${h.priority_confidence_weight}">⚡ ${(pr * 100).toFixed(0)}</span>`;
+}
+
 /* ------------------------------ map ------------------------------ */
 let map = null, atmLayer = null, complaintLayer = null;
 
@@ -169,6 +183,29 @@ async function loadComplaints() {
   } catch { state.complaints = []; }
 }
 
+const ddH = document.getElementById("dd-horizon");
+  if (ddH) ddH.addEventListener("change", async (e) => {
+    state.horizon = e.target.value;
+    await renderHorizonConfidence();
+  });
+
+async function renderHorizonConfidence() {
+  try {
+    const hz = await api("/horizons");
+    const rows = hz.horizons || [];
+    const h = state.horizon || "24";
+    const row = rows.find((r) => String(r.horizon_hours) === h);
+    const el = document.getElementById("horizon-confidence");
+    if (!row) { if (el) el.textContent = "—"; return; }
+    const cls = row.confidence.startsWith("HIGH") ? "ok" : row.confidence.startsWith("MEDIUM") ? "warn" : "bad";
+    el.textContent = `${h}h: ${row.confidence}`;
+    el.className = `pill ${cls}`;
+    if (cls === "bad") {
+      toast(`INSUFFICIENT CONFIDENCE at ${h}h horizon — HOLD ACTION for horizon-based recommendations (24h forecast still shown)`);
+    }
+  } catch { /* panel absent */ }
+}
+
 async function loadAll() {
   try {
     const q = state.asOf ? `&as_of=${encodeURIComponent(state.asOf)}` : "";
@@ -198,7 +235,8 @@ function renderPolice() {
   const hotspots = [...state.risk].sort((a, b) => b.risk_score - a.risk_score).slice(0, 20);
   document.getElementById("hotspot-count").textContent = `${hotspots.length} hotspots`;
   tbodyOf(document.getElementById("hotspot-table")).innerHTML = hotspots.map(
-    (h, i) => `<tr><td>${i + 1}</td><td><b>${esc(h.atm_id)}</b></td><td>${esc(h.branch_name)}<br/><span class="muted">${esc(h.bank_name)}</span></td><td>${esc(h.city)}</td><td>${riskPill(h.risk_score)}</td></tr>`
+    (h, i) => `<tr><td>${i + 1}</td><td><b>${esc(h.atm_id)}</b></td><td>${esc(h.branch_name)}<br/><span class="muted">${esc(h.bank_name)}</span></td><td>${esc(h.city)}</td>
+    <td>${riskPill(h.risk_score)}</td><td>${emergingBadge(h)}</td><td>${priorityBadge(h)}</td></tr>`
   ).join("");
   renderAlertTable("alert-table");
 }
@@ -218,11 +256,40 @@ function renderAlertTable(tableId, alerts = state.alerts) {
     (a) => `<tr><td>${fmtTime(a.created_at)}</td><td><b>${esc(a.atm_id)}</b></td><td>${esc(a.city)}</td>
     <td>${riskPill(a.risk_score)}</td><td>${esc(a.recommended_action)}</td><td>${statusPill(a.status)}</td>
     <td><button class="btn small" data-evid="${esc(a.alert_id)}">Details</button>
-    ${a.status === "new" ? `<button class="btn small ok" data-act="acknowledged" data-id="${esc(a.alert_id)}">Acknowledge</button> ` : ""}
-    ${a.status !== "actioned" ? `<button class="btn small warn" data-act="actioned" data-id="${esc(a.alert_id)}">Actioned</button>` : ""}</td></tr>`
+    ${hitlButtons(a)}</td></tr>`
   ).join("");
-  el.querySelectorAll("button[data-act]").forEach((b) => b.addEventListener("click", () => setAlertStatus(b.dataset.id, b.dataset.act)));
+  el.querySelectorAll("button[data-act]").forEach((b) => b.addEventListener("click", () => hitlAction(b.dataset.id, b.dataset.act)));
   el.querySelectorAll("button[data-evid]").forEach((b) => b.addEventListener("click", () => openEvidence(b.dataset.evid)));
+}
+
+function hitlButtons(a) {
+  const base = `data-id="${esc(a.alert_id)}"`;
+  if (a.status === "new" || a.status === "acknowledged" || a.status === "monitoring") {
+    return `<button class="btn small ok" data-act="acknowledged" ${base}>Acknowledge</button>
+      <button class="btn small" data-act="monitoring" ${base}>Monitor</button>
+      <button class="btn small warn" data-act="dismissed" ${base}>Dismiss</button>
+      <button class="btn small warn" data-act="escalated" ${base}>Escalate</button>
+      <button class="btn small" data-act="review_requested" ${base}>More data</button>`;
+  }
+  return "";
+}
+
+function hitlAction(alertId, status) {
+  let reason = "";
+  if (status === "dismissed" || status === "escalated") {
+    reason = prompt(`Reason required for "${status}" (recorded to the audit ledger):`);
+    if (reason === null) return;
+    if (!reason.trim()) { toast("A reason is required for " + status); return; }
+  }
+  setAlertStatus(alertId, status, reason);
+}
+
+async function setAlertStatus(alertId, status, reason = "") {
+  try {
+    await api(`/alerts/${alertId}/status`, { method: "POST", body: JSON.stringify({ status, reason }) });
+    toast(`Alert ${alertId} → ${status} (ledger-recorded)`);
+    loadAll();
+  } catch (err) { toast("Update failed: " + err.message); }
 }
 
 async function renderBank() {
@@ -274,6 +341,23 @@ function bankAction(score) {
   return "No action required";
 }
 
+async function renderOutcomes() {
+  try {
+    const s = await api("/alerts/outcomes/summary");
+    const el = document.getElementById("outcome-panel");
+    document.getElementById("outcome-badge").textContent = s.evaluated ? `${s.evaluated} evaluated` : "";
+    if (!s.evaluated) {
+      el.innerHTML = `<p class="muted">No outcomes yet — alerts must age past the 24h horizon. Click "Evaluate pending" after a cycle.</p>`;
+      return;
+    }
+    el.innerHTML = [
+      ["Evaluated", s.evaluated], ["True positives", s.true_positives], ["False positives", s.false_positives],
+      ["False negatives", s.false_negatives], ["Mean |error|", s.mean_abs_error], ["Outcome ECE (10 bins)", s.outcome_ece_10_bins],
+    ].map(([k, v]) => `<div class="m-row"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("") +
+      `<p class="ev-notice">${esc(s.note)}</p>`;
+  } catch { /* panel absent for non-I4C */ }
+}
+
 async function renderI4C() {
   renderMap();
   const s = state.stats;
@@ -312,6 +396,7 @@ async function renderI4C() {
   renderAlertTable("i4c-alert-table", state.alerts);
   await ledgerStatus();
   await renderInbox();
+  await renderOutcomes();
 }
 
 async function ledgerStatus() {
@@ -347,6 +432,22 @@ async function openEvidence(alertId) {
       (a) => `<span class="pill bad">${esc(maskedAccount(a.account_token))} (${a.recent_withdrawals} txns/24h)</span>`
     ).join(" ") || `<span class="muted">No complaint-linked accounts active at this ATM in the last 24h.</span>`;
     const alert = state.alerts.find((a) => a.alert_id === alertId);
+    const unc = ev.uncertainty || {};
+    const graph = (ev.evidence_graph || []).map(
+      (g, idx) => `<div class="ev-graph-row">
+        <span class="ev-graph-idx">${idx + 1}</span>
+        <span><b>${esc(g.signal)}</b><br/><span class="muted">${esc(g.value)}</span><br/>
+          <span class="muted">direction: ${esc(g.direction)} · source: ${esc(g.source_type)} · ${esc(g.observed_or_synthetic)}</span></span>
+        <span class="ev-graph-arrow">↓</span></div>`
+    ).join("");
+    const uncRows = [
+      ["Confidence", unc.confidence || "n/a"],
+      ["Evidence strength", unc.evidence_strength || "n/a"],
+      ["Data freshness", unc.data_freshness_hours !== undefined && unc.data_freshness_hours !== null ? `${unc.data_freshness_hours}h` : "n/a"],
+      ["Model version", unc.model_version || "n/a"],
+      ["Prediction horizon", unc.prediction_horizon_hours ? `${unc.prediction_horizon_hours}h` : "n/a"],
+      ["Synthetic evaluation", unc.synthetic_evaluation ? "YES" : "no"],
+    ].map(([k, v]) => `<div class="feat-row"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("");
     document.getElementById("ev-alert-id").textContent = ev.alert_id;
     document.getElementById("ev-body").innerHTML = `
       <div class="ev-block">
@@ -364,6 +465,15 @@ async function openEvidence(alertId) {
       <div class="ev-block"><h3>Recommended Actions (Response Playbook — graded, advisory)</h3>
         ${(ev.recommended_actions || []).map((a) => `<p class="ev-meta">${a.step}. ${esc(a.action)} — <b>${esc(a.owner)}</b></p>`).join("") || `<p class="ev-meta">No graded steps for this risk band.</p>`}
         <p class="ev-notice">Advisory only — no automated enforcement; audited human decision required (docs/RESPONSE_PLAYBOOK.md).</p></div>
+      <div class="ev-block"><h3>Uncertainty & Evidence Metadata</h3>${uncRows}
+        ${unc.insufficient_evidence ? `<p class="ev-notice" style="color:var(--yellow)">INSUFFICIENT EVIDENCE — HOLD ACTION: evidence below strength threshold or data stale. Review before any action.</p>` : ""}</div>
+      <div class="ev-block"><h3>WHAT-IF (counterfactual simulation)</h3>
+        ${ev.counterfactual_whatif && ev.counterfactual_whatif.current_risk !== null && ev.counterfactual_whatif.current_risk !== undefined
+          ? `<p class="ev-meta">Current risk: <b>${(ev.counterfactual_whatif.current_risk * 100).toFixed(0)}%</b> · If complaint-surge signals were absent: <b>${(ev.counterfactual_whatif.risk_without_complaint_surge * 100).toFixed(0)}%</b> (delta ${(ev.counterfactual_whatif.delta * 100).toFixed(1)} pts)</p>
+             <p class="ev-notice">${esc(ev.counterfactual_whatif.interpretation)}</p>`
+          : `<p class="ev-meta">${esc((ev.counterfactual_whatif || {}).interpretation || "Unavailable.")}</p>`}</div>
+      <div class="ev-block"><h3>Evidence Graph — why this ATM</h3>${graph}
+        <p class="ev-notice">Each signal shows value, direction, source type and whether it is observed or synthetic. No unexplained AI reasoning.</p></div>
       <div class="ev-block"><h3>Indicative Feature Contributions</h3>${contribs}
         <p class="ev-notice">${esc(ev.explainability_note)}</p></div>
       <div class="ev-block"><h3>Per-instance SHAP (native XGBoost pred_contribs)</h3>
@@ -431,7 +541,7 @@ async function runAlertCycle() {
 function connectWS() {
   try {
     const proto = location.protocol === "https:" ? "wss" : "ws";
-    const ws = new WebSocket(`${proto}://${location.host}/ws/alerts`);
+    const ws = new WebSocket(`${proto}://${location.host}/ws/alerts?token=${encodeURIComponent(getToken())}`);
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -524,6 +634,13 @@ function bindEvents() {
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${j.report_id}.pdf`; a.click();
       toast("Situational report generated (ledger-recorded)");
     } catch (err) { toast("Report failed: " + err.message); }
+  });
+  wire("btn-evaluate-outcomes", async () => {
+    try {
+      const r = await api("/alerts/outcomes/evaluate", { method: "POST" });
+      toast(`Outcomes evaluated: ${r.evaluated} — monitoring updated`);
+      renderOutcomes();
+    } catch (err) { toast("Outcome evaluation failed: " + err.message); }
   });
   const loginPass = document.getElementById("login-password");
   if (loginPass) loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });

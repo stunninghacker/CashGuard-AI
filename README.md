@@ -1,6 +1,6 @@
 ﻿# ðŸ›¡ï¸ CashGuard AI â€” Predictive Analytics Framework for Cybercrime Cash-Withdrawal Hotspots
 
-**Smart India Hackathon 2024 Â· Ministry of Home Affairs Â· I4C, CIS Division Â· Theme: Blockchain & Cybersecurity**
+**Smart India Hackathon 2026 Â· Ministry of Home Affairs Â· I4C, CIS Division Â· Theme: Blockchain & Cybersecurity**
 
 > An AI/ML-driven framework that analyzes cybercrime complaint data (NCRP/CFCFRMS) and
 > ATM withdrawal patterns to **predict where fraudsters will withdraw cash in the next 24 hours** â€”

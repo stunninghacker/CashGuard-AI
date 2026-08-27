@@ -85,6 +85,31 @@ async def no_cache_frontend(request, call_next):
         response.headers["Pragma"] = "no-cache"
     return response
 
+
+@app.middleware("http")
+async def rate_limit(request, call_next):
+    """Simple in-memory rate limiting (Phase 10): per-IP budget; stricter for
+    the login endpoint to slow brute force. Demo-scale; production would use a
+    distributed limiter."""
+    from time import time
+
+    from fastapi import HTTPException
+
+    from ..config import LOGIN_RATE_LIMIT_PER_MINUTE, RATE_LIMIT_PER_MINUTE
+
+    ip = request.client.host if request.client else "unknown"
+    now = int(time())
+    key = f"{ip}:{'login' if request.url.path.endswith('/auth/login') else 'api'}:{now // 60}"
+    bucket = rate_limit._buckets
+    bucket[key] = bucket.get(key, 0) + 1
+    limit = LOGIN_RATE_LIMIT_PER_MINUTE if key.endswith("login") else RATE_LIMIT_PER_MINUTE
+    if bucket[key] > limit:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded — try again shortly")
+    return await call_next(request)
+
+
+rate_limit._buckets = {}
+
 # ---------------------------------- REST API ----------------------------------
 app.include_router(auth.router)
 app.include_router(complaints.router)

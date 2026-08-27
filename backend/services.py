@@ -117,7 +117,21 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
                 continue
 
         action = recommend_action(s["risk_score"], s["risk_level"])
-        sms = send_sms(
+        # INSUFFICIENT EVIDENCE — HOLD ACTION (Phase 7): near-threshold alerts
+        # sit in the weakest-evidence band -> they are review flags, not action
+        # orders. The full evidence/uncertainty block is shown in the panel.
+        if 0.70 <= s["risk_score"] < 0.78:
+            action = "INSUFFICIENT EVIDENCE — HOLD ACTION (review recommended; evidence below strength threshold)"
+        sms = email = dispatch = ""
+        from .config import SHADOW_MODE
+
+        if SHADOW_MODE:
+            # SHADOW MODE (Phase 14): record predictions only — no channels fire.
+            sms = "[shadow] SMS suppressed (SHADOW_MODE) — prediction recorded for evaluation"
+            email = "[shadow] Email suppressed (SHADOW_MODE)"
+            dispatch = "[shadow] Dispatch suppressed (SHADOW_MODE)"
+        else:
+            sms = send_sms(
             f"SHO {s['district']}",
             f"High risk of fraud cash withdrawal at ATM {s['atm_id']} "
             f"({s['branch_name']}, {s['city']}) in next 24h. Risk {s['risk_score']:.2f}. {action}",
@@ -146,7 +160,8 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
             police_station_area=s["police_station_area"],
             risk_score=round(s["risk_score"], 4),
             recommended_action=action,
-            status="new",
+            status="shadow" if SHADOW_MODE else "new",
+            model_version=_model_version(),
             sms_log=sms,
             email_log=email,
             dispatch_log=dispatch,
@@ -155,32 +170,50 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
                            entity_id=alert.alert_id, payload=s)
         # CFCFRMS fund-block loop (Phase 6)
         recs = create_fund_block_recommendations(db, alert)
-        # live push to dashboards (WS)
+        # live push to dashboards (WS) — suppressed in SHADOW_MODE
         from .realtime import enqueue_broadcast
 
-        enqueue_broadcast("alert", {
-            "alert_id": alert.alert_id, "atm_id": alert.atm_id, "city": alert.city,
-            "state": alert.state, "district": alert.district,
-            "police_station_area": alert.police_station_area,
-            "bank_name": alert.bank_name, "risk_score": alert.risk_score,
-            "recommended_action": action, "status": "new",
-            "recommended_actions": graded_actions(s["risk_score"]),
-            "recovery_recs": recs,
-        })
+        if not SHADOW_MODE:
+            enqueue_broadcast("alert", {
+                "alert_id": alert.alert_id, "atm_id": alert.atm_id, "city": alert.city,
+                "state": alert.state, "district": alert.district,
+                "police_station_area": alert.police_station_area,
+                "bank_name": alert.bank_name, "risk_score": alert.risk_score,
+                "recommended_action": action, "status": alert.status,
+                "recommended_actions": graded_actions(s["risk_score"]),
+                "recovery_recs": recs,
+            })
         created += 1
 
     return {"checked": len(scores), "flagged": len(flagged), "created": created, "skipped": skipped}
 
 
-def set_alert_status(db: Session, alert, status: str, actor_user) -> None:
-    """Update alert status + append a tamper-evident ledger block."""
-    updated = repo.update_alert_status(db, alert, status)
+HITL_STATUSES = {
+    "acknowledged": "seen — no decision yet",
+    "actioned": "response completed",
+    "dismissed": "false positive / not actionable",
+    "escalated": "sent up the chain",
+    "monitoring": "watching, no action yet",
+    "review_requested": "more data or a second reviewer needed",
+}
+REASON_REQUIRED = {"dismissed", "escalated"}  # mandatory human reason
+
+
+def set_alert_status(db: Session, alert, status: str, actor_user, reason: str = "") -> None:
+    """Human-in-the-loop (Phase 6): every decision is auditable; dismiss and
+    escalate REQUIRE a recorded reason."""
+    if status not in HITL_STATUSES:
+        raise ValueError(f"status must be one of {sorted(HITL_STATUSES)}")
+    if status in REASON_REQUIRED and not reason.strip():
+        raise ValueError(f"a reason is required for '{status}'")
+    updated = repo.update_alert_status(db, alert, status, reason=reason)
     repo.append_ledger(db, actor=f"{actor_user.user_id} ({actor_user.role})",
                        event_type="status_changed",
-                       entity_id=alert.alert_id, payload={"status": status})
+                       entity_id=alert.alert_id,
+                       payload={"status": status, "reason": reason})
     from .realtime import enqueue_broadcast
 
-    enqueue_broadcast("alert_status", {"alert_id": alert.alert_id, "status": status})
+    enqueue_broadcast("alert_status", {"alert_id": alert.alert_id, "status": status, "reason": reason})
     return updated
 
 
@@ -262,11 +295,220 @@ def recovery_funnel(db: Session, days: int = 7) -> dict:
 
 
 def recommend_action(score: float, level: str) -> str:
+    # HUMAN-IN-THE-LOOP: review-oriented language — the system never recommends
+    # punitive action directly; it recommends review.
     if level == "CRITICAL":
-        return "Deploy patrol team + freeze suspicious linked accounts"
+        return "Review recommended — verify evidence, then coordinate branch + police station"
     if level == "HIGH":
-        return "Enhanced monitoring + notify local police station"
-    return "Enhanced monitoring of CCTV and cash limits"
+        return "Review recommended — enhanced monitoring + notify local police station"
+    return "Review recommended — monitor ATM activity and CCTV"
+
+
+def _counterfactual_whatif(inst, model, calibrator) -> dict:
+    """
+    Per-alert WHAT-IF (Phase 4): recompute the risk with the complaint-surge
+    signals REMOVED (set to 0) — a valid inference-time ablation, clearly
+    labelled as a counterfactual simulation, NOT a causal claim.
+    Returns {current_risk, without_complaint_surge, delta, interpretation}.
+    """
+    import pandas as pd
+
+    try:
+        row = inst.to_frame().T.copy()
+        current = float(model.predict_proba(row)[:, 1][0])
+        if calibrator is not None:
+            current = float(calibrator.predict_proba([[current]])[0, 1])
+        counter = row.copy()
+        for c in ["n_complaints_city_24h", "n_complaints_city_7d", "t_phishing_7d",
+                  "t_investment_fraud_7d", "t_job_fraud_7d", "t_upi_fraud_7d",
+                  "hours_since_last_complaint_city"]:
+            counter[c] = 0.0
+        without = float(model.predict_proba(counter)[:, 1][0])
+        if calibrator is not None:
+            without = float(calibrator.predict_proba([[without]])[0, 1])
+        return {
+            "current_risk": round(current, 4),
+            "risk_without_complaint_surge": round(without, 4),
+            "delta": round(current - without, 4),
+            "interpretation": (
+                "Counterfactual simulation: complaint-surge signals removed at inference "
+                "time (valid input ablation). NOT a causal claim; residual risk is carried "
+                "by withdrawal/mule-behavioural signals."
+            ),
+        }
+    except Exception:
+        return {"current_risk": None, "risk_without_complaint_surge": None, "delta": None,
+                "interpretation": "Counterfactual unavailable for this row."}
+
+
+def _model_version() -> str:
+    try:
+        return inference.load_pipeline().get("trained_at", "unknown")[:10]
+    except Exception:
+        return "unknown"
+
+
+def _uncertainty_block(alert, ev) -> dict:
+    """Uncertainty + evidence metadata for every forecast (Phase 4)."""
+    score = alert.risk_score
+    contrib = len(ev.get("feature_contributions", []) or [])
+    freeze = len(ev.get("recommended_freeze_accounts", []) or [])
+    evidence_strength = min(1 + contrib + freeze, 5)  # 1 baseline + SHAP/global + freeze intel
+    if score >= 0.85 and evidence_strength >= 4:
+        confidence = "High"
+    elif score >= 0.70 or evidence_strength >= 3:
+        confidence = "Medium"
+    else:
+        confidence = "Low"
+    # Model disagreement (Phase 10): Model B (statistical baseline) vs Model A
+    disagreement = None
+    try:
+        import joblib as _joblib
+
+        from .config import ARTIFACT_DIR
+
+        b_path = ARTIFACT_DIR / "model_b.joblib"
+        if b_path.exists() and ev.get("feature_row") is not None:
+            b = _joblib.load(b_path)
+            b_row = ev["feature_row"][b["features"]].to_numpy().reshape(1, -1)
+            prob_b = float(b["model"].predict_proba(b_row)[0, 1])
+            disagreement = round(abs(score - prob_b), 4)
+            if disagreement > 0.35:
+                confidence = "Low (model disagreement)"
+                ev["hold_reason"] = "model disagreement"
+            elif disagreement > 0.20:
+                confidence = "Medium (reduced — model disagreement)"
+    except Exception:
+        pass
+    ref = ev.get("data_through")
+    freshness_h = max(round((datetime.utcnow() - ref).total_seconds() / 3600.0, 1), 0.0) if ref else None
+    return {
+        "risk_score": score,
+        "confidence": confidence,
+        "evidence_strength": f"{evidence_strength}/5",
+        "data_freshness_hours": freshness_h,
+        "model_version": alert.model_version or _model_version(),
+        "model_disagreement_abs": disagreement,
+        "prediction_timestamp": datetime.utcnow().isoformat(),
+        "prediction_horizon_hours": 24,
+        "synthetic_evaluation": True,
+        "insufficient_evidence": evidence_strength < 3 or (freshness_h is not None and freshness_h > 48) or (disagreement is not None and disagreement > 0.35),
+    }
+
+
+def _evidence_graph(alert, ev, inst) -> list[dict]:
+    """Visual evidence chain per alert (Phase 5) — value/direction/source/synthetic."""
+    graph = []
+    comp = ev.get("complaint_activity", "")
+    wd = ev.get("withdrawal_activity", "")
+    graph.append({
+        "signal": "Recent complaint surge",
+        "value": comp,
+        "direction": "up" if "complaint(s)" in comp and "0 complaint" not in comp else "flat",
+        "source_type": "complaint_record",
+        "observed_or_synthetic": "synthetic",
+    })
+    graph.append({
+        "signal": "Transaction velocity increase",
+        "value": f"withdrawals_6h={inst.get('withdrawals_6h', 0):.1f}, withdrawals_24h={inst.get('withdrawals_24h', 0):.1f}",
+        "direction": "up" if float(inst.get("withdrawals_6h", 0)) > float(inst.get("withdrawals_24h", 0)) / 6.0 else "flat",
+        "source_type": "withdrawal_record",
+        "observed_or_synthetic": "synthetic",
+    })
+    graph.append({
+        "signal": "Mule-account concentration",
+        "value": f"counterparty_count_24h={inst.get('counterparty_count_24h', 0):.1f}, linked_share={inst.get('linked_proportion_24h', 0):.2f}",
+        "direction": "up" if float(inst.get("linked_proportion_24h", 0)) >= 0.4 else "flat",
+        "source_type": "complaint_linkage",
+        "observed_or_synthetic": "synthetic",
+    })
+    graph.append({
+        "signal": "Geographic proximity",
+        "value": f"dist_to_complaint_centroid_km={inst.get('dist_to_complaint_centroid_km', 0):.1f}",
+        "direction": "near" if float(inst.get("dist_to_complaint_centroid_km", 99)) <= 10 else "far",
+        "source_type": "geography",
+        "observed_or_synthetic": "synthetic",
+    })
+    graph.append({
+        "signal": "Temporal similarity (Hawkes intensity)",
+        "value": f"hawkes_intensity_24h={inst.get('hawkes_intensity_24h', 0):.3f}",
+        "direction": "up" if float(inst.get("hawkes_intensity_24h", 0)) > 15 else "flat",
+        "source_type": "complaint_timeline",
+        "observed_or_synthetic": "synthetic",
+    })
+    graph.append({
+        "signal": "Forecast risk",
+        "value": f"{alert.risk_score:.2f} (threshold >= 0.70)",
+        "direction": "flagged" if alert.risk_score >= 0.7 else "not-flagged",
+        "source_type": "model_output",
+        "observed_or_synthetic": "synthetic",
+    })
+    return graph
+
+
+def evaluate_pending_outcomes(db: Session) -> int:
+    """
+    Closed-loop learning (Phase 9): for alerts created >24h ago with no outcome,
+    check whether a fraud withdrawal actually occurred at the flagged ATM in the
+    next 24h. Writes AlertOutcome records. NEVER auto-retrains.
+    """
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    alerts = repo.list_alerts(db, limit=500)
+    evaluated = 0
+    for a in alerts:
+        if a.created_at > cutoff:
+            continue
+        if repo.get_alert_outcome(db, a.alert_id) is not None:
+            continue
+        window = [a.created_at, a.created_at + timedelta(hours=24)]
+        wds = repo.recent_withdrawals(db, atm_id=a.atm_id, since=window[0])
+        fraud_now = [w for w in wds if w.timestamp <= window[1] and w.is_fraud_withdrawal]
+        actual = "yes" if fraud_now else "no"
+        pred = a.risk_score
+        repo.create_alert_outcome(
+            db,
+            alert_id=a.alert_id, atm_id=a.atm_id,
+            predicted_risk=pred, actual_fraud_happened=actual,
+            prediction_error=round(abs((1.0 if actual == "yes" else 0.0) - pred), 4),
+            is_false_positive=(actual == "no" and pred >= 0.5),
+            is_false_negative=(actual == "yes" and pred < 0.5),
+            evaluated_at=datetime.utcnow(),
+            model_version=a.model_version or "",
+        )
+        evaluated += 1
+    return evaluated
+
+
+def outcome_monitoring(db: Session) -> dict:
+    """Model-monitoring summary (Phase 9): predicted vs actual, FP/FN, drift."""
+    outcomes = repo.list_alert_outcomes(db, limit=500)
+    decided = [o for o in outcomes if o.actual_fraud_happened in ("yes", "no")]
+    n = len(decided)
+    if n == 0:
+        return {"evaluated": 0, "note": "No outcomes evaluated yet — alerts must age past the 24h horizon."}
+    fp = sum(1 for o in decided if o.is_false_positive)
+    fn = sum(1 for o in decided if o.is_false_negative)
+    tp = sum(1 for o in decided if o.actual_fraud_happened == "yes" and o.predicted_risk >= 0.5)
+    tn = sum(1 for o in decided if o.actual_fraud_happened == "no" and o.predicted_risk < 0.5)
+    mean_err = sum(o.prediction_error for o in decided) / n
+    # calibration drift: ECE over recent outcomes (10 bins, coarse)
+    import numpy as np
+
+    ece = 0.0
+    for lo, hi in zip(np.linspace(0, 1, 11)[:-1], np.linspace(0, 1, 11)[1:]):
+        m = [o for o in decided if lo <= o.predicted_risk < hi]
+        if len(m) >= 2:
+            conf = sum(o.predicted_risk for o in m) / len(m)
+            obs = sum(1 for o in m if o.actual_fraud_happened == "yes") / len(m)
+            ece += (len(m) / n) * abs(conf - obs)
+    return {
+        "evaluated": n,
+        "true_positives": tp, "false_positives": fp,
+        "true_negatives": tn, "false_negatives": fn,
+        "mean_abs_error": round(mean_err, 4),
+        "outcome_ece_10_bins": round(float(ece), 4),
+        "note": "Outcomes are evaluated against the synthetic withdrawal label (CONTROLLED SYNTHETIC EVALUATION). No auto-retraining on small samples.",
+    }
 
 
 def graded_actions(score: float) -> list[dict]:
@@ -441,6 +683,18 @@ def build_alert_evidence(db: Session, alert) -> dict:
         ),
         "feature_contributions": feature_contributions,
         "per_instance_shap": inference.shap_contributions(inst),
+        "evidence_graph": _evidence_graph(alert, {
+            "complaint_activity": complaint_activity,
+            "withdrawal_activity": withdrawal_activity,
+        }, inst),
+        "uncertainty": _uncertainty_block(alert, {
+            "feature_contributions": feature_contributions,
+            "recommended_freeze_accounts": recommended_freeze_accounts,
+            "data_through": ref,
+            "feature_row": inst,
+        }),
+        "counterfactual_whatif": _counterfactual_whatif(inst, inference.load_pipeline()["model"],
+                                                        inference.load_pipeline().get("calibrator")),
     }
 
 

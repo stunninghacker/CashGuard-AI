@@ -21,6 +21,22 @@ from ...security import require_auth
 router = APIRouter(tags=["risk"])
 
 
+@router.get("/horizons")
+def horizons(
+    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "BANK", "I4C_ADMIN")),
+):
+    """Multi-horizon forecast confidence (2/6/12/24/48h) — CONTROLLED SYNTHETIC
+    EVALUATION. Drives the dashboard's FORECAST HORIZON / MODEL CONFIDENCE panel."""
+    import json
+
+    from ...config import ARTIFACT_DIR
+
+    path = ARTIFACT_DIR / "deep_eval" / "horizons.json"
+    if not path.exists():
+        return {"status": "missing", "note": "Run scripts/horizon_eval.py"}
+    return json.loads(path.read_text())
+
+
 @router.get("/risk-scores", response_model=list[RiskScoreOut])
 def risk_scores(
     city: str | None = None,

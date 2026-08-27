@@ -72,6 +72,12 @@ class RiskScoreOut(BaseModel):
     longitude: float
     risk_score: float
     risk_level: str  # LOW / MEDIUM / HIGH / CRITICAL
+    emerging_risk: float = 0.0  # rate-of-change score: "risk rising fast" vs "usually risky"
+    intervention_priority: float = 0.0  # "where to act first" (see INTERVENTION_PRIORITY.md)
+    priority_exposure: float = 0.0
+    priority_urgency: float = 0.0
+    priority_evidence: float = 0.0
+    priority_confidence_weight: float = 0.0
     as_of: datetime
 
 
@@ -87,6 +93,8 @@ class AlertOut(BaseModel):
     risk_score: float
     recommended_action: str
     status: str
+    decision_reason: str = ""
+    model_version: str = ""
     sms_log: str
     email_log: str
     dispatch_log: str = ""
@@ -106,7 +114,20 @@ class AlertCreateIn(BaseModel):
 
 
 class AlertUpdateIn(BaseModel):
-    status: str = Field(pattern="^(acknowledged|actioned)$")
+    status: str
+    reason: str = ""
+
+
+class OutcomeOut(BaseModel):
+    alert_id: str
+    atm_id: str
+    predicted_risk: float
+    actual_fraud_happened: str
+    prediction_error: float
+    is_false_positive: bool
+    is_false_negative: bool
+    evaluated_at: datetime
+    model_version: str
 
 
 class EvidenceOut(BaseModel):
@@ -122,6 +143,9 @@ class EvidenceOut(BaseModel):
     recommended_freeze_accounts: list[dict] = []  # CFCFRMS fund-blocking intel
     recommended_actions: list[dict] = []           # graded response-playbook steps
     per_instance_shap: list[dict] = []             # native XGBoost pred_contribs
+    evidence_graph: list[dict] = []                # visual evidence chain (Phase 5)
+    uncertainty: dict = {}                         # confidence/freshness/version (Phase 4)
+    counterfactual_whatif: dict = {}               # inference-time ablation (Phase 4)
     data_through: datetime            # recency/coverage header metadata
     atms_scored: int
     atms_total: int

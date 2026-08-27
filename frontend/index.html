@@ -81,6 +81,9 @@
         <div class="city-chips" id="category-chips"></div>
         <span class="dd-label">Time (as-of replay)</span>
         <input type="date" id="asof-date" class="date-input" title="Replay the forecast for a past date" />
+        <span class="dd-label">Forecast horizon</span>
+        <select id="dd-horizon" class="date-input"><option value="24">24h (active)</option><option value="2">2h</option><option value="6">6h</option><option value="12">12h</option><option value="48">48h</option></select>
+        <span id="horizon-confidence" class="pill info">—</span>
         <button id="btn-replay" class="btn small">⟲ Replay</button>
         <button id="btn-live" class="btn small">Live</button>
         <label class="dd-toggle"><input type="checkbox" id="toggle-heat" checked /> Complaint heat</label>
@@ -153,15 +156,21 @@
       </section>
     </div>
     <div class="two-col">
-      <section class="panel">
-        <div class="panel-head"><h2>Ledger (tamper-evident hash chain)</h2><span id="ledger-badge"></span></div>
-        <div class="ledger-actions">
-          <button id="btn-ledger-verify" class="btn small">Verify Ledger</button>
-          <button id="btn-ledger-tamper" class="btn small warn">Tamper-demo (flip a block)</button>
-          <button id="btn-sit-report" class="btn small accent">Generate Situational Report (PDF)</button>
-        </div>
-        <div id="ledger-preview" class="muted"></div>
-      </section>
+<section class="panel">
+      <div class="panel-head"><h2>Ledger (tamper-evident hash chain)</h2><span id="ledger-badge"></span></div>
+      <div class="ledger-actions">
+        <button id="btn-ledger-verify" class="btn small">Verify Ledger</button>
+        <button id="btn-ledger-tamper" class="btn small warn">Tamper-demo (flip a block)</button>
+        <button id="btn-sit-report" class="btn small accent">Generate Situational Report (PDF)</button>
+      </div>
+      <div id="ledger-preview" class="muted"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Closed-Loop Outcomes (predicted vs actual)</h2>
+        <button id="btn-evaluate-outcomes" class="btn small">Evaluate pending (24h horizon)</button>
+        <span id="outcome-badge"></span></div>
+      <div id="outcome-panel"></div>
+    </section>
       <section class="panel">
         <div class="panel-head"><h2>I4C Inbox (received via webhook)</h2><span class="ev-notice">real POST path → local mock receiver</span></div>
         <div id="inbox-panel" class="inbox"></div>

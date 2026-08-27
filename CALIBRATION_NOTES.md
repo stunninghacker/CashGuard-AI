@@ -40,8 +40,8 @@ India-specific verified statistic unless a source is cited.
 - **CRITICAL REALISM RULE (enforced)**: mule accounts have normal banking
     history before cash-out, and bursts are MINUTE-level chunks (same ATM) with
     imperfect day-over-day persistence. Numbers read from `artifacts/metrics.json`
-    after the label-leak removal: max single-feature AUC = 0.8457
-    (counterparty_count_24h), threshold(≥0.7) precision = 0.7927 — the model
+    after the label-leak removal: max single-feature AUC = 0.8466
+    (counterparty_count_24h), threshold(≥0.7) precision = 0.8116 — the model
     cannot exploit "linked account present = fraud".
 
 ### 1.3 Prediction-horizon justification — `verified_pattern` (direction only)
@@ -88,12 +88,12 @@ there is no dependence on the fraud-withdrawal ground-truth label.
 forecast point (the 24h *before* the prediction day); the label is fraud in the
 24h *after* it. The feature can never contain the outcome it predicts.
 
-(c) **Its single-feature AUC is 0.8457, not 1.0.** No single feature is
+(c) **Its single-feature AUC is 0.8466, not 1.0.** No single feature is
 decisive (`per_feature_auc` in `metrics.json`; the next-strongest is
 `distinct_accounts_24h` at 0.7189). A label leak would show ~1.0 here.
 
 (d) **The ranking decays.** `precision@20/50/100/200/500/1000 = 1.0 / 1.0 /
-1.0 / 0.995 / 0.9 / 0.782` and threshold(≥0.7) precision = 0.7927. A genuine
+1.0 / 0.995 / 0.934 / 0.8` and threshold(≥0.7) precision = 0.8116. A genuine
 leak would stay ≈1.0 throughout the curve instead of decaying.
 
 ---
@@ -106,9 +106,9 @@ generated from behaviours calibrated to the published patterns above. This does
 
 1. **Methodological rigor** — time-based split with a validation slice (early
    stopping + calibration never touch the test set), precision@K,
-   **baseline lifts** (vs volume-ranking: 1.176–2.128×; vs complaint-proximity
-   ranking: 8.333–10.0×, from `metrics.json`), **lead-time** (median 14.1 h of
-   warning before the first confirmed fraud withdrawal; IQR 8.4–20.0 h;
+   **baseline lifts** (vs volume-ranking: 1.111–2.041×; vs complaint-proximity
+   ranking: >=50 (baseline ~0.00-0.02)×, from `metrics.json`), **lead-time** (median 13.5 h of
+   warning before the first confirmed fraud withdrawal; IQR 8.1–19.9 h;
    annotated `lead_time_is_horizon_dependent`),
    calibration curve + confusion matrix (`artifacts/calibration_and_confusion.png`),
    robustness-to-perturbation (`artifacts/robustness_check.png`).
@@ -118,17 +118,17 @@ generated from behaviours calibrated to the published patterns above. This does
    module only as the label `y`. The regenerated metrics on the held-out test
    set (with the Hawkes self-exciting feature and validation-slice early
    stopping) are:
-   `precision@20/50/100/1000 = 1.0 / 1.0 / 1.0 / 0.782; threshold(≥0.7) precision =
-   0.7927; max single-feature AUC = 0.8457 (feature: counterparty_count_24h)`.
+   `precision@20/50/100/1000 = 1.0 / 1.0 / 1.0 / 0.8; threshold(≥0.7) precision =
+   0.8116; max single-feature AUC = 0.8466 (feature: counterparty_count_24h)`.
    - **Residual-separability disclosure (known limitation):** even after removing
      the leak, precision@K at K≤100 remains 1.0. The per-feature-AUC diagnostic
      shows why: the strongest single feature is `counterparty_count_24h`
      (distinct complaint-linked mule accounts active at the ATM in the last 24h,
-     AUC 0.8457) — this is *operationally available at prediction time* and is
+     AUC 0.8466) — this is *operationally available at prediction time* and is
      NOT the removed ground-truth label. Combined with complaint-surge and
      volume features, the model's top-of-ranking certainty is therefore high but
      is carried by legitimate signals; the honest decay (P@200 0.995 → P@500
-     0.9 → P@1000 0.782, threshold precision 0.7927) shows imperfect
+     0.934 → P@1000 0.8, threshold precision 0.8116) shows imperfect
      separability across the operational band. If a future revision needs P@100
      < 1.0, the generator detune levers are `scenario.blocked_burst_prob` and
      `scenario.random_atm_fraud_prob` in `calibration_config.yaml`.
@@ -140,17 +140,17 @@ generated from behaviours calibrated to the published patterns above. This does
   complaint timestamps only** (strict mask; prediction-time safety asserted by
   `self_test()`; params fitted on the training period only).
 - **Ensemble is NOT better — disclosed, not hidden**: rank-average
-  XGB+Hawkes gives test ROC-AUC **0.8153** vs pure-XGBoost **0.9362**
+  XGB+Hawkes gives test ROC-AUC **0.8143** vs pure-XGBoost **0.9366**
   (`metrics_xgboost_only` vs `metrics_ensemble` in `metrics.json`). The active
   model is therefore `xgboost` (the Hawkes feature still contributes as one of
   24 features). `new_feature_single_auc_hawkes = 0.5238` — weak alone,
   leak-free (< 0.95 gate).
 - Baselines on the same test set: volume ranking P@20/50/100 =
-  0.85/0.56/0.47 → **lift vs volume 1.176/1.786/2.128**; complaint-proximity
+  0.85/0.56/0.47 → **lift vs volume 1.111/1.471/2.041**; complaint-proximity
   ranking P@20/50/100 = 0.1/0.12/0.12 → **lift vs proximity 10.0/8.333/8.333**
   (the model massively outperforms a naive "near recent complaints" heuristic —
   and this is disclosed honestly).
-- Lead time median **14.1 h** (IQR 8.4–20.0) — annotated
+- Lead time median **13.5 h** (IQR 8.1–19.9) — annotated
   `lead_time_is_horizon_dependent: true`: it is a horizon design-property of
   the 24h forecast, not an independent accuracy claim.
 3. **Transfer-readiness** — schema, repository layer, adapters, and feature

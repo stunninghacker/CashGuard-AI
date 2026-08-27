@@ -26,39 +26,30 @@ python -m uvicorn backend.api.main:app --port 8000
 Open **http://localhost:8000**. (Also run `scripts/robustness_check.py` once
 beforehand — static PNG for the deck.)
 
-## 2. Live Walkthrough (click-by-click, ~5 minutes)
+## 2. Live Walkthrough — the 16-step evidence-first scenario
 
-1. **Login** as `officer.district1 / District1!1` (Northsagar police).
-2. **Map** — ATMs colored by risk. Click a red ATM → popup with jurisdiction
-   (fictional state/district/PS area) + risk %.
-3. **Drill-down panel (deliverable b)**:
-   - Toggle **crime category** chips (e.g., phishing) → complaint heat changes.
-   - **Date + ⟲ Replay** → forecast map recomputed for a past date
-     (temporal drill-down).
-   - **State / City / Bank** cascade filters.
-   - Toggle **Complaint heat** (observed) vs **Forecast risk** (predicted).
-4. **Top High-Risk ATMs (next 24h)** — top-20 table.
-5. **⚡ Run Alert Cycle** — watch the **live WebSocket toast** arrive, then the
-   alert feed fill with SMS/email/dispatch logs.
-6. **Click Details** on an alert → **3-field evidence panel**: complaint
-   activity · withdrawal activity · context signal with **VERIFIED/ASSUMED
-   disclosure**; CFCFRMS freeze intel (masked account tokens); feature
-   contributions (**NOT SHAP**); jurisdiction + recipients.
-7. **Acknowledge / Actioned** — status changes, appended to the ledger.
-8. **📄 Generate Intelligence Report (PDF)** — downloads via the chain-of-custody
-   path.
-9. **Log out → Login as `bank.hdfc / HdfcBank!1`** — only HDFC ATMs visible
-   (server-side RBAC). Show the **Fund-Block Recommendations queue**; click
-   **Hold / Recovered** and watch the **Recovery Funnel** move.
-10. **Log out → Login as `i4c.admin / I4cAdmin!1`**:
-    - National stats + recovery funnel headline (₹ flagged / held / recovered).
-    - **I4C Inbox** panel — intel received via the REAL webhook path
-      (dispatch + cfcfrms channels).
-    - **Verify Ledger** → "Ledger verified ✓ · N blocks". Click
-      **Tamper-demo** → Verify again → "LEDGER TAMPERED ✗" (the chain caught it).
-    - **Generate Situational Report (PDF)**.
-11. (Time permitting) `http://localhost:8000/docs` — full API surface;
-    `POST /ingest/stream/start` shows live ingestion dripping.
+1. **Login** as `officer.district1 / District1!1`.
+2. (Simulated) batch of complaints arrives — the engine is re-scored.
+3. New signals arrive → **emerging-risk badges** on hotspots ("▲ Emerging 62%" vs "● historical").
+4. Top hotspots update — click #1. The row answers: where (ATM/city) · how high (risk %) ·
+   how soon (24h horizon) · why (Details) · how confident (uncertainty block).
+5. **Details** → 3-field evidence + **evidence graph** (complaint surge → velocity → mule
+   concentration → proximity → temporal → forecast risk; each node: value, direction, source,
+   observed/synthetic).
+6. Uncertainty block: confidence · evidence strength n/5 · data freshness · model version ·
+   horizon — and **INSUFFICIENT EVIDENCE — HOLD ACTION** on the weak band.
+7. **Recommended actions** (graded, review-oriented).
+8. Officer decides: **Acknowledge / Monitor / Dismiss / Escalate / More data** — dismiss and
+   escalate **require a reason** (ledger-recorded).
+9. **Bank login** → scoped alert + **fund-block queue** + recovery funnel; Hold/Recovered updates it.
+10. After the 24h horizon: **Evaluate pending** → **Closed-Loop Outcomes** (predicted vs actual,
+    FP/FN, drift).
+11. **I4C**: national stats + model monitoring + **Verify Ledger ✓** → **Tamper-demo** → **Verify ✗**.
+12. **PDF Intelligence Report** (ledger-fingerprinted) + **Situational Report**.
+13. Live WebSocket toast on new alerts.
+14. Drill-downs: category chips, date replay, state→city→bank cascade, heat-vs-forecast toggle.
+15. Deep-eval artifacts shown: ablation, adversarial worlds, horizons, calibration (ECE/Brier).
+16. Close on the honesty opening (§0).
 
 ## 3. Fallback Plan — DEMO_MODE (if live inference breaks on stage)
 

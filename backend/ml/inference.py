@@ -106,13 +106,40 @@ def predict_risk(as_of: datetime, city: str | None = None) -> list[dict]:
     state, police_station_area, pin, latitude, longitude, risk_score.
     Sorted by risk desc.
     """
-    _, meta, probs = score_all(as_of)
+    X, meta, probs = score_all(as_of)
 
     out = []
     for i in range(len(meta)):
         row = meta.iloc[i]
         if city and row["city"] != city:
             continue
+        x = X.iloc[i]
+        # Emerging-risk score: rate-of-change signals vs historical levels
+        # (complaint surge, mule-account concentration, short-window velocity)
+        city_base = max(float(x["n_complaints_city_7d"]) / 7.0, 1.0)
+        surge = min(float(x["n_complaints_city_24h"]) / city_base, 2.0) / 2.0
+        mule_share = min(
+            float(x["counterparty_count_24h"]) / max(float(x["distinct_accounts_24h"]), 1.0),
+            1.0,
+        )
+        velocity = min(
+            float(x["withdrawals_6h"]) / max(float(x["withdrawals_24h"]) / 4.0, 1.0),
+            2.0,
+        ) / 2.0
+        emerging = round(min(0.4 * surge + 0.35 * mule_share + 0.25 * velocity, 1.0), 4)
+        # ---- Intervention priority (Phase 3, formulation in INTERVENTION_PRIORITY.md) ----
+        # P = (0.40*risk + 0.25*exposure + 0.15*urgency + 0.20*evidence) * confidence-weight
+        p = float(probs[i])
+        exposure = min(float(x["amount_sum_24h"]) / 1_000_000.0, 1.0)   # INR exposure, normalized (assumption: 1M cap)
+        urgency = emerging
+        evidence = min(
+            1.0,
+            0.25 + 0.25 * min(float(x["counterparty_count_24h"]) / 8.0, 1.0)
+            + 0.25 * float(x["linked_proportion_24h"])
+            + 0.25 * min(float(x["n_complaints_city_24h"]) / 40.0, 1.0),
+        )
+        q = 1.0 if p >= 0.80 else 0.7 if p >= 0.70 else 0.4  # confidence weight from probability band
+        priority = round((0.40 * p + 0.25 * exposure + 0.15 * urgency + 0.20 * evidence) * q, 4)
         out.append(
             {
                 "atm_id": row["atm_id"],
@@ -125,7 +152,13 @@ def predict_risk(as_of: datetime, city: str | None = None) -> list[dict]:
                 "police_station_area": row["police_station_area"],
                 "latitude": float(row["latitude"]),
                 "longitude": float(row["longitude"]),
-                "risk_score": round(float(probs[i]), 4),
+                "risk_score": round(p, 4),
+                "emerging_risk": emerging,  # "risk rising fast" vs "usually risky"
+                "intervention_priority": priority,
+                "priority_exposure": round(exposure, 4),
+                "priority_urgency": round(urgency, 4),
+                "priority_evidence": round(evidence, 4),
+                "priority_confidence_weight": q,
             }
         )
     out.sort(key=lambda s: s["risk_score"], reverse=True)

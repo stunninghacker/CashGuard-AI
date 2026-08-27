@@ -120,4 +120,31 @@ def update_alert(
     alert = repo.get_alert(db, alert_id)
     if alert is None:
         raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
-    return services.set_alert_status(db, alert, payload.status, user)
+    try:
+        return services.set_alert_status(db, alert, payload.status, user, reason=payload.reason)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/outcomes/list")
+def list_outcomes(user=Depends(require_auth("I4C_ADMIN", "POLICE_STATE")), db: Session = Depends(get_db)):
+    outcomes = repo.list_alert_outcomes(db, limit=200)
+    return [
+        {"alert_id": o.alert_id, "atm_id": o.atm_id, "predicted_risk": o.predicted_risk,
+         "actual_fraud_happened": o.actual_fraud_happened, "prediction_error": o.prediction_error,
+         "is_false_positive": o.is_false_positive, "is_false_negative": o.is_false_negative,
+         "evaluated_at": o.evaluated_at.isoformat(), "model_version": o.model_version}
+        for o in outcomes
+    ]
+
+
+@router.post("/outcomes/evaluate")
+def evaluate_outcomes(user=Depends(require_auth("I4C_ADMIN")), db: Session = Depends(get_db)):
+    """Evaluate pending alerts past their 24h horizon against observed outcomes."""
+    n = services.evaluate_pending_outcomes(db)
+    return {"evaluated": n, "monitoring": services.outcome_monitoring(db)}
+
+
+@router.get("/outcomes/summary")
+def outcome_summary(user=Depends(require_auth("I4C_ADMIN", "POLICE_STATE")), db: Session = Depends(get_db)):
+    return services.outcome_monitoring(db)

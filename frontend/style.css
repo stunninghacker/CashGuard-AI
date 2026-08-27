@@ -90,6 +90,11 @@ main.dash { padding: 20px 24px; max-width: 1600px; margin: 0 auto; display: flex
 .inbox { max-height: 300px; overflow-y: auto; }
 .inbox-msg { border-bottom: 1px solid rgba(30,44,74,.5); padding: 8px 0; font-size: 12px; }
 .ledger-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+
+/* ---------- evidence graph ---------- */
+.ev-graph-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(30,44,74,.5); font-size: 12px; }
+.ev-graph-idx { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #06121f; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+.ev-graph-arrow { color: var(--accent); font-size: 16px; margin-left: auto; }
 .chip {
   padding: 4px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
   border: 1px solid var(--border); background: var(--bg-2); color: var(--muted);

@@ -31,8 +31,15 @@ router = APIRouter(tags=["realtime"])
 
 # ------------------------------ Mock I4C inbox ------------------------------
 @router.post("/mock-i4c-inbox")
-async def mock_i4c_inbox(request: Request, db: Session = Depends(get_db)):
-    """Receives REAL webhook POSTs (dispatch + CFCFRMS stub) and stores them."""
+async def mock_i4c_inbox(request: Request, x_webhook_token: str | None = None, db: Session = Depends(get_db)):
+    """Receives REAL webhook POSTs (dispatch + CFCFRMS stub) and stores them.
+    If WEBHOOK_TOKEN is configured, requests must carry X-Webhook-Token."""
+    from ...config import WEBHOOK_TOKEN
+
+    if WEBHOOK_TOKEN and x_webhook_token != WEBHOOK_TOKEN:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=401, detail="invalid webhook token")
     try:
         payload = await request.json()
     except Exception:
@@ -54,7 +61,22 @@ def inbox_list(user=Depends(require_auth("I4C_ADMIN", "POLICE_STATE", "POLICE_DI
 
 # ------------------------------ WebSocket live push --------------------------
 @router.websocket("/ws/alerts")
-async def ws_alerts(ws: WebSocket):
+async def ws_alerts(ws: WebSocket, token: str | None = None):
+    """Live push. Requires a valid access token (?token=) so unauthenticated
+    connections are rejected (Phase 16 security audit)."""
+    from ...security import decode_token
+
+    if not token:
+        await ws.close(code=4401, reason="missing token")
+        return
+    try:
+        claims = decode_token(token)
+        if claims.get("type") != "access":
+            await ws.close(code=4401, reason="not an access token")
+            return
+    except Exception:
+        await ws.close(code=4401, reason="invalid token")
+        return
     await manager.connect(ws)
     try:
         while True:

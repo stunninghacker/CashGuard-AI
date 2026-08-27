@@ -59,7 +59,9 @@ HOTSPOT_K: int = int(os.getenv("HOTSPOT_K", "20"))
 SIMULATED_NOW: str = os.getenv("SIMULATED_NOW", "")
 
 SEED: int = int(os.getenv("SEED", "42"))
-CORS_ORIGINS: list[str] = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")]
+CORS_ORIGINS: list[str] = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000").split(",")]
+RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "240"))
+LOGIN_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("LOGIN_RATE_LIMIT_PER_MINUTE", "10"))
 
 # --------------------------------------------------------------------------
 # Demo resilience (Section 10 of the SIH spec)
@@ -86,6 +88,14 @@ JWT_REFRESH_TTL_HOURS: int = int(os.getenv("JWT_REFRESH_TTL_HOURS", "24"))
 WEBHOOK_URL: str = os.getenv("WEBHOOK_URL", "http://127.0.0.1:8000/mock-i4c-inbox")
 CFCFRMS_WEBHOOK_URL: str = os.getenv("CFCFRMS_WEBHOOK_URL", "http://127.0.0.1:8000/mock-i4c-inbox")
 ALLOW_TAMPER_DEMO: bool = os.getenv("ALLOW_TAMPER_DEMO", "").lower() in ("1", "true", "yes")
+
+# --------------------------------------------------------------------------
+# Shadow mode (Phase 14): predictions recorded but no operational actions.
+# SHADOW_MODE=true -> alerts are stored with status="shadow"; no SMS/email
+# webhook/WS dispatch; outcomes are still evaluated. Safe real-validation path.
+# --------------------------------------------------------------------------
+SHADOW_MODE: bool = os.getenv("SHADOW_MODE", "").lower() in ("1", "true", "yes")
+WEBHOOK_TOKEN: str = os.getenv("WEBHOOK_TOKEN", "")  # if set, mock inbox POSTs must carry it
 
 # --------------------------------------------------------------------------
 # Mock notification gateways

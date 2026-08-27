@@ -14,9 +14,9 @@ NOT equal real-world precision.**
 Our claim is:
 1. **Methodological rigor** — time-based split with a validation slice (early
    stopping + calibration never touch the test set), precision@K, baseline
-   lifts (volume: 1.176–2.128×; complaint-proximity: 8.333–10.0× — the model
+   lifts (volume: 1.111–2.041×; complaint-proximity: >=50 (baseline ~0.00-0.02)× — the model
    massively beats a naive "near recent complaints" heuristic, disclosed
-   honestly), median lead-time (14.1 h; IQR 8.4–20.0 — annotated
+   honestly), median lead-time (13.5 h; IQR 8.1–19.9 — annotated
    `lead_time_is_horizon_dependent: true`, a horizon design-property of the
    24h forecast, not an independent accuracy claim), calibration curve +
    confusion matrix, robustness-to-perturbation
@@ -24,18 +24,18 @@ Our claim is:
 2. **Honest separability (numbers read from `artifacts/metrics.json`)**
    — the label-leaking feature `fraud_withdrawals_24h` was removed; the
    regenerated held-out-test numbers are: `precision@20/50/100/1000 =
-   1.0 / 1.0 / 1.0 / 0.782; threshold(≥0.7) precision = 0.7927; max
-   single-feature AUC = 0.8457 (feature: counterparty_count_24h)`.
+   1.0 / 1.0 / 1.0 / 0.8; threshold(≥0.7) precision = 0.8116; max
+   single-feature AUC = 0.8466 (feature: counterparty_count_24h)`.
    - **Residual-separability disclosure:** precision@K at K≤100 remains 1.0.
      The per-feature-AUC diagnostic attributes this to
      `counterparty_count_24h` (complaint-linked mule activity, available at
      prediction time — not the removed label) combined with surge/volume
-     features; the decay (P@200 0.995 → P@500 0.9 → P@1000 0.782) and
-     threshold precision 0.7927 are the operational-band numbers. Disclosed as
+     features; the decay (P@200 0.995 → P@500 0.934 → P@1000 0.8) and
+     threshold precision 0.8116 are the operational-band numbers. Disclosed as
      a known limitation, not claimed away (detune levers:
      `scenario.blocked_burst_prob`, `scenario.random_atm_fraud_prob`).
    - **Ensemble disclosed**: rank-average XGB+Hawkes scores *worse*
-     (AUC 0.8153) than pure XGBoost (AUC 0.9362); active model = xgboost.
+     (AUC 0.8143) than pure XGBoost (AUC 0.9366); active model = xgboost.
      The Hawkes feature (single-feature AUC 0.5238, leak-free) remains in the
      feature set.
 3. **Transfer-readiness** — schema, repository layer, ingestion adapters, and
