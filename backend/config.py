@@ -46,6 +46,7 @@ DATA_DIR: Path = BASE_DIR / "data"
 # --------------------------------------------------------------------------
 RISK_THRESHOLD: float = float(os.getenv("RISK_THRESHOLD", "0.7"))  # alert when P(fraud in 24h) >= 0.7
 ALERT_COOLDOWN_HOURS: int = int(os.getenv("ALERT_COOLDOWN_HOURS", "6"))  # no duplicate alert for same ATM within N hours
+ALERT_DEDUP_RISK_DELTA: float = float(os.getenv("ALERT_DEDUP_RISK_DELTA", "0.1"))  # dedup is bypassed when risk rose by more than this
 SCHEDULER_INTERVAL_MINUTES: int = int(os.getenv("SCHEDULER_INTERVAL_MINUTES", "60"))
 HOTSPOT_K: int = int(os.getenv("HOTSPOT_K", "20"))
 

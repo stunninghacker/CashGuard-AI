@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from . import models
 from . import repositories as repo
 from .alerts.notifier import send_email, send_sms
-from .config import ALERT_COOLDOWN_HOURS, DEMO_CACHE_DIR, DEMO_MODE, RISK_THRESHOLD, SIMULATED_NOW
+from .config import ALERT_COOLDOWN_HOURS, ALERT_DEDUP_RISK_DELTA, DEMO_CACHE_DIR, DEMO_MODE, RISK_THRESHOLD, SIMULATED_NOW
 from .data.synthetic_data import NIGHT_HOURS, load_calibration_config
 from .ml import inference
 
@@ -114,8 +114,13 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
         if not force:
             existing = repo.recent_open_alert_for_atm(db, s["atm_id"], ALERT_COOLDOWN_HOURS)
             if existing is not None:
-                skipped += 1
-                continue
+                # Alert-fatigue dedup (Phase: mitigation): skip repeat alerts for
+                # the same ATM within the cooldown window UNLESS risk has risen
+                # meaningfully since the last alert (delta > ALERT_DEDUP_RISK_DELTA)
+                # — a genuine escalation still gets through.
+                if s["risk_score"] - (existing.risk_score or 0.0) <= ALERT_DEDUP_RISK_DELTA:
+                    skipped += 1
+                    continue
 
         action = recommend_action(s["risk_score"], s["risk_level"])
         # INSUFFICIENT EVIDENCE — HOLD ACTION (Phase 7): near-threshold alerts

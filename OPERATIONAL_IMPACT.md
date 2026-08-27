@@ -40,6 +40,21 @@ amount ₹455M.)
   depends on complaint/withdrawal data latency, bank cooperation, and human
   action — all pilot questions.
 
+## Alert fatigue mitigation
+
+The alert cycle deduplicates repeat alerts for the same ATM: if an ATM
+already has an open (unacknowledged or recently-actioned) alert, no new alert
+fires for that ATM within the cooldown window (`ALERT_COOLDOWN_HOURS`, default
+6 hours) — **unless** the risk score has risen meaningfully since the last
+alert (delta > `ALERT_DEDUP_RISK_DELTA`, default 0.1), so a genuine escalation
+still gets through. This is a scheduling rule, not a model change. It must be
+read alongside the honest headline number: the threshold-0.7 false-alert rate
+is **38%** and this system does not hide that — the dedup reduces noise, but
+the system is decision support, not an autonomous trigger. Every alert still
+requires human review before any action, which is exactly what the evidence
+panel is for: it is designed to **prioritize investigator attention, not to
+replace it**.
+
 ## Why this matters for SIH
 It converts "the model ranks well" into the operational question the problem
 statement cares about: **"if you act on the top-K, what share of the fraud

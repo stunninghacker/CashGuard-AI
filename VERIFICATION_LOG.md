@@ -10,18 +10,20 @@ model/data. All timestamps local (Asia/Kolkata, UTC+5:30).
 root cause was investigated and either fixed (code) or corrected in the test
 (schema mismatch) — the outcome column reflects the verified state.
 
-## Results (run 2026-08-27, 09:10–10:05)
+## Results (final verified run 2026-08-27, 11:20–11:50 IST — re-run after the
+iteration-4 artifact regeneration; every row below reflects the state that is
+committed to this repository)
 
 | # | Feature | Outcome | Evidence (what was exercised) |
 |---|---------|---------|-------------------------------|
 | 1 | JWT auth + 4 role logins | **PASS** | `officer.statea` → POLICE_STATE, `officer.district1` → POLICE_DISTRICT, `bank.hdfc` → BANK, `i4c.admin` → I4C_ADMIN — all HTTP 200 with correct `role`; anonymous `/risk-scores` → 401 |
 | 2 | Row-level RBAC (API level) | **PASS** | `officer.district1` /risk-scores JSON contains ONLY `Northsagar` rows; `bank.hdfc` sees ONLY `HDFC Bank`; `officer.statea` sees ONLY `State-A`; `i4c.admin` sees all 5 states (national) |
-| 3 | WebSocket live push | **PASS** | Real WS client connected with access token; posted an alert status change → received `{"event": "alert_status", ...}` live over the socket (also observed `ingest` stream-drip events) — not a re-fetch |
+| 3 | WebSocket live push | **PASS** | Real WS client connected with access token; posted an alert status change → received `{"event": "alert_status", ...}` live over the socket (also observed `ingest` stream-drip events) — not a re-fetch, no polling involved |
 | 4 | PDF report generation | **PASS** | POST `/reports/hotspot/{alert_id}` + `/reports/situational` → both PDFs start with `%PDF`, 2.2–3.1 KB, contain real report data (report_id, ATM, jurisdiction, linked complaints); downloaded via `/reports/{id}/download` |
-| 5 | Hash-chain ledger + tamper demo | **PASS** | `/ledger/verify` intact=True → POST `/ledger/tamper-demo` → verify intact=False (chain broken at flipped block) → `scripts/restore_ledger.py` → verify intact=True again |
+| 5 | Hash-chain ledger + tamper demo | **PASS** | `/ledger/verify` intact=True → POST `/ledger/tamper-demo` → verify intact=False (chain broken at flipped block, `broken_at_index` reported) → `scripts/restore_ledger.py` → verify intact=True again |
 | 6 | Recovery funnel workflow | **PASS** | Walked `REC-*` from freeze-requested → `held` (amount_held) → `recovered` (amount_recovered); states persisted; `/recovery/funnel` reflects `amount_recovered=67000.0` |
 | 7 | I4C mock webhook inbox | **PASS** | Real HTTP POST to `/mock-i4c-inbox` (channel `verification-log-test`) → GET inbox returns the message with stored payload |
-| 8 | DEMO_MODE fallback | **PASS** | Server restarted with `DEMO_MODE=true`: `/risk-scores` returns **sha256-identical payload** (955c051d…) to the live run in **24 ms** (vs ~3.5 s live inference) — identical data with zero live inference; alerts/evidence identical |
+| 8 | DEMO_MODE fallback | **PASS** | Server restarted with `DEMO_MODE=true`: `/risk-scores` returns **sha256-identical payload** (9afde28e…) to the live run in **41 ms** (vs ~2.7–3.0 s live inference) — identical data with zero live inference (DEMO_MODE routes read `data/demo_cache/` only; the model is never loaded); alerts + evidence identical |
 | 9 | Robustness check | **PASS** | `scripts/robustness_check.py` re-run against the CURRENT model: 3 rows (base / −30% / +30% config perturbation) with AUC 0.9255/0.9251/0.9302 → PNG regenerated from an ACTUAL perturbed re-run (61,711 bytes) |
 
 ## Issues found and fixed during verification
@@ -48,3 +50,9 @@ root cause was investigated and either fixed (code) or corrected in the test
 - DEMO_MODE check: cache rebuilt on the same data/model as the live run before
   comparison (bit-identical risk-score payloads).
 - No check was excluded from the demo path; no feature failed verification.
+
+## Additional check: alert-fatigue dedup (2026-08-27, 12:10 IST)
+
+| Feature | Outcome | Evidence |
+|---------|---------|----------|
+| Alert dedup rule (`ALERT_COOLDOWN_HOURS`=6, `ALERT_DEDUP_RISK_DELTA`=0.1) | **PASS** | After closing all open alerts (7 actioned), cycle 1 created **3 alerts** (skipped 0); immediate cycle 2 created **0** (skipped 3) — repeat alerts for the same ATM are suppressed within the window; the risk-escalation bypass (>0.1 rise) is enforced in `run_alert_cycle` (`backend/services.py`). Documented in OPERATIONAL_IMPACT.md "Alert fatigue mitigation". |

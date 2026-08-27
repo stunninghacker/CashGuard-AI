@@ -8,6 +8,8 @@
 
 ---
 
+> **Docs map**: [DOCS_INDEX.md](DOCS_INDEX.md) — 30-second index of every document in this repo.
+
 ## 1. Problem Statement (Short Version)
 
 India's National Cyber Crime Reporting Portal receives ~8,000 complaints/day. Most financial
