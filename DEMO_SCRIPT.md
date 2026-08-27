@@ -118,7 +118,7 @@ four-point rebuttal.)
 **Q4 — "An officer gets an alert — then what?"**
 The alert carries a graded response playbook (notify branch → heighten monitoring →
 CCTV/pre-position → tighten withdrawal verification) with an evidence panel and feature
-contributions (global importance + percentile — not SHAP); the Bank dashboard shows the
+contributions (global importance + percentile, plus per-instance TreeSHAP); the Bank dashboard shows the
 CFCFRMS fund-block queue and recovery funnel. Everything is advisory — a human action
 is required and every action lands on the tamper-evident ledger.
 

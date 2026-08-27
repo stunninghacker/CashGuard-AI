@@ -106,7 +106,7 @@ Full click-by-click walkthrough + failure contingency: **`DEMO_SCRIPT.md`**.
    observed-heat vs forecast-risk toggles.
 4. **⚡ Run Alert Cycle** → live **WebSocket** push → alert feed → **Details** →
    3-field evidence panel (verified/assumed disclosure, CFCFRMS freeze intel,
-   NOT-SHAP contributions) → **PDF Intelligence Report**.
+   per-instance TreeSHAP contributions) → **PDF Intelligence Report**.
 5. **Bank login** → only HDFC ATMs + **Fund-Block queue** + **recovery funnel**.
 6. **I4C login** → national stats, **recovery funnel headline**, **I4C Inbox**
    (real webhook → local mock receiver), **Verify Ledger** + **tamper demo**,
@@ -154,7 +154,9 @@ in `MODEL_CARD.md` for the investigation that produced these numbers.
 parameters (`artifacts/robustness_check.png`).
 
 **Explainability** (evidence panel): global XGBoost `feature_importances_` + instance
-percentile vs. the training set â€” **explicitly NOT SHAP**. Every contributing signal is
+percentile vs. the training set (interpretation aid), **plus per-instance TreeSHAP
+values via XGBoost's native `pred_contribs`** (exact tree-based attribution, no causal
+claim implied). Every contributing signal is
 source-tagged `verified_pattern` / `assumption_general_literature` in the alert detail view
 (see `CALIBRATION_NOTES.md`).
 | `MODEL_CARD.md` | Model facts + "Why precision@K is not artificially perfect" (leak-guard investigation) |
@@ -162,13 +164,17 @@ source-tagged `verified_pattern` / `assumption_general_literature` in the alert 
 ## 8. Security (prototype-grade, honest)
 
 - **Role-scoped bearer tokens** (`backend/security.py`): `POST /api/auth/login` issues an
-  HMAC-SHA256 signed, expiring token; mutation endpoints (alert status, alert creation,
-  training, reports, audit) enforce role via FastAPI dependencies â€” verified live
-  (401 without token, 403 for wrong role).
-- Read endpoints are open in this prototype for demo fluidity; production replaces
-  `security.py` with OAuth2.0/JWT against MHA/I4C identity providers (integration point
-  marked in code).
-- Env vars for DB URL, model path, `AUTH_SECRET`, `DEMO_MODE`; Dockerfile provided.
+  HMAC-SHA256 signed, expiring token (30-min access, 24h refresh); ALL data endpoints
+  (risk scores, alerts, evidence, reports, audit, recovery) enforce authentication and
+  role via FastAPI dependencies — verified live (401 without token, 403 for wrong role,
+  row-level scoping per role). Only `DEMO_MODE=true` serves pre-computed cache data.
+- Full control inventory: `FINAL_SECURITY_AUDIT.md` (auth, authorization, JWT expiry,
+  refresh, CORS, rate limiting, WebSocket auth, report access, PII, training, audit,
+  model, and mock endpoints).
+- Production replaces the prototype token scheme with OAuth2.0/OIDC against MHA/I4C
+  identity providers (integration point marked in code).
+- Env vars for DB URL, model path, `AUTH_SECRET`, `DEMO_MODE`, `SHADOW_MODE`,
+  `ALLOW_TAMPER_DEMO`; Dockerfile provided.
 
 ## 9. Production Integration Path (Real Data)
 
@@ -185,13 +191,11 @@ source-tagged `verified_pattern` / `assumption_general_literature` in the alert 
 ## 10. Future Scope
 
 - Real-data pilots with I4C/MHA and partner banks; model monitoring & drift detection
-- **Anchor the audit hash chain to a permissioned blockchain/ledger** (the prototype's
+- **Anchor the audit hash chain to a permissioned ledger** (the prototype's
   SHA-256 chain already provides tamper-evidence â€” the SIH "Blockchain & Cybersecurity"
   theme is implemented live; ledger anchoring is the production upgrade)
 - Federated learning across banks without sharing raw transaction data
 - Hourly granularity (currently daily), sub-city geo grids, district-level routing
-- True SHAP per-instance attribution (evidence panel currently uses global importance
-  + instance percentile, honestly labelled)
 - Inter-agency routing/handoff (depends on non-public MHA/I4C protocols)
 - Fairness/bias audits to avoid over-policing specific areas
 

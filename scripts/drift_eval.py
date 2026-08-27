@@ -45,6 +45,7 @@ def main():
         "fraud_rate_shift": {"dataset": {"fraud_share": 0.18}},
         "mule_network_topology": {"scenario": {"mule_same_atm_prob": 0.75, "mule_burst_prob": 0.1, "random_atm_fraud_prob": 0.3}},
         "coordinated_adaptation": {"scenario": {"blocked_burst_prob": 0.3, "hot_atm_use_prob": 0.75, "mule_burst_prob": 0.6}},
+        "risk_avoidance": {"scenario": {"hot_atm_use_prob": 0.15, "random_atm_fraud_prob": 0.45, "blocked_burst_prob": 0.1}},
     }
     rows = []
     tmp = Path(tempfile.mkdtemp(prefix="cg_drift_"))

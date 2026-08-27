@@ -93,8 +93,8 @@ Our claim is:
 
 - The evidence panel uses **global feature importance (XGBoost
   `feature_importances_`) + instance percentile** vs. the training set.
-- It is **explicitly NOT SHAP** and does not imply per-instance causal
-  attribution. True SHAP is future work (scaffolded, not built).
+- It is **per-instance TreeSHAP (XGBoost native pred_contribs)** and does not imply causal
+  attribution.
 
 ## 5. Ledger (Blockchain theme)
 

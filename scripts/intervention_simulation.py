@@ -99,6 +99,8 @@ def main():
             "k": k,
             "capture_rate_mean_ci95": [mean, lo, hi],
             "loss_prevented_pct_mean_ci95": [lm, llo, lhi],
+            "false_interventions_mean": round(float(np.mean([r["false_interventions"] for r in rs])), 1),
+            "missed_events_mean": round(float(np.mean([r["missed_events"] for r in rs])), 1),
             "efficiency_inr_per_intervention_mean": round(float(np.mean([r["efficiency_inr_per_intervention"] for r in rs])), 2),
             "time_to_intervention_median_h": round(float(np.median([r["time_to_intervention_median_h"] for r in rs if r["time_to_intervention_median_h"]])), 1),
         })

@@ -36,7 +36,7 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
 3. **⚡ Run Alert Cycle** → SMS/email mock logs for SHOs & branch managers, dedupe cooldown.
 4. **Alert → Details → 3-field evidence panel**: complaint activity, withdrawal activity,
    context signal with **VERIFIED/ASSUMED source disclosure**, fired rule, feature
-   contributions (global importance + percentile — **NOT SHAP**).
+   contributions (global importance + percentile, plus per-instance TreeSHAP via native pred_contribs).
 5. **Acknowledge / Actioned** — state persists (audit trail).
 6. **Bank view**: pick a bank → only its ATMs, risk + suggested actions.
 7. `/docs` — full REST API (integration-ready contracts).
@@ -65,7 +65,7 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
 - Mock SMS/email → NIC SMS / SendGrid / I4C webhook (one file).
 - OAuth2/JWT roles; PostgreSQL via `DATABASE_URL`; Dockerized; DEMO_MODE fallback is stage-only.
 - **Future**: blockchain-based tamper-evident alert audit log; model drift monitoring;
-  federated learning across banks; true SHAP; inter-agency routing per MHA protocols.
+  federated learning across banks; inter-agency routing per MHA protocols.
 
 ### Why `counterparty_count_24h` is not a leak (numbers from `artifacts/metrics.json`)
 (a) Built from complaint-linked accounts — complaints are filed *before*

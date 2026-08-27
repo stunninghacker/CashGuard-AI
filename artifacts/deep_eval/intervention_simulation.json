@@ -10,47 +10,53 @@
     {
       "k": 5,
       "capture_rate_mean_ci95": [
-        0.034,
-        0.033,
-        0.035
+        0.037,
+        0.035,
+        0.038
       ],
       "loss_prevented_pct_mean_ci95": [
-        3.184,
-        3.082,
-        3.273
+        3.23,
+        3.102,
+        3.349
       ],
-      "efficiency_inr_per_intervention_mean": 52536.14,
+      "false_interventions_mean": 92.1,
+      "missed_events_mean": 10279.5,
+      "efficiency_inr_per_intervention_mean": 53273.29,
       "time_to_intervention_median_h": 13.9
     },
     {
       "k": 10,
       "capture_rate_mean_ci95": [
-        0.052,
-        0.051,
-        0.052
+        0.055,
+        0.054,
+        0.055
       ],
       "loss_prevented_pct_mean_ci95": [
-        4.736,
-        4.667,
-        4.77
+        5.021,
+        4.947,
+        5.075
       ],
-      "efficiency_inr_per_intervention_mean": 39065.04,
-      "time_to_intervention_median_h": 14.6
+      "false_interventions_mean": 242.3,
+      "missed_events_mean": 10087.1,
+      "efficiency_inr_per_intervention_mean": 41418.08,
+      "time_to_intervention_median_h": 14.8
     },
     {
       "k": 20,
       "capture_rate_mean_ci95": [
-        0.08,
-        0.079,
-        0.08
+        0.081,
+        0.081,
+        0.081
       ],
       "loss_prevented_pct_mean_ci95": [
-        7.288,
-        7.25,
-        7.353
+        7.401,
+        7.362,
+        7.438
       ],
-      "efficiency_inr_per_intervention_mean": 30059.1,
-      "time_to_intervention_median_h": 15.7
+      "false_interventions_mean": 580.0,
+      "missed_events_mean": 9806.6,
+      "efficiency_inr_per_intervention_mean": 30529.91,
+      "time_to_intervention_median_h": 15.4
     }
   ],
   "conclusion": "Under the simulated assumptions, intervening on top-K captures a material share of fraud exposure vs doing nothing (capture/loss-prevention improve with K; efficiency declines). Real-world validation requires the pilot."

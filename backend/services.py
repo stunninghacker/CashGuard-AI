@@ -684,8 +684,9 @@ def build_alert_evidence(db: Session, alert) -> dict:
         "recommended_actions": graded_actions(alert.risk_score),
         "fired_rule": f"risk_score >= {RISK_THRESHOLD}",
         "explainability_note": (
-            "Indicative feature contributions — global feature importance + "
-            "instance percentile (NOT SHAP; no per-instance causal attribution implied)."
+            "Feature contributions: global feature importance + instance percentile "
+            "(interpretation aid), plus per-instance TreeSHAP values via XGBoost's "
+            "native pred_contribs (exact tree-based attribution; no causal claim implied)."
         ),
         "feature_contributions": feature_contributions,
         "per_instance_shap": inference.shap_contributions(inst),

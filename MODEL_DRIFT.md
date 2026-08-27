@@ -3,7 +3,7 @@
 Artifacts: `artifacts/deep_eval/drift.json` + `drift_summary.json`
 (11 worlds, `scripts/drift_eval.py`, reproducible in one command).
 
-## The 11 worlds (all CONTROLLED SYNTHETIC EVALUATION)
+## The 12 worlds (all CONTROLLED SYNTHETIC EVALUATION)
 
 Each world regenerates its own dataset + trains its own model; the table
 below is the honest profile after the iteration-4 generator de-separation
@@ -22,6 +22,7 @@ below is the honest profile after the iteration-4 generator de-separation
 | fraud_rate_shift | fraud share 10% → 18% | 0.917 | 0.736 | 0.517 | REDUCED (threshold) |
 | mule_network_topology | mule ATM-rotation topology changed | 0.932 | 0.608 | 0.338 | REDUCED (threshold) |
 | coordinated_adaptation | attacker adapts: higher burst + blocked-burst evasion | 0.932 | 0.683 | 0.431 | REDUCED (threshold) |
+| risk_avoidance | attacker deliberately avoids historically hot ATMs (hot use 15%, random-atm fraud 45%) | 0.930 | 0.649 | 0.484 | REDUCED (threshold) |
 
 Plus: **new-location generalization** (`cold_location.json`): a city's ATMs
 held out of training → ROC-AUC 0.924 (unseen-ATM features are behavioural,
@@ -30,7 +31,7 @@ held out of training → ROC-AUC 0.9237 (unseen-ATM features are behavioural,
 not memorization).
 
 ## Findings (honest)
-1. **ROC-AUC is drift-robust across all 11 worlds** (0.869–0.942, every world
+1. **ROC-AUC is drift-robust across all 12 worlds** (0.861–0.942, every world
    above the 0.85 collapse floor). Ranking quality does not collapse under
    scenario shifts.
 2. **Threshold precision at the frozen 0.7 threshold is world-sensitive**

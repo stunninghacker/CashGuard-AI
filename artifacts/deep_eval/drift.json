@@ -163,5 +163,20 @@
     "world": "coordinated_adaptation",
     "drift_flag": "REDUCED",
     "label": "CONTROLLED SYNTHETIC EVALUATION"
+  },
+  {
+    "roc_auc": 0.9304,
+    "pr_auc": 0.4821,
+    "precision_at_100": 0.67,
+    "precision_at_500": 0.548,
+    "precision_at_1000": 0.484,
+    "threshold_precision_0p7": 0.6495,
+    "alert_volume_0p7": 194,
+    "false_alert_rate_0p7": 0.3505,
+    "capture_rate_top1000": 0.3135,
+    "brier": 0.0634,
+    "world": "risk_avoidance",
+    "drift_flag": "REDUCED",
+    "label": "CONTROLLED SYNTHETIC EVALUATION"
   }
 ]

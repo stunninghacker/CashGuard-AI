@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT))
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-from sklearn.metrics import average_precision_score, roc_auc_score  # noqa: E402
+from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score  # noqa: E402
 
 from backend.database import engine  # noqa: E402
 from backend.eval.deep_evaluation import load_split, OUT  # noqa: E402
@@ -77,11 +77,13 @@ def main():
             "horizon_hours": h,
             "roc_auc": round(float(roc_auc_score(yh, df["score"].to_numpy())), 4),
             "pr_auc": round(float(average_precision_score(yh, df["score"].to_numpy())), 4),
+            "brier": round(float(brier_score_loss(yh, df["score"].to_numpy())), 4),
             "precision_at_1000_horizon": round(float(yh[top1000].mean()), 4),
             "recall_at_1000_horizon": round(float(yh[top1000].sum() / max(int(yh.sum()), 1)), 4),
             "capture_rate_top1000": round(float(yh[top1000].sum() / max(int(yh.sum()), 1)), 4),
             "false_alert_rate_0p7_horizon": round(float((~yh.astype(bool))[score >= 0.7].mean()), 4) if (score >= 0.7).sum() else None,
             "horizon_event_rate": round(float(yh.mean()), 4),
+            "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class — reported for completeness, interpreted alongside precision@K and event rate)",
             "confidence": confidence_label({"precision_at_1000_horizon": round(float(yh[top1000].mean()), 4)}),
         })
         print(f"  {h:>2}h: P@1000 {rows[-1]['precision_at_1000_horizon']} recall {rows[-1]['recall_at_1000_horizon']} PR {rows[-1]['pr_auc']} -> {rows[-1]['confidence']}")

@@ -1,56 +1,110 @@
 [
   {
-    "jurisdiction_group": "all_jurisdictions",
+    "group": "all",
     "rows": 48600,
     "positive_rate": 0.0841,
-    "alert_rate_0p7": 0.0182,
-    "false_positive_rate_0p7": 0.0047,
-    "precision_0p7": 0.7441,
-    "recall_0p7": 0.1608
+    "alert_rate_0p7": 0.015,
+    "false_positive_rate_0p7": 0.0032,
+    "precision_0p7": 0.7885,
+    "recall_0p7": 0.1405
   },
   {
-    "jurisdiction_group": "District-3",
+    "group": "jurisdiction:District-3",
     "rows": 9720,
     "positive_rate": 0.0835,
-    "alert_rate_0p7": 0.0152,
-    "false_positive_rate_0p7": 0.0048,
-    "precision_0p7": 0.6824,
-    "recall_0p7": 0.1244
+    "alert_rate_0p7": 0.0113,
+    "false_positive_rate_0p7": 0.0034,
+    "precision_0p7": 0.7,
+    "recall_0p7": 0.0948
   },
   {
-    "jurisdiction_group": "Eastvale",
+    "group": "jurisdiction:Eastvale",
     "rows": 9720,
     "positive_rate": 0.0685,
-    "alert_rate_0p7": 0.0112,
-    "false_positive_rate_0p7": 0.0035,
-    "precision_0p7": 0.6881,
-    "recall_0p7": 0.1126
+    "alert_rate_0p7": 0.0092,
+    "false_positive_rate_0p7": 0.0024,
+    "precision_0p7": 0.7416,
+    "recall_0p7": 0.0991
   },
   {
-    "jurisdiction_group": "Greenfield District",
+    "group": "jurisdiction:Greenfield District",
     "rows": 9720,
     "positive_rate": 0.0687,
-    "alert_rate_0p7": 0.0157,
-    "false_positive_rate_0p7": 0.006,
-    "precision_0p7": 0.6209,
-    "recall_0p7": 0.1422
+    "alert_rate_0p7": 0.0098,
+    "false_positive_rate_0p7": 0.0032,
+    "precision_0p7": 0.6737,
+    "recall_0p7": 0.0958
   },
   {
-    "jurisdiction_group": "Metro-West",
+    "group": "jurisdiction:Metro-West",
     "rows": 9720,
     "positive_rate": 0.0729,
-    "alert_rate_0p7": 0.0143,
-    "false_positive_rate_0p7": 0.0042,
-    "precision_0p7": 0.705,
-    "recall_0p7": 0.1382
+    "alert_rate_0p7": 0.0128,
+    "false_positive_rate_0p7": 0.0034,
+    "precision_0p7": 0.7339,
+    "recall_0p7": 0.1283
   },
   {
-    "jurisdiction_group": "Northsagar",
+    "group": "jurisdiction:Northsagar",
     "rows": 9720,
     "positive_rate": 0.1266,
-    "alert_rate_0p7": 0.0344,
-    "false_positive_rate_0p7": 0.0047,
-    "precision_0p7": 0.8623,
-    "recall_0p7": 0.234
+    "alert_rate_0p7": 0.0319,
+    "false_positive_rate_0p7": 0.0035,
+    "precision_0p7": 0.8903,
+    "recall_0p7": 0.2242
+  },
+  {
+    "group": "complaint_area:low",
+    "rows": 19440,
+    "positive_rate": 0.0707,
+    "alert_rate_0p7": 0.011,
+    "false_positive_rate_0p7": 0.0029,
+    "precision_0p7": 0.7371,
+    "recall_0p7": 0.1142
+  },
+  {
+    "group": "complaint_area:mid",
+    "rows": 9720,
+    "positive_rate": 0.0835,
+    "alert_rate_0p7": 0.0113,
+    "false_positive_rate_0p7": 0.0034,
+    "precision_0p7": 0.7,
+    "recall_0p7": 0.0948
+  },
+  {
+    "group": "complaint_area:high",
+    "rows": 19440,
+    "positive_rate": 0.0977,
+    "alert_rate_0p7": 0.0208,
+    "false_positive_rate_0p7": 0.0033,
+    "precision_0p7": 0.8395,
+    "recall_0p7": 0.179
+  },
+  {
+    "group": "atm_volume:low",
+    "rows": 16200,
+    "positive_rate": 0.079,
+    "alert_rate_0p7": 0.0094,
+    "false_positive_rate_0p7": 0.0016,
+    "precision_0p7": 0.8301,
+    "recall_0p7": 0.0993
+  },
+  {
+    "group": "atm_volume:mid",
+    "rows": 16308,
+    "positive_rate": 0.0871,
+    "alert_rate_0p7": 0.017,
+    "false_positive_rate_0p7": 0.0031,
+    "precision_0p7": 0.8201,
+    "recall_0p7": 0.1605
+  },
+  {
+    "group": "atm_volume:high",
+    "rows": 16092,
+    "positive_rate": 0.0861,
+    "alert_rate_0p7": 0.0185,
+    "false_positive_rate_0p7": 0.0048,
+    "precision_0p7": 0.7374,
+    "recall_0p7": 0.158
   }
 ]

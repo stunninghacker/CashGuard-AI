@@ -16,18 +16,18 @@ the generator's assumptions — NOT real-world loss prevention.
 
 ## Results (regenerated on the de-separated iteration-4 generator)
 
-| Strategy | Fraud events captured | Loss prevented (% of exposure) | 95% CI | Efficiency (₹ prevented / intervention) | Time-to-intervention (median) |
-|---|---|---|---|---|---|
-| Baseline (do nothing) | 0% | 0% | — | 0 | — |
-| Top-5 / day | 3.4% | 3.2% | [3.1, 3.3] | ₹52,536 | 13.9 h |
-| **Top-10 / day** | 5.2% | 4.7% | [4.7, 4.8] | ₹39,065 | 14.6 h |
-| Top-20 / day | 8.0% | 7.3% | [7.2, 7.4] | ₹30,059 | 15.7 h |
+| Strategy | Fraud events captured | Loss prevented (% of exposure) | 95% CI | False interventions | Missed events | Efficiency (₹ / intervention) | Time-to-intervention (median) |
+|---|---|---|---|---|---|---|---|
+| Baseline (do nothing) | 0% | 0% | — | 0 | all | 0 | — |
+| Top-5 / day | 3.7% | 3.2% | [3.1, 3.3] | 92 | 10280 | ₹53,273 | 13.9 h |
+| **Top-10 / day** | 5.5% | 5.0% | [4.9, 5.1] | 242 | 10087 | ₹41,418 | 14.8 h |
+| Top-20 / day | 8.1% | 7.4% | [7.4, 7.4] | 580 | 9807 | ₹30,530 | 15.4 h |
 
 (Exact values in the artifact; exposure total = simulated test-period fraud
 amount ₹455M.)
 
 ## Honest interpretation
-- Under the simulated assumptions, **top-K intervention captures ~3–8% of
+- Under the simulated assumptions, **top-K intervention captures ~3.7–8.1% of
   fraud exposure with ~5–20 daily actions** — better than doing nothing, and
   the gain is bounded by how concentrated fraud is. Note the capture rates are
   LOWER than the previous (pre-de-separation) simulation: the iteration-4

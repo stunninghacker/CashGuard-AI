@@ -77,6 +77,13 @@
       "precision_at_1000": 0.431,
       "threshold_precision": 0.6835,
       "drift_flag": "REDUCED"
+    },
+    {
+      "world": "risk_avoidance",
+      "roc_auc": 0.9304,
+      "precision_at_1000": 0.484,
+      "threshold_precision": 0.6495,
+      "drift_flag": "REDUCED"
     }
   ]
 }
