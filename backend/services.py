@@ -208,6 +208,18 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
             email_log=email,
             dispatch_log=dispatch,
         )
+        # Inter-agency jurisdiction routing (Item 4): origin state = complaint
+        # jurisdiction that seeded this ATM's risk. If it differs from the
+        # predicted withdrawal state (ATM.state), the case is cross-state.
+        from .routing import origin_state_for_atm, route_alert
+
+        origin = origin_state_for_atm(db, s)
+        if origin and origin != alert.state:
+            alert.origin_state = origin
+            alert.routing_status = "handoff"
+            db.commit()
+        if alert.origin_state and alert.origin_state != alert.state:
+            route_alert(db, alert)
         repo.append_ledger(db, actor="scheduler (system)", event_type="alert_created",
                            entity_id=alert.alert_id, payload=s)
         # CFCFRMS fund-block loop (Phase 6)

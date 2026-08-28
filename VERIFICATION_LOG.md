@@ -77,6 +77,19 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | Regression / smoke | **PASS** | `scripts/test_security_regression.py` 14/14; `scripts/smoke_test.py` OK (SMOKE OK). |
 | Honesty | maintained | Threshold explorer labelled "artifact-backed curve"; tiers weight attention, do NOT change the review-before-action rule; operational threshold stays 0.7 unless ops re-derives it. |
 
+## Item 4 — Inter-agency jurisdiction routing (2026-08-28)
+
+| Check | Outcome | Evidence |
+|-------|---------|----------|
+| Routing engine | **PASS** | `backend/routing.py`: `origin_state_for_atm` (local-seed + account-linked cross-state signals), `route_alert`, `ack_handoff`. `AlertHandoff` model + `Alert.origin_state`/`routing_status`. |
+| Wired into alert cycle | **PASS** | `run_alert_cycle` computes origin_state; cross-state alerts flagged + handoff created + ledger-logged (`alert_handoff_created/ack/complete`). |
+| API | **PASS** | `GET /alerts/handoffs/list` (role-scoped) 200; `POST /alerts/handoffs/{id}/ack` 200; unknown handoff → 404. |
+| Frontend | **PASS** | I4C "Inter-Agency Jurisdiction Handoffs" panel + Ack/Complete; alert routing badge (`origin → state`) in `routingBadge()`; `node --check` OK. |
+| Automated unit test | **PASS** | `scripts/test_jurisdiction_routing.py` 4/4 (intra-state no-op, cross-state queued, ack-complete mirrors routing_status, idempotent); cleans up. |
+| Full HTTP path | **PASS** | Controlled fixture → list 200 (1) → ack 200 complete → cleaned. |
+| Regression / smoke | **PASS** | security regression 14/14; smoke OK. |
+| HONESTY — current data | documented | Synthetic generator is intra-state (withdrawals cluster near complaint origin), so handoffs do NOT fire in production runs. Mechanism verified on controlled fixtures; activates with zero code changes when cross-state data arrives. No fabricated cross-state cases to make the queue look busy. See JURISDICTION_ROUTING.md. |
+
 
 
 | Probe | Outcome | Evidence |

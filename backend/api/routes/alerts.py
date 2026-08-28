@@ -148,3 +148,63 @@ def evaluate_outcomes(user=Depends(require_auth("I4C_ADMIN")), db: Session = Dep
 @router.get("/outcomes/summary")
 def outcome_summary(user=Depends(require_auth("I4C_ADMIN", "POLICE_STATE")), db: Session = Depends(get_db)):
     return services.outcome_monitoring(db)
+
+
+# ---------------------------- Jurisdiction routing ---------------------------
+
+class HandoffAckIn(BaseModel):
+    status: str = "ack"          # ack | complete
+    note: str = ""
+
+
+@router.get("/handoffs/list")
+def list_handoffs(
+    status: str | None = None,
+    limit: int = 200,
+    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN", "BANK")),
+    db: Session = Depends(get_db),
+):
+    """Inter-agency jurisdiction handoff queue (Item 4).
+
+    Cross-state cases: the predicted withdrawal state differs from the
+    complainant-origin jurisdiction that seeded the risk. Role-scoped by
+    jurisdiction (origin_state or receiving_state must match the caller's scope)."""
+    from ... import routing
+
+    handoffs = routing.list_handoffs(db, status=status, limit=limit)
+    scope = (user.scope or "").lower()
+    rows = []
+    for h in handoffs:
+        if user.role == "I4C_ADMIN":
+            visible = True
+        elif user.role == "BANK":
+            visible = False  # banks see their alert, not inter-agency handoff queue
+        else:
+            # police see handoffs touching their state (origin or receiving)
+            visible = scope in (h.origin_state or "").lower() or scope in (h.receiving_state or "").lower()
+        if visible:
+            rows.append({
+                "handoff_id": h.handoff_id, "alert_id": h.alert_id, "atm_id": h.atm_id,
+                "origin_state": h.origin_state, "receiving_state": h.receiving_state,
+                "status": h.status, "reason": h.reason,
+                "created_at": h.created_at.isoformat(), "ack_by": h.ack_by,
+                "ack_at": h.ack_at.isoformat() if h.ack_at else None, "note": h.note,
+            })
+    return {"total": len(rows), "handoffs": rows}
+
+
+@router.post("/handoffs/{handoff_id}/ack")
+def ack_handoff(
+    handoff_id: str,
+    payload: HandoffAckIn,
+    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")),
+    db: Session = Depends(get_db),
+):
+    """Acknowledge / complete a handoff from the receiving state-LEA queue."""
+    from ... import routing
+
+    h = routing.ack_handoff(db, handoff_id, actor=f"{user.role}:{user.scope}",
+                            complete=(payload.status == "complete"), note=payload.note)
+    if h is None:
+        raise HTTPException(status_code=404, detail=f"Handoff {handoff_id} not found")
+    return {"handoff_id": h.handoff_id, "status": h.status, "ack_by": h.ack_by}

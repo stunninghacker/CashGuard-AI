@@ -278,11 +278,19 @@ function renderAlertTable(tableId, alerts = state.alerts) {
   tbodyOf(el).innerHTML = alerts.map(
     (a) => `<tr><td>${fmtTime(a.created_at)}</td><td><b>${esc(a.atm_id)}</b></td><td>${esc(a.city)}</td>
     <td>${tierBadge(a.tier || tierOf(a.risk_score))}</td><td>${riskPill(a.risk_score)}</td><td>${esc(a.recommended_action)}</td><td>${statusPill(a.status)}</td>
-    <td><button class="btn small" data-evid="${esc(a.alert_id)}">Details</button>
+    <td>${routingBadge(a)}<button class="btn small" data-evid="${esc(a.alert_id)}">Details</button>
     ${hitlButtons(a)}</td></tr>`
   ).join("");
   el.querySelectorAll("button[data-act]").forEach((b) => b.addEventListener("click", () => hitlAction(b.dataset.id, b.dataset.act)));
   el.querySelectorAll("button[data-evid]").forEach((b) => b.addEventListener("click", () => openEvidence(b.dataset.evid)));
+}
+
+function routingBadge(a) {
+  if (a.routing_status && a.routing_status !== "none" && a.origin_state) {
+    const st = a.routing_status === "handoff_complete" ? "done" : a.routing_status === "handoff_ack" ? "acked" : "xstate";
+    return `<span class="rt rt-${st}" title="origin ${esc(a.origin_state)} → ${esc(a.state)}">↗ ${esc(a.origin_state)}→${esc(a.state)}</span><br/>`;
+  }
+  return "";
 }
 
 function tierBadge(tier) {
@@ -429,7 +437,42 @@ async function renderI4C() {
   renderAlertTable("i4c-alert-table", state.alerts);
   await ledgerStatus();
   await renderInbox();
+  await renderHandoffs();
   await renderOutcomes();
+}
+
+async function renderHandoffs() {
+  const panel = document.getElementById("handoff-panel");
+  const countEl = document.getElementById("handoff-count");
+  if (!panel) return;
+  try {
+    const res = await api("/alerts/handoffs/list");
+    const hs = res.handoffs || [];
+    if (countEl) countEl.textContent = res.total ? `${hs.filter((h) => h.status === "queued").length} queued / ${res.total}` : "0";
+    panel.innerHTML = hs.slice(0, 20).map(
+      (h) => `<div class="inbox-msg">
+        <span class="pill rt rt-xstate">${esc(h.origin_state)} → ${esc(h.receiving_state)}</span>
+        <span class="pill ${h.status === "queued" ? "warn" : "ok"}">${esc(h.status)}</span>
+        <span class="muted">${fmtTime(h.created_at)}</span><br/>
+        <span class="mono">ATM ${esc(h.atm_id)} · alert ${esc(h.alert_id)}</span>
+        ${h.status === "queued" ? `<button class="btn small ok" data-hack="${esc(h.handoff_id)}">Ack</button>
+          <button class="btn small" data-hcomplete="${esc(h.handoff_id)}">Complete</button>` : ""}
+      </div>`
+    ).join("") || `<p class="muted">No cross-state handoffs queued.</p>`;
+    panel.querySelectorAll("button[data-hack]").forEach((b) => b.addEventListener("click", () => handoffAck(b.dataset.hack, "ack")));
+    panel.querySelectorAll("button[data-hcomplete]").forEach((b) => b.addEventListener("click", () => handoffAck(b.dataset.hack, "complete")));
+  } catch {
+    panel.innerHTML = `<p class="muted">—</p>`;
+    if (countEl) countEl.textContent = "";
+  }
+}
+
+async function handoffAck(handoffId, status) {
+  try {
+    await api(`/alerts/handoffs/${handoffId}/ack`, { method: "POST", body: JSON.stringify({ status }) });
+    await renderHandoffs();
+    renderAlertTable(state.user.role === "I4C_ADMIN" ? "alert-table" : "bank-alert-table", state.alerts);
+  } catch (e) { toast("Handoff update failed: " + e.message); }
 }
 
 async function ledgerStatus() {

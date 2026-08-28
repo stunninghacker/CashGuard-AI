@@ -180,4 +180,7 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 18px
 @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }.tier { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
 .tier.dispatch { background:#c0392b; color:#fff; }
 .tier.action { background:#e67e22; color:#fff; }
-.tier.monitor { background:#95a5a6; color:#fff; }
+.tier.monitor { background:#95a5a6; color:#fff; }.rt { display:inline-block; padding:2px 7px; border-radius:9px; font-size:10px; font-weight:700; margin:1px 2px 1px 0; }
+.rt-xstate { background:#8e44ad; color:#fff; }
+.rt-acked { background:#f39c12; color:#fff; }
+.rt-done { background:#27ae60; color:#fff; }

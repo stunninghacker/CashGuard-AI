@@ -99,6 +99,8 @@ class AlertOut(BaseModel):
     sms_log: str
     email_log: str
     dispatch_log: str = ""
+    origin_state: str = ""  # complainant-origin jurisdiction (cross-state seeding)
+    routing_status: str = "none"  # none / handoff / handoff_ack / handoff_complete
     acknowledged_at: datetime | None = None
     actioned_at: datetime | None = None
 

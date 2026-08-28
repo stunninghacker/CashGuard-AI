@@ -25,7 +25,8 @@
 - **FAIRNESS_ONE_SLIDER.md** — pitch-ready fairness summary + dashboard-output chart
 - **MODEL_DRIFT.md** — 12 adversarial worlds: AUC stable, threshold precision varies honestly
 - **LOAD_TEST.md** — 8,000-complaints/day benchmark + the inference cache (8 users in 5.5s)
-- **OPERATIONAL_IMPACT.md** — intervention simulation + alert-fatigue dedup rule
+- **OPERATIONAL_IMPACT.md** — intervention simulation + alert-fatigue dedup rule + tiered triage
+- **JURISDICTION_ROUTING.md** — inter-agency cross-state handoff queue (Item 4; mechanism tested, activates when cross-state data arrives)
 - **INTERVENTION_VALUE_EVALUATION.md** — random vs volume vs historical vs CashGuard (11–14× at K=10)
 - **INTERVENTION_PRIORITY.md** — the priority score + the formal ACT/REVIEW/HOLD policy
 - **MODEL_OUTCOME_MONITOR.md** — closed-loop outcome evaluation + runtime drift monitors

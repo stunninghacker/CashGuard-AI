@@ -165,6 +165,8 @@ class Alert(Base):
     sms_log: Mapped[str] = mapped_column(Text, default="")
     email_log: Mapped[str] = mapped_column(Text, default="")
     dispatch_log: Mapped[str] = mapped_column(Text, default="")  # I4C / state-LEA webhook (mock)
+    origin_state: Mapped[str] = mapped_column(String(64), default="")  # complainant-origin jurisdiction (cross-state seeding)
+    routing_status: Mapped[str] = mapped_column(String(16), default="none", index=True)  # none / handoff / handoff_ack / handoff_complete
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     actioned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -190,6 +192,37 @@ class AlertOutcome(Base):
     is_false_negative: Mapped[bool] = mapped_column(Boolean, default=False)
     evaluated_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     model_version: Mapped[str] = mapped_column(String(32), default="")
+
+
+class AlertHandoff(Base):
+    """
+    Inter-agency jurisdiction routing record (Item 4).
+
+    When a predicted fraud-withdrawal location (the flagged ATM's state) differs
+    from the complainant-originating jurisdiction that seeded the risk
+    (origin_state), the alert is a CROSS-STATE case. A handoff is created to
+    forward the intelligence to the receiving state-LEA queue, while the
+    originating state keeps provenance. This models the real I4C coordination
+    node pattern: cases move between state jurisdictions.
+
+    HONEST SCOPE: an in-app routing/handoff queue with mock state-LEA
+    forwarding. It does not call any real inter-agency gateway (Tier 2).
+    """
+
+    __tablename__ = "alert_handoffs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    handoff_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    alert_id: Mapped[str] = mapped_column(String(32), ForeignKey("alerts.alert_id"), index=True)
+    atm_id: Mapped[str] = mapped_column(String(32), index=True)
+    origin_state: Mapped[str] = mapped_column(String(64), index=True)   # complaint-origin jurisdiction
+    receiving_state: Mapped[str] = mapped_column(String(64), index=True)  # predicted withdrawal state
+    status: Mapped[str] = mapped_column(String(24), default="queued", index=True)  # queued / ack / complete / rejected
+    reason: Mapped[str] = mapped_column(String(200), default="cross_state_withdrawal")
+    created_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    ack_by: Mapped[str] = mapped_column(String(64), default="")
+    ack_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    note: Mapped[str] = mapped_column(String(256), default="")
 
 
 class AuditRecord(Base):
