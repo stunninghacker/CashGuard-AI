@@ -200,6 +200,7 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
             state=s["state"],
             police_station_area=s["police_station_area"],
             risk_score=round(s["risk_score"], 4),
+            tier=alert_tier(s["risk_score"]),
             recommended_action=action,
             status="shadow" if SHADOW_MODE else "new",
             model_version=_model_version(),
@@ -334,6 +335,17 @@ def recovery_funnel(db: Session, days: int = 7) -> dict:
         "recovery_rate_pct": round(100 * recovered / flagged, 1) if flagged else 0.0,
         "note": "Synthetic/illustrative outcomes — real CFCFRMS/core-banking APIs are the Tier 2 integration point.",
     }
+
+
+def alert_tier(score: float) -> str:
+    """Tiered alerts (ACT/REVIEW/HOLD policy): dispatch >= 0.85 (with adequate
+    evidence, verified by the HOLD engine), action 0.70-0.85, monitor otherwise.
+    Tiers weight LEA attention - they do not change the review-before-action rule."""
+    if score >= 0.85:
+        return "dispatch"
+    if score >= 0.70:
+        return "action"
+    return "monitor"
 
 
 def recommend_action(score: float, level: str) -> str:

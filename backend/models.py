@@ -157,6 +157,7 @@ class Alert(Base):
     state: Mapped[str] = mapped_column(String(64), default="")          # jurisdiction awareness
     police_station_area: Mapped[str] = mapped_column(String(64), default="")  # jurisdiction awareness
     risk_score: Mapped[float] = mapped_column(Float, default=0.0)
+    tier: Mapped[str] = mapped_column(String(16), default="monitor", index=True)  # dispatch / action / monitor (ACT/REVIEW/HOLD policy)
     recommended_action: Mapped[str] = mapped_column(String(160), default="Enhanced monitoring")
     status: Mapped[str] = mapped_column(String(24), default="new", index=True)  # new / acknowledged / actioned / dismissed / escalated / monitoring / review_requested
     decision_reason: Mapped[str] = mapped_column(String(256), default="")  # mandatory for dismiss/escalate

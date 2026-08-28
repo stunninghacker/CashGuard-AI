@@ -177,4 +177,7 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 18px
 .leaflet-popup-tip { background: #0f1a2e; }
 .leaflet-control-attribution { font-size: 10px; background: rgba(11,18,32,.8) !important; color: var(--muted) !important; }
 
-@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }.tier { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.tier.dispatch { background:#c0392b; color:#fff; }
+.tier.action { background:#e67e22; color:#fff; }
+.tier.monitor { background:#95a5a6; color:#fff; }

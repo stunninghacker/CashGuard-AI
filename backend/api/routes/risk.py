@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ... import repositories as repo, services
@@ -50,6 +50,20 @@ def risk_scores(
         return rows
     ref = services.resolve_as_of(db, as_of)
     return services.get_risk_scores(db, as_of=ref, city=city, user=user)
+
+
+@router.get("/threshold-explorer")
+def threshold_explorer(user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "BANK", "I4C_ADMIN"))):
+    """Precision-recall tradeoff explorer — artifact-backed curve from the
+    held-out test split (scripts/threshold_curve.py). Not recomputed per
+    request; the operational threshold stays 0.7 unless ops re-derives it."""
+    import json as _json
+    from ...eval.deep_evaluation import OUT
+
+    path = OUT / "threshold_curve.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="threshold_curve.json missing - run scripts/threshold_curve.py")
+    return _json.loads(path.read_text(encoding="utf-8"))
 
 
 @router.get("/hotspots", response_model=list[RiskScoreOut])

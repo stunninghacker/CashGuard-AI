@@ -102,9 +102,17 @@
       <section class="panel">
         <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket)</span></h2><span class="pill warn" id="alert-count"></span></div>
         <table id="alert-table" class="data-table">
-          <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
+        <div class="panel-head" style="margin-top:10px"><h2>Threshold Explorer <span class="ev-notice">(artifact-backed curve)</span></h2></div>
+        <div id="thr-explorer">
+          <label class="dd-label">Alert threshold:
+            <input type="range" id="thr-slider" min="50" max="95" value="70" step="5" />
+            <b id="thr-value">0.70</b>
+          </label>
+          <div id="thr-metrics" class="ev-notice">loading…</div>
+        </div>
       </section>
     </div>
   </main>

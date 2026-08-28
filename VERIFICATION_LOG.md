@@ -66,7 +66,18 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | Missing-model kill test (DEMO_MODE=true, model.joblib deleted) | **PASS after fix** | risk-scores/alerts/evidence/horizons served from cache (15–52 ms, no model loaded); /stats/summary initially 500 (uncached inference path) — fixed to read the demo cache; retest: all endpoints 200. Model restored. |
 | Split-cache staleness | **PASS after fix** | main_split_cache.npz served a stale split (pos-rate 0.084 vs 0.062). Fixed: data-stamp guard auto-rebuilds on data change; baseline_war regenerated on the fresh split (P@100 0.86). |
 
-## Kill-test security probes (2026-08-27, final pass)
+## Item 3 — Alert precision / tiered triage (2026-08-28)
+
+| Check | Outcome | Evidence |
+|-------|---------|----------|
+| Threshold curve artifact | **PASS** | `scripts/threshold_curve.py` → `artifacts/deep_eval/threshold_curve.json`: 10 points thr 0.50–0.95 (precision 0.554→0.834, recall 0.154→0.045, alert volume 837→163). Serves `GET /risk/threshold-explorer` (artifact-backed, 10 pts, 200). |
+| Tier assignment in alert cycle | **PASS** | `backend/models.py` `Alert.tier` (+ column migrated), `backend/services.py` `alert_tier()` (dispatch ≥0.85 / action 0.70–0.85 / monitor), set at alert creation + backfilled from risk_score. Verified: 17 alerts → 16 dispatch, 1 action; dispatch samples risk 0.986–0.996. |
+| API schema | **PASS** | `AlertOut.tier` added; `/alerts` returns tier 200. |
+| Frontend | **PASS** | `frontend/index.html` alert table Tier column + `app.js` `tierBadge()`/`tierOf()` + `window.THR_CURVE` explorer panel bound to `/threshold-explorer`; `node --check` OK. |
+| Regression / smoke | **PASS** | `scripts/test_security_regression.py` 14/14; `scripts/smoke_test.py` OK (SMOKE OK). |
+| Honesty | maintained | Threshold explorer labelled "artifact-backed curve"; tiers weight attention, do NOT change the review-before-action rule; operational threshold stays 0.7 unless ops re-derives it. |
+
+
 
 | Probe | Outcome | Evidence |
 |-------|---------|----------|

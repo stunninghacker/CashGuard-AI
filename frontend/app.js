@@ -239,7 +239,30 @@ function renderPolice() {
     <td>${riskPill(h.risk_score)}</td><td>${emergingBadge(h)}</td><td>${priorityBadge(h)}</td></tr>`
   ).join("");
   renderAlertTable("alert-table");
+  loadThresholdCurve();
 }
+
+let THR_CURVE = null;
+async function loadThresholdCurve() {
+  if (THR_CURVE) return applyThresholdCurve();
+  try {
+    const data = await api("/threshold-explorer");
+    THR_CURVE = data;
+    applyThresholdCurve();
+  } catch (e) { /* non-fatal: explorer panel stays on its placeholder */ }
+}
+function applyThresholdCurve() {
+  const slider = document.getElementById("thr-slider");
+  const out = document.getElementById("thr-metrics");
+  if (!THR_CURVE || !slider || !out) return;
+  const row = THR_CURVE.curve.find((r) => Math.abs(r.threshold * 100 - Number(slider.value)) < 0.01) || THR_CURVE.curve[0];
+  document.getElementById("thr-value").textContent = row.threshold.toFixed(2);
+  out.innerHTML = `at threshold <b>${row.threshold.toFixed(2)}</b>: precision <b>${(row.precision * 100).toFixed(1)}%</b> · recall ${(row.recall * 100).toFixed(1)}% · ${row.alert_volume} alerts · false-alert rate ${(row.false_alert_rate * 100).toFixed(1)}%`;
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const slider = document.getElementById("thr-slider");
+  if (slider) slider.addEventListener("input", applyThresholdCurve);
+});
 
 function tbodyOf(el) {
   /* The data tables declare <tbody> explicitly; guard anyway so a stale-cache
@@ -254,12 +277,22 @@ function renderAlertTable(tableId, alerts = state.alerts) {
   if (!el) return;
   tbodyOf(el).innerHTML = alerts.map(
     (a) => `<tr><td>${fmtTime(a.created_at)}</td><td><b>${esc(a.atm_id)}</b></td><td>${esc(a.city)}</td>
-    <td>${riskPill(a.risk_score)}</td><td>${esc(a.recommended_action)}</td><td>${statusPill(a.status)}</td>
+    <td>${tierBadge(a.tier || tierOf(a.risk_score))}</td><td>${riskPill(a.risk_score)}</td><td>${esc(a.recommended_action)}</td><td>${statusPill(a.status)}</td>
     <td><button class="btn small" data-evid="${esc(a.alert_id)}">Details</button>
     ${hitlButtons(a)}</td></tr>`
   ).join("");
   el.querySelectorAll("button[data-act]").forEach((b) => b.addEventListener("click", () => hitlAction(b.dataset.id, b.dataset.act)));
   el.querySelectorAll("button[data-evid]").forEach((b) => b.addEventListener("click", () => openEvidence(b.dataset.evid)));
+}
+
+function tierBadge(tier) {
+  const cls = tier === "dispatch" ? "tier dispatch" : tier === "action" ? "tier action" : "tier monitor";
+  return `<span class="${cls}">${esc(tier || "monitor")}</span>`;
+}
+function tierOf(score) {
+  if (score >= 0.85) return "dispatch";
+  if (score >= 0.7) return "action";
+  return "monitor";
 }
 
 function hitlButtons(a) {

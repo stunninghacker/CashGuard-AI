@@ -92,6 +92,7 @@ class AlertOut(BaseModel):
     police_station_area: str
     risk_score: float
     recommended_action: str
+    tier: str = "monitor"  # dispatch / action / monitor (ACT/REVIEW/HOLD policy)
     status: str
     decision_reason: str = ""
     model_version: str = ""

@@ -55,6 +55,23 @@ requires human review before any action, which is exactly what the evidence
 panel is for: it is designed to **prioritize investigator attention, not to
 replace it**.
 
+### Tiered triage (dispatch / action / monitor)
+
+To further manage attention, every alert carries a `tier` derived from
+`ART/REVIEW/HOLD` policy bands, stored on the alert and shown in the UI:
+
+- **dispatch** — risk ≥ 0.85 (top-band; highest-confidence, highest-priority)
+- **action** — risk 0.70–0.85 (standard review)
+- **monitor** — risk < 0.70 (low-band; only produced under the ART retrain-band
+  flagging that the hold engine reviews before it ever fires)
+
+The threshold-0.7 curve point used by ops is `precision 0.624 / recall 0.103 /
+497 alerts`, drawn from `artifacts/deep_eval/threshold_curve.json` and exposed
+live in the dashboard's **Threshold Explorer** panel (slider 0.50–0.95 →
+precision / recall / FAR / alert volume). Tiers and the explorer weight
+**attention only** — they never bypass the human-review rule above.
+
+
 ## Why this matters for SIH
 It converts "the model ranks well" into the operational question the problem
 statement cares about: **"if you act on the top-K, what share of the fraud
