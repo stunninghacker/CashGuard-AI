@@ -289,3 +289,32 @@ change. No signal labelled repeats, and no material-change guard on re-fires.
 - UI (puppeteer, I4C admin): `#i4c-alert-table` renders 3 unique alerts each
   tagged **`re-observed ×2`**; no duplicate rows; HITL + routing badges intact.
 - `node --check app.js` OK; `py_compile` OK on changed backend files.
+
+## A5 — Broken layout / dead whitespace (2026-08-29) [FIXED + VERIFIED]
+
+**Observed problem:** dashboards were endless-scroll walls with large empty
+(dead) whitespace. The `.two-col` grid stretches BOTH columns to the height of
+the taller one, and the long, unconstrained data tables pushed every panel way
+down. Objective measurements (headless Chrome, 1600x1000):
+- Bank dashboard: document height = **4822px** (the 127-row "Your ATMs" table
+  alone forced a 4416px column; the sibling fund-block column was stretched to
+  match, wasting space).
+- Police dashboard: document height = **4051px** (hotspots/alerts two-col = 3155px each).
+- I4C dashboard: document height = **2847px** (the alert table panel = 1433px).
+
+**Fix (frontend, CSS + HTML):**
+- Added a `.table-scroll` scrollable container (`max-height: 520px; overflow-y: auto`,
+  sticky `thead th` header) and wrapped the four long tables in it:
+  `hotspot-table`, police `alert-table`, `i4c-alert-table`, `bank-atm-table`,
+  and `bank-alert-table`.
+- Result: dashboards now fit ~1.5–2 viewport heights and the `.two-col` sibling
+  columns are near-equal height, eliminating the dead whitespace.
+- Bumped cache-busters: `style.css?v=6` -> `?v=7`, `app.js?v=7` -> `?v=8` (from A4).
+
+**Verification (puppeteer re-measure + scroll test):**
+- Document heights: bank **4822 -> 1353**, police **4051 -> 1576**, I4C **2847 -> 2006**.
+- Tables now scroll internally with NO data loss (scrollH vs clientH):
+  bank atm-table 4350/520 with **all 127 rows**; i4c alert-table scrollable
+  with **23 rows**; police hotspot **20 rows** + alert-table **22 rows**.
+- No horizontal overflow (`overflowX:false`) on any dashboard; no overlaps.
+- HTML well-formed: div 56/56, section 16/16, table 5/5 balanced.

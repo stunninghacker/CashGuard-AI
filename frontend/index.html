@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CashGuard AI — Predictive Fraud Withdrawal Intelligence</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
   <script>
     /* Stale-cache self-healing: if the dashboard JS failed to load (old cached
        app.js), show a clear banner instead of a dead Sign-in button. */
@@ -94,17 +94,17 @@
     <div class="two-col">
       <section class="panel">
         <div class="panel-head"><h2>Top High-Risk ATMs — Next 24h</h2><span class="pill info" id="hotspot-count"></span></div>
-        <table id="hotspot-table" class="data-table">
+        <div class="table-scroll"><table id="hotspot-table" class="data-table">
           <thead><tr><th>#</th><th>ATM</th><th>Bank / Branch</th><th>City</th><th>Risk</th></tr></thead>
           <tbody></tbody>
-        </table>
+        </table></div>
       </section>
       <section class="panel">
         <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket)</span></h2><span class="pill warn" id="alert-count"></span></div>
-        <table id="alert-table" class="data-table">
+        <div class="table-scroll"><table id="alert-table" class="data-table">
           <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
           <tbody></tbody>
-        </table>
+        </table></div>
         <div class="panel-head" style="margin-top:10px"><h2>Threshold Explorer <span class="ev-notice">(artifact-backed curve)</span></h2></div>
         <div id="thr-explorer">
           <label class="dd-label">Alert threshold:
@@ -125,10 +125,10 @@
     <div class="two-col">
       <section class="panel">
         <div class="panel-head"><h2>Your ATMs — Risk Scores</h2></div>
-        <table id="bank-atm-table" class="data-table">
+        <div class="table-scroll"><table id="bank-atm-table" class="data-table">
           <thead><tr><th>ATM</th><th>Branch</th><th>City</th><th>Risk</th><th>Suggested Action</th></tr></thead>
           <tbody></tbody>
-        </table>
+        </table></div>
       </section>
       <section class="panel">
         <div class="panel-head"><h2>Fund-Block Recommendations (CFCFRMS loop)</h2></div>
@@ -139,10 +139,10 @@
     </div>
     <section class="panel">
       <div class="panel-head"><h2>Alerts for Your Branches</h2></div>
-      <table id="bank-alert-table" class="data-table">
+      <div class="table-scroll"><table id="bank-alert-table" class="data-table">
         <thead><tr><th>Time</th><th>ATM</th><th>Risk</th><th>Action</th><th>Status</th><th></th></tr></thead>
         <tbody></tbody>
-      </table>
+      </table></div>
     </section>
   </main>
 
@@ -151,10 +151,10 @@
     <section class="stats-grid" id="i4c-stats"></section>
     <section class="panel">
       <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket · deduplicated)</span></h2><span class="pill warn" id="alert-count"></span></div>
-      <table id="i4c-alert-table" class="data-table">
+      <div class="table-scroll"><table id="i4c-alert-table" class="data-table">
         <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
         <tbody></tbody>
-      </table>
+      </table></div>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Recovery Funnel (flagged → held → recovered)</h2><span class="ev-notice">synthetic/illustrative — CFCFRMS APIs are Tier 2</span></div>
