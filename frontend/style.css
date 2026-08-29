@@ -197,3 +197,119 @@ footer { text-align: center; color: var(--muted); font-size: 11px; padding: 18px
 .rt-done { background:#27ae60; color:#fff; }
 .rt-escl { background:#e74c3c; color:#fff; }
 .rt-reobs { background:#7f8c8d; color:#fff; }
+
+/* ============================ LIQUID GLASS (B) ============================ */
+/* Frosted, translucent "liquid glass" surface over an ambient glow. Layers on
+   top of the base theme; does not alter layout / table structure. */
+:root {
+  --glass: rgba(22, 37, 66, 0.42);
+  --glass-strong: rgba(15, 26, 46, 0.62);
+  --glass-border: rgba(148, 197, 255, 0.18);
+  --glass-highlight: rgba(255, 255, 255, 0.09);
+  --glass-shadow: 0 12px 40px rgba(2, 8, 23, 0.55);
+  --accent-glow: rgba(56, 189, 248, 0.35);
+}
+
+body {
+  background:
+    radial-gradient(1100px 700px at 12% -6%, rgba(14, 116, 224, 0.28), transparent 60%),
+    radial-gradient(1000px 650px at 92% 12%, rgba(56, 189, 248, 0.22), transparent 55%),
+    radial-gradient(1200px 800px at 50% 115%, rgba(99, 102, 241, 0.22), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+header {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.panel {
+  background: linear-gradient(165deg, rgba(30, 48, 84, 0.5), rgba(12, 21, 40, 0.34));
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}
+
+.pill {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+.btn {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.btn:hover { transform: translateY(-1px); border-color: var(--accent); box-shadow: 0 6px 22px rgba(56, 189, 248, 0.24); }
+.btn.primary, .btn.accent { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #06121f; text-shadow: none; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4); }
+
+.modal-card {
+  background: linear-gradient(165deg, rgba(26, 44, 78, 0.85), rgba(11, 19, 37, 0.8));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--glass-highlight);
+}
+.modal { background: rgba(4, 8, 18, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+.drilldown, .date-input, select, .modal-card input, .chip {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.toast {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+.notice {
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.table-scroll .data-table thead th {
+  background: rgba(15, 26, 46, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* ambient glow orbs (non-interactive) */
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(520px 520px at 18% 22%, var(--accent-glow), transparent 65%),
+    radial-gradient(460px 460px at 85% 70%, rgba(99, 102, 241, 0.18), transparent 65%);
+  animation: cashguard-flow 26s ease-in-out infinite alternate;
+}
+main.dash, header { position: relative; z-index: 1; }
+@keyframes cashguard-flow {
+  0%   { opacity: .55; transform: translate(0, 0) scale(1); }
+  100% { opacity: .9;  transform: translate(-30px, 24px) scale(1.08); }
+}
+
+/* glassy table rows + score bars */
+.data-table tbody tr { transition: background .15s ease; }
+.data-table tbody tr:hover { background: rgba(56, 189, 248, 0.09); }
+
+.leaflet-popup-content-wrapper {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid var(--glass-border);
+}

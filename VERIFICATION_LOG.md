@@ -318,3 +318,25 @@ down. Objective measurements (headless Chrome, 1600x1000):
   with **23 rows**; police hotspot **20 rows** + alert-table **22 rows**.
 - No horizontal overflow (`overflowX:false`) on any dashboard; no overlaps.
 - HTML well-formed: div 56/56, section 16/16, table 5/5 balanced.
+
+## B — Liquid Glass UI redesign (2026-08-29) [DONE + VERIFIED]
+
+**Change (frontend/style.css):** added an isolated "liquid glass" layer on top of
+the base theme — frosted, translucent surfaces over an ambient glow:
+- Ambient animated body gradient (radial colour washes) + a fixed `body::before`
+  glow-orbit layer (`pointer-events:none`, non-interactive).
+- `.panel`, `header`, `.modal-card`, `.toast`, `.notice`, leaflet popups: frosted
+  `-webkit-backdrop-filter`/`backdrop-filter: blur(...) saturate(...)` + glass
+  border + inner top highlight + soft shadow.
+- `.pill`, `.btn`, `.drilldown`, `.chip`, `select`, `.date-input`, inputs: glassy
+  translucent treatment; primary/accent buttons get a gradient + glow.
+- Sticky table header (`thead th`) made translucent-frosted to match.
+- Layer uses new `:root` glass tokens; **does not touch layout/table structure** —
+  the A1-A5 fixes are preserved.
+
+**Verification (headless Chrome, all three roles):**
+- Login modal computed `backdrop-filter: blur(22px) saturate(1.5)`; panels
+  `blur(16px) saturate(1.5)`; body `radial-gradient` ambient active on all dashboards.
+- All dashboards still render (visible=true, data intact), `overflowX:false`, and
+  document heights unchanged (I4C 2006 / police 1576 / bank 1353) — proving the
+  glass layer does not break the A5 layout work.
