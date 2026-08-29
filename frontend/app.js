@@ -161,8 +161,8 @@ function drawOfflineMap() {
 
   // --- styled offline basemap: neutral ground + a district-outline polygon ---
   const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, "#0f141b");
-  grad.addColorStop(1, "#0b0f14");
+  grad.addColorStop(0, "#1d2025");
+  grad.addColorStop(1, "#15171b");
   ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
 
   // neutral fill for the "district" envelope (a GeoJSON-style outline, not bare tiles)
@@ -708,10 +708,13 @@ async function renderI4C() {
   const alertTotal = state.alerts.length;
   const alertActioned = state.alerts.filter((a) => a.status === "actioned").length;
   document.getElementById("i4c-stats").innerHTML = [
-    ["🕵️", s.complaints_24h, "Complaints (24h)"], ["📅", s.complaints_7d, "Complaints (7d)"],
-    ["🏧", s.high_risk_atms, "High-risk ATMs"], ["🚨", alertTotal, "Alerts"],
-    ["✅", alertActioned, "Actioned"], ["💸", s.fraud_withdrawals_7d, "Fraud withdrawals (7d)"],
-  ].map(([e, n, l]) => `<div class="stat"><div class="num">${e} ${(n ?? 0).toLocaleString()}</div><div class="lbl">${l}</div></div>`).join("");
+    ["🏧", s.high_risk_atms, "High-risk ATMs", "hero"],
+    ["🚨", alertTotal, "Alerts", "hero"],
+    ["🕵️", s.complaints_24h, "Complaints (24h)", ""],
+    ["📅", s.complaints_7d, "Complaints (7d)", ""],
+    ["✅", alertActioned, "Actioned", ""],
+    ["💸", s.fraud_withdrawals_7d, "Fraud withdrawals (7d)", ""],
+  ].map(([e, n, l, h]) => `<div class="stat ${h}"><div class="num">${e} ${(n ?? 0).toLocaleString()}</div><div class="lbl">${l}</div></div>`).join("");
   const scale = document.getElementById("i4c-scale-note");
   if (scale) scale.textContent = `Demo-scale synthetic dataset — ${(s.complaints_7d ?? 0).toLocaleString()} complaints (7d) across current window; figures are illustrative, not live production traffic.`;
 
