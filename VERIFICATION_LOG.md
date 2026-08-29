@@ -1,5 +1,7 @@
 # VERIFICATION_LOG.md â€” Manual End-to-End Verification of Demo-Claimed Features
 
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** â€” Some ROC-AUC figures in this log (~0.92x, e.g. 0.9255â€“0.9302 robustness, 0.9272 baseline) were produced by a SAME-DAY LABEL-LEAKAGE bug now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 â†’ corrected 0.6344 in the proof, see P1.5 below). Any 0.92x AUC reported as a PASS is **superseded** in absolute terms; the PASS/P1.5 integrity story is the honest baseline. See `artifacts/deep_eval/RECONCILIATION.md` and `MODEL_CARD.md`.
+
 Every feature claimed in README.md / DEMO_SCRIPT.md was MANUALLY exercised
 against the live server (API-level, not just UI presence) on the iteration-4
 model/data. All timestamps local (Asia/Kolkata, UTC+5:30).
@@ -506,7 +508,7 @@ fabricated-artifact bug was found and fixed.
 
 
 --------------------------------------------------------------------------------
-## P1.5 — DATA-LEAKAGE CORRECTION + honest Forecast-Safe rebuild + demo framing (2026-08-29)
+## P1.5 ï¿½ DATA-LEAKAGE CORRECTION + honest Forecast-Safe rebuild + demo framing (2026-08-29)
 --------------------------------------------------------------------------------
 
 ### Context
@@ -530,16 +532,16 @@ leak_proof.py in temp dir) exposed a SAME-DAY LABEL-LEAKAGE bug.
   deep_eval/threshold_curve.json (AUC 0.6273).
 
 ### Honest post-fix reality (proven negative for a populated live alert view)
-- Live score_all(): all 900 ATMs 0.04–0.11 (max 0.107). Injected extreme cash-out spree
-  (inject_test.py, read-only): honest scores only 0.043–0.048; raw probs <=0.050;
+- Live score_all(): all 900 ATMs 0.04ï¿½0.11 (max 0.107). Injected extreme cash-out spree
+  (inject_test.py, read-only): honest scores only 0.043ï¿½0.048; raw probs <=0.050;
   re-seed does NOT produce high honest scores. Class-weight sweep (2/4/8x) collapses
   calibrated scores ? 0 alerts. => No honest mechanism populates high-risk alerts; any
   populated real-alert table would be fabrication.
 
-### DEMO FRAMING (user decision — Option B, explicit constraints honoured)
+### DEMO FRAMING (user decision ï¿½ Option B, explicit constraints honoured)
 - Server runs WITHOUT DEMO_MODE => live default = honest sparse state (max ~0.11, 0 alerts)
   for every role on fresh load, with Threshold Explorer + honest Model Card.
-- NEW backend: GET /simulated/scenario (backend/api/routes/simulated.py, registered) —
+- NEW backend: GET /simulated/scenario (backend/api/routes/simulated.py, registered) ï¿½
   opt-in ONLY. Returns SCRIPTED scenario: 12 alerts, 12 risk ATMs (banks incl HDFC/SBI/
   Kotak/Axis/ICICI/BoB/PNB across 4 states/districts), 12 evidence panels, delivery logs,
   all carrying simulated:true + disclosure. Never auto-served.
@@ -548,9 +550,9 @@ leak_proof.py in temp dir) exposed a SAME-DAY LABEL-LEAKAGE bug.
   watermark on every screen; "Exit Simulated Mode" -> live. state.simulatedOptedIn drives
   it across renders/role-switches; resets on fresh login. Run Alert Cycle + WS live feed
   suppressed in sim mode; simulated alert status updates are in-memory and labelled
-  "(simulated — not persisted)". openEvidence uses the simulated payload (scripted
+  "(simulated ï¿½ not persisted)". openEvidence uses the simulated payload (scripted
   disclosure) when opted-in.
-- Model Card (renderI4C): prominent "Model Honesty — Data-Leakage Corrected" panel,
+- Model Card (renderI4C): prominent "Model Honesty ï¿½ Data-Leakage Corrected" panel,
   0.9275?0.6344 story + honest consequence note.
 - P1.8: I4C inbox now renders parsed readable KV fields + "view raw payload" toggle (all
   escaped; no raw secrets).

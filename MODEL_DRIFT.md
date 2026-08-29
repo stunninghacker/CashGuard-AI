@@ -1,5 +1,7 @@
 # MODEL_DRIFT.md — Drift & Adversarial-Behaviour Evaluation
 
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** — The ROC-AUC figures in this document (~0.86–0.94) were produced by a SAME-DAY LABEL-LEAKAGE bug in feature engineering (`backend/ml/features.py`, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 → corrected 0.6344 in the proof). All 0.92x AUCs below are **superseded**; relative world-to-world patterns remain informative, but the absolute values are not model performance. See `artifacts/deep_eval/RECONCILIATION.md`.
+
 Artifacts: `artifacts/deep_eval/drift.json` + `drift_summary.json`
 (11 worlds, `scripts/drift_eval.py`, reproducible in one command).
 

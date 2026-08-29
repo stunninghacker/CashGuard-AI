@@ -1,5 +1,7 @@
 # AUDIT_REPORT.md — Baseline Engineering Audit
 
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** — This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (`backend/ml/features.py`, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 → corrected 0.6344 in the proof). Any 0.92x AUC cited below is **superseded**; see `MODEL_CARD.md`, `VERIFICATION_LOG.md` (P1.5), and `artifacts/deep_eval/RECONCILIATION.md`.
+
 **Method**: full-repo inspection; every claim grounded in code or artifact.
 **Legend**: ✅ present · ⚠️ partial/needs work · ❌ missing (at the time of this
 baseline audit; all ❌ items below were subsequently implemented and are artifact-backed).
