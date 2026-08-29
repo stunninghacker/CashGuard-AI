@@ -6,6 +6,15 @@ was **fresh-verified in the 2026-08-29 session** (marked ✔) versus taken from
 existing honest artifacts (unmarked). Nothing is fabricated; anything a hostile
 judge could disprove is either fixed or documented as a limitation.
 
+Companion docs in this series (all in `docs/audits/`):
+`FINAL_10_10_BASELINE.md`, `FINAL_10_10_GENERATOR_LEAKAGE.md`,
+`FINAL_10_10_SPATIAL_GENERALIZATION.md`, `FINAL_10_10_TEMPORAL_GENERALIZATION.md`,
+`FINAL_10_10_BASELINE_WAR.md`, `FINAL_10_10_INTERVENTION_ECONOMICS.md`,
+`FINAL_10_10_FAIRNESS.md`, `FINAL_10_10_ROBUSTNESS_ADVERSARIAL.md`,
+`FINAL_10_10_OPS_AND_SCALE.md`, `FINAL_10_10_HOSTILE_Q_ADDENDUM.md` (Q76–Q100),
+plus this scorecard. `Q&A_PREPARATION.md` covers Q1–Q75; together they answer 100
+hostile questions.
+
 ## Phase-by-phase verdict
 
 | # | Phase | Evidence | Verdict | Fresh-verified |
