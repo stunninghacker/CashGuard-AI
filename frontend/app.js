@@ -30,6 +30,11 @@ async function api(path, opts = {}) {
     showLogin();
     throw new Error("Session expired — please sign in again");
   }
+  if (res.status === 403) {
+    const kind = path.includes("/alerts/run") ? "run-alert-cycle" : path.includes("stats") ? "stats" : path.includes("complaint") ? "complaints" : path.split("?")[0];
+    showNotice(`This action is not available for your role (${403}). ${path}`);
+    throw new Error(`${path} -> 403`);
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(`${path} -> ${res.status} ${body.slice(0, 120)}`);
@@ -43,6 +48,16 @@ function toast(msg) {
   el.classList.remove("hidden");
   clearTimeout(toast._t);
   toast._t = setTimeout(() => el.classList.add("hidden"), 4500);
+}
+
+function showNotice(msg) {
+  const el = document.getElementById("notice");
+  const txt = document.getElementById("notice-text");
+  if (!el || !txt) return;
+  txt.textContent = msg;
+  el.classList.remove("hidden");
+  const close = document.getElementById("notice-close");
+  if (close) close.onclick = () => el.classList.add("hidden");
 }
 
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
@@ -326,11 +341,14 @@ async function loadAll() {
     const [risk, alerts, stats] = await Promise.all([
       api(`/risk-scores${q}`),
       api("/alerts?limit=200"),
-      api("/stats/summary"),
+      api("/stats/summary").catch(() => null),   // role-scoped; non-fatal (BANK)
     ]);
     state.risk = risk; state.alerts = alerts; state.stats = stats;
     await Promise.all([loadCityCoords(), loadComplaints()]);
-    document.getElementById("as-of").textContent = state.asOf ? `Forecast replay as of ${fmtTime(state.asOf)}` : `Forecast as of ${fmtTime(stats.generated_at)}`;
+    const asOfEl = document.getElementById("as-of");
+    if (asOfEl) asOfEl.textContent = state.asOf
+      ? `Forecast replay as of ${fmtTime(state.asOf)}`
+      : (state.stats ? `Forecast as of ${fmtTime(state.stats.generated_at)}` : `Forecast as of ${fmtTime(new Date().toISOString())}`);
     document.getElementById("role-badge").textContent = `${state.user.role} · ${state.user.scope}`;
     render();
   } catch (err) { toast("Load failed: " + err.message); }
@@ -342,6 +360,10 @@ function render() {
   if (state.user.role === "BANK") { document.getElementById("dash-bank").classList.remove("hidden"); renderBank(); }
   else if (state.user.role === "I4C_ADMIN") { document.getElementById("dash-i4c").classList.remove("hidden"); renderI4C(); }
   else { document.getElementById("dash-police").classList.remove("hidden"); renderPolice(); }
+  // Role-gate the "Run Alert Cycle" button: only roles the backend authorizes
+  // (POLICE_STATE / POLICE_DISTRICT / I4C_ADMIN) may run the alert engine.
+  const btnCycle = document.getElementById("btn-cycle");
+  if (btnCycle) btnCycle.classList.toggle("hidden", state.user.role === "BANK");
 }
 
 function renderPolice() {
