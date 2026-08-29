@@ -1,5 +1,7 @@
 # FINAL_10_10_ROBUSTNESS_ADVERSARIAL.md — Adversarial worlds, drift, disagreement, transfer
 
+
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
 Covers Phase 8 (adversarial simulation), 10 (model disagreement), 14
 (drift/robustness) and 16 (transfer/production-readiness) of the kill test.
 Sources: stored `adversarial_worlds.json`, `drift.json`, `transfer_readiness.json`,

@@ -1,5 +1,7 @@
 # FINAL_10_10_BASELINE_WAR.md — Does CashGuard beat operational heuristics?
 
+
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
 Question: is the ML ranking better than simple operational baselines at the
 same intervention budget? Source: stored `baseline_war.json`, cross-checked
 against the live retrain (CashGuard's live numbers: AUC 0.9272, P@100 0.84,
