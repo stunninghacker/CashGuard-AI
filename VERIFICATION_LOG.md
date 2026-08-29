@@ -459,3 +459,47 @@ state is provable.
   the A1 map-fallback under real network conditions — but needs the user's external
   access/credentials, which are not available to this agent.
 - Status: READY-but-BLOCKED; documented honestly, not claimed as live.
+
+---
+
+## FINAL 10/10 KILL-TEST — fresh-verification session (2026-08-29)
+
+Headline metrics and eval artifacts were NOT taken on trust; the critical ones
+were re-executed live against the current DB + pipeline and matched, and one
+fabricated-artifact bug was found and fixed.
+
+### Fixes
+- **`lift_vs_volume_at_20: 900000000.0` (division-by-zero)** — `backend/ml/train.py`
+  computed lift as `active_prec / max(baseline, 1e-9)`; when the volume baseline
+  caught zero positives at K, `0.9 / 1e-9 = 9e8` leaked into `metrics.json`. Fixed
+  to return `null` when the baseline is 0 (lift is undefined). **Retrained** →
+  clean `metrics.json` now shows 18.0x / 40.0x / 21.0x (no 9e8 anywhere).
+
+### Reproduced live (matched stored artifacts)
+| Check | Script | Result |
+|---|---|---|
+| Baseline retrain | `train_model.py` | AUC 0.9272, P@100 0.84, P@1000 0.563 (PASS) |
+| Generator leakage | `permutation_tests.py` | label-shuffle AUC 0.488; no identity cols; city-perm ≈ 0 (PASS) |
+| Seed stability | `seed_stability.py` | model-seed AUC 0.9258–0.9264; gen-seed P@100 0.50–0.67 (documented) |
+| Spatial generalisation | `generalization_splits.py` | t-forward 0.926; cold-atm 0.917; cold-city 0.922; **new-hotspot 0.790** (weak split, reported) |
+| Fairness | `fairness_audit.py` | FPR 0.0017–0.0053 across 15 groups (PASS) |
+| Security regression | `test_security_regression.py` | 12/12 PASS |
+| Jurisdiction routing | `test_jurisdiction_routing.py` | 4/4 PASS |
+| Fairness cap | `test_fairness_cap.py` | 5/5 PASS |
+
+### Honest findings logged (not hidden)
+1. Complaint/spatial features add almost nothing (permutation Δ < 0.001;
+   complaints-only ablation 0.50); `counterparty_count_24h` (single-feature AUC
+   ~0.83) drives the model — reactive mule signal, not proactive-from-complaints.
+2. New-hotspot generalization is the weak split (P@100 ~0.34 vs 0.82
+   time-forward) — the SIH's hardest case.
+3. Generator-seed top-100 precision is draw-sensitive (0.50–0.67 vs fixed-seed
+   0.84).
+4. Sub-daily horizons (2/6/12h) are HOLD; only 24h is operationally usable.
+
+### Deliverables committed (docs/audits)
+`FINAL_10_10_BASELINE.md`, `FINAL_10_10_GENERATOR_LEAKAGE.md`,
+`FINAL_10_10_SPATIAL_GENERALIZATION.md`, `FINAL_10_10_TEMPORAL_GENERALIZATION.md`,
+`FINAL_10_10_BASELINE_WAR.md`, `FINAL_10_10_INTERVENTION_ECONOMICS.md`,
+`FINAL_10_10_FAIRNESS.md`, `FINAL_10_10_SCORECARD.md`.
+- Status: KILL-TEST findings captured; commits `6f65329`, `81feb58`, `e7fd42f`.
