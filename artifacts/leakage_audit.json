@@ -1,0 +1,57 @@
+{
+  "audit_id": "LSK-AUDIT-2026-08-30",
+  "title": "Label-Leakage Audit — CashGuard AI (SIH26184 prototype)",
+  "status": "CLOSED",
+  "root_cause": {
+    "module": "backend/ml/features.py",
+    "function": "_shift_day_past",
+    "description": "Rolling-window features and the target label were constructed on the SAME calendar day. Day-keyed aggregates computed at day d included day d's own complaints/withdrawals — the exact window being predicted — so the features leaked the label into the training/evaluation pipeline. This inflated validation ROC-AUC to the ~0.92x range.",
+    "defect_class": "CWE-200 / temporal leakage (target-window contamination), not a modelling error",
+    "observed_effect": "held-out ROC-AUC reported as ~0.927x was an artifact of same-day feature/label construction; not a real separability signal"
+  },
+  "fix": {
+    "summary": "Day-keyed feature frames are now shifted forward by one day in _shift_day_past so a row keyed day == d carries ONLY data observed strictly before the start of day d (<= d-1). Rolling windows no longer include the target day.",
+    "mechanism": "frame['day'] = frame['day'] + pd.Timedelta(days=1) applied to complaint, complaint-type, centroid, account, and counterparty aggregates; withdrawal hourly features already use the hour bucket immediately before each day start.",
+    "verification": "per-feature AUC audit re-run; strongest single-feature AUC is now days_since_epoch 0.5604, no feature approaches 0.92; leak signature patterns (the removed fraud_withdrawals_24h 1.0-style dominance) no longer present"
+  },
+  "numbers": {
+    "leaky_AUC": 0.9275,
+    "leaky_interpretation": "INVALID — artifact of same-day feature/label construction. May be cited only as the explicitly-invalidated leaky baseline; never as valid model performance.",
+    "honest_AUC_immediate_rerun": 0.6344,
+    "final_honest_ROC_AUC": 0.6273,
+    "final_honest_accuracy": 0.9391,
+    "final_honest_positive_share": 0.0522,
+    "n_test": 48600
+  },
+  "repro_steps": [
+    "1) Checkout/reconstruct the pre-fix features.py where _shift_day_past was absent or not applied to all day-keyed aggregates.",
+    "2) Build features and target on the same day grid for the held-out window; train the XGBoost + platt-sigmoid pipeline with split_day 2026-07-07.",
+    "3) Compute held-out ROC-AUC — observe ~0.9275 (leaky).",
+    "4) Apply the fix: shift every day-keyed aggregate frame forward by one day so features use only data <= d-1.",
+    "5) Re-train and re-evaluate on the same split — observe ROC-AUC dropping to 0.6344 (immediate honest re-run), and 0.6273 in the final consolidated run (artifacts/metrics.json).",
+    "6) Confirm no single feature AUC approaches 0.92 (see artifacts/metrics.json per_feature_auc)."
+  ],
+  "artifacts_audited": [
+    {"path": "artifacts/metrics.json", "status": "honest", "note": "final forecast-safe numbers: ROC-AUC 0.6273, P@20..1000, prf@thresholds, per_feature_auc"},
+    {"path": "artifacts/deep_eval/generalization_splits.json", "status": "honest", "note": "re-run on corrected pipeline: random 0.627, time_forward 0.6263, cold_atm 0.5963, cold_city/cold_district 0.6228, new_hotspot 0.5847"},
+    {"path": "artifacts/deep_eval/ablation.json", "status": "honest", "note": "re-run: A 0.4938, B 0.4448, C 0.5814, D 0.4219, E_full_model 0.6263"},
+    {"path": "artifacts/deep_eval/cold_location.json", "status": "honest", "note": "re-run: 0.6228 (held-out city Northsagar)"},
+    {"path": "artifacts/deep_eval/operational.json", "status": "honest", "note": "re-run: 0.6249"},
+    {"path": "artifacts/deep_eval/RECONCILIATION.md", "status": "reference", "note": "authoritative manifest of honest vs superseded deep-eval artifacts"}
+  ],
+  "superseded_artifacts": [
+    {"path": "artifacts/deep_eval/adversarial_worlds.json", "status": "superseded", "note": "still holds leaky 0.8038-0.897; honest re-run of completed worlds = 0.6321 / 0.6386 (see RECONCILIATION.md)"},
+    {"path": "artifacts/deep_eval/drift.json", "status": "superseded", "note": "0.9203-0.9349 leaky"},
+    {"path": "artifacts/deep_eval/drift_summary.json", "status": "superseded", "note": "leaky"},
+    {"path": "artifacts/deep_eval/baseline_war.json", "status": "superseded", "note": "0.9261-0.9276 leaky"},
+    {"path": "artifacts/deep_eval/feature_audit.json", "status": "superseded", "note": "model_auc 0.9274 leaky"},
+    {"path": "artifacts/deep_eval/horizons.json", "status": "superseded", "note": "0.9159-0.9261 leaky"},
+    {"path": "artifacts/deep_eval/model_disagreement.json", "status": "superseded", "note": "0.9259 leaky"},
+    {"path": "artifacts/deep_eval/permutation_tests.json", "status": "superseded", "note": "baseline 0.9259 leaky"},
+    {"path": "artifacts/deep_eval/seed_stability.json", "status": "superseded", "note": "0.9178-0.9266 leaky"},
+    {"path": "artifacts/deep_eval/transfer_readiness.json", "status": "superseded", "note": "0.9217-0.9365 leaky"},
+    {"path": "artifacts/deep_eval/intervention_simulation.json", "status": "superseded", "note": "references ~0.929-0.978 illustrative recovery rates"},
+    {"path": "artifacts/deep_eval/hourly_eval.json", "status": "superseded", "note": "conclusion references stale daily ~0.93"}
+  ],
+  "conclusion": "The previously reported ~0.9275 ROC-AUC was solely an artifact of same-day feature/label leakage and is INVALID as a model-performance claim. After the day-keyed shift fix, the honest forecast-safe held-out ROC-AUC is 0.6273 on the synthetic test set. All headline evaluation artifacts cited in this deliverable set were re-run on the corrected pipeline and carry honest numbers; every remaining 0.92x figure in the repo (per RECONCILIATION.md) is the explicitly-superseded leaky baseline and must not be cited as valid. The honest 0.6273 is a score on SYNTHETIC labels (see REAL_DATA_GAP.md and LABEL_VALIDITY.md), not real-world fraud."
+}

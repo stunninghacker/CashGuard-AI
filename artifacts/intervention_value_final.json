@@ -1,0 +1,61 @@
+{
+  "value_evaluation_id": "IV-FINAL-2026-08-30",
+  "label": "CONTROLLED SYNTHETIC EVALUATION — illustrative only",
+  "source_of_truth": "artifacts/metrics.json (honest, post-leakage-fix numbers)",
+  "single_region": true,
+  "n_atms": 180,
+  "dataset_scale": "demo-scale, single state State-A / single district Northsagar",
+  "value_claim": "illustrative; no real-world per-ATM benchmark exists (see REAL_DATA_GAP.md)",
+  "lead_time_median_hours": 15.9,
+  "lead_time_p25_hours": 10.6,
+  "lead_time_p75_hours": 19.7,
+  "rounds_per_evaluation": 1,
+  "thresholds": [
+    {
+      "threshold": 0.5,
+      "alerts": 62,
+      "precision": 0.6613,
+      "recall": 0.0138,
+      "false_alert_rate": 0.3387,
+      "est_atm_cycles_of_attention": 62,
+      "note": "alerts x rounds (62 x 1); ~67% of flagged ATMs are true positives in this synthetic test window"
+    },
+    {
+      "threshold": 0.6,
+      "alerts": 47,
+      "precision": 0.6383,
+      "recall": 0.0101,
+      "false_alert_rate": 0.3617,
+      "est_atm_cycles_of_attention": 47,
+      "note": "alerts x rounds (47 x 1)"
+    },
+    {
+      "threshold": 0.7,
+      "alerts": 32,
+      "precision": 0.75,
+      "recall": 0.0081,
+      "false_alert_rate": 0.25,
+      "est_atm_cycles_of_attention": 32,
+      "note": "alerts x rounds (32 x 1); highest precision band with 30-60 ATM/cycle operating guidance"
+    },
+    {
+      "threshold": 0.85,
+      "alerts": 3,
+      "precision": 0.6667,
+      "recall": 0.0007,
+      "false_alert_rate": 0.3333,
+      "est_atm_cycles_of_attention": 3,
+      "note": "alerts x rounds (3 x 1); very low volume, dispatch-grade confidence ~0.8% recall"
+    }
+  ],
+  "monetary_style_value": {
+    "status": "illustrative only, no real benchmark",
+    "disclaimer": "No real-world per-ATM fraud benchmark exists; calibration against a real baseline is not possible on synthetic labels. Any rupee-shaped figure would be invented and is therefore NOT provided. The value frame below is a qualitative decision-frame, not an ROI claim.",
+    "notes": [
+      "intervention value at honest numbers = ability to concentrate finite reviewer attention on the 30-60 highest-risk ATM/cycles at 67-75% precision instead of the full 180-ATM network.",
+      "avg precision across dispatch-adjacent thresholds ~0.65-0.75 on the synthetic test window.",
+      "lead_time_median 15.9h is the synthetic-world forecast lead — whether real investigation-confirmed outcomes echo this is unverified until a real pilot.",
+      "Validate in shadow mode (SHADOW_MODE=true) and only then derive thresholds per REAL_DATA_VALIDATION_PROTOCOL."
+    ]
+  }
+}
