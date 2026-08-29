@@ -150,6 +150,13 @@
   <main id="dash-i4c" class="dash hidden">
     <section class="stats-grid" id="i4c-stats"></section>
     <section class="panel">
+      <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket · deduplicated)</span></h2><span class="pill warn" id="alert-count"></span></div>
+      <table id="i4c-alert-table" class="data-table">
+        <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+    <section class="panel">
       <div class="panel-head"><h2>Recovery Funnel (flagged → held → recovered)</h2><span class="ev-notice">synthetic/illustrative — CFCFRMS APIs are Tier 2</span></div>
       <div id="i4c-funnel"></div>
     </section>
@@ -213,6 +220,6 @@
   <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn ghost small" aria-label="Dismiss">✕</button></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

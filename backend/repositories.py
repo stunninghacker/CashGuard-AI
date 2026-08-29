@@ -204,6 +204,17 @@ def get_alert_by_atm_recent(db: Session, atm_id: str, since: datetime) -> models
     )
 
 
+def record_alert_reobservation(db: Session, alert: models.Alert) -> models.Alert:
+    """Anti alert-fatigue (A4): the same ATM risk was re-seen again within the
+    cooldown window without a material escalation. Instead of creating a duplicate
+    lookalike alert, increment an honest re-observation counter on the latest alert."""
+    alert.reobservation_count = (alert.reobservation_count or 0) + 1
+    alert.last_reobserved_at = datetime.utcnow()
+    db.commit()
+    db.refresh(alert)
+    return alert
+
+
 def create_alert_outcome(db: Session, **kwargs) -> models.AlertOutcome:
     outcome = models.AlertOutcome(**kwargs)
     db.add(outcome)
@@ -271,22 +282,6 @@ def count_alerts(db: Session, status: str | None = None) -> int:
     if status:
         stmt = stmt.where(models.Alert.status == status)
     return int(db.scalar(stmt) or 0)
-
-
-def recent_open_alert_for_atm(db: Session, atm_id: str, hours: int) -> models.Alert | None:
-    """Return a still-open (new/acknowledged) alert for this ATM within the cooldown window."""
-    cutoff = datetime.utcnow() - timedelta(hours=hours)
-    stmt = (
-        select(models.Alert)
-        .where(
-            models.Alert.atm_id == atm_id,
-            models.Alert.status.in_(["new", "acknowledged"]),
-            models.Alert.created_at >= cutoff,
-        )
-        .order_by(models.Alert.created_at.desc())
-        .limit(1)
-    )
-    return db.scalar(stmt)
 
 
 def high_risk_atms_count(db: Session, threshold: float, since: datetime | None = None) -> int:

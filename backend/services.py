@@ -189,7 +189,9 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
     One alert cycle:
       1. compute risk scores as of now
       2. keep ATMs with risk_score >= threshold
-      3. skip ATMs already alerted within the cooldown window (dedupe)
+      3. dedupe: within the cooldown window a re-flagged ATM whose risk did NOT
+         materially escalate (delta <= ALERT_DEDUP_RISK_DELTA) is recorded as a
+         re-observation instead of a duplicate alert (anti alert-fatigue)
       4. create alert + mock SMS/email + REAL webhook dispatch + WS push
       5. issue CFCFRMS fund-block recommendations for linked mule accounts
     Returns a summary of what happened (for logs / API responses).
@@ -198,6 +200,7 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
     flagged = [s for s in scores if s["risk_score"] >= RISK_THRESHOLD]
     created = 0
     skipped = 0
+    reobserved = 0
 
     # Item 5 — active fairness constraint: per-jurisdiction proportional alert cap.
     # Sizes each state's actionable budget to its share of the national ATM base so
@@ -207,16 +210,35 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
     fairness = FairnessCap(db, cycle_budget=len(flagged))
 
     for s in flagged:
+        escalate_delta = None
         if not force:
-            existing = repo.recent_open_alert_for_atm(db, s["atm_id"], ALERT_COOLDOWN_HOURS)
+            # Alert-fatigue dedup (Phase: mitigation): compare against the ATM's MOST
+            # RECENT alert (open OR already actioned/dismissed) within the cooldown
+            # window. Previously only still-open alerts matched, so once an alert was
+            # actioned the same ATM re-fired immediately with the identical risk score
+            # — a spammy feed full of lookalike rows.
+            existing = repo.get_alert_by_atm_recent(
+                db, s["atm_id"], datetime.utcnow() - timedelta(hours=ALERT_COOLDOWN_HOURS)
+            )
             if existing is not None:
-                # Alert-fatigue dedup (Phase: mitigation): skip repeat alerts for
-                # the same ATM within the cooldown window UNLESS risk has risen
-                # meaningfully since the last alert (delta > ALERT_DEDUP_RISK_DELTA)
-                # — a genuine escalation still gets through.
-                if s["risk_score"] - (existing.risk_score or 0.0) <= ALERT_DEDUP_RISK_DELTA:
-                    skipped += 1
+                delta = s["risk_score"] - (existing.risk_score or 0.0)
+                if delta <= ALERT_DEDUP_RISK_DELTA:
+                    # The same risk was already flagged for this ATM and nothing has
+                    # materially escalated. Don't spam a duplicate — record an honest
+                    # re-observation (counter + last-seen) on the latest alert and
+                    # ledger-log it so the "still watching" is auditable.
+                    repo.record_alert_reobservation(db, existing)
+                    repo.append_ledger(db, actor="scheduler (system)", event_type="alert_reobserved",
+                                       entity_id=existing.alert_id,
+                                       payload={"atm_id": s["atm_id"],
+                                                "risk_score": round(s["risk_score"], 4),
+                                                "delta_vs_last": round(delta, 4),
+                                                "reobservation_count": existing.reobservation_count})
+                    reobserved += 1
                     continue
+                # genuine escalation (delta > ALERT_DEDUP_RISK_DELTA) -> a new alert
+                # below, labeled with the delta so reviewers can see the escalation.
+                escalate_delta = round(delta, 4)
 
         action = recommend_action(s["risk_score"], s["risk_level"])
         # INSUFFICIENT EVIDENCE — HOLD ACTION (Phase 7): near-threshold alerts
@@ -278,6 +300,7 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
             sms_log=sms,
             email_log=email,
             dispatch_log=dispatch,
+            risk_delta_vs_last=escalate_delta,
         )
         # Inter-agency jurisdiction routing (Item 4): origin state = complaint
         # jurisdiction that seeded this ATM's risk. If it differs from the
@@ -311,7 +334,8 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
         created += 1
 
     _invalidate_score_cache()
-    return {"checked": len(scores), "flagged": len(flagged), "created": created, "skipped": skipped}
+    return {"checked": len(scores), "flagged": len(flagged), "created": created,
+            "skipped": skipped, "reobserved": reobserved}
 
 
 HITL_STATUSES = {

@@ -103,6 +103,9 @@ class AlertOut(BaseModel):
     routing_status: str = "none"  # none / handoff / handoff_ack / handoff_complete
     acknowledged_at: datetime | None = None
     actioned_at: datetime | None = None
+    reobservation_count: int = 0
+    last_reobserved_at: datetime | None = None
+    risk_delta_vs_last: float | None = None
 
     model_config = {"from_attributes": True}
 

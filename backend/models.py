@@ -169,6 +169,9 @@ class Alert(Base):
     routing_status: Mapped[str] = mapped_column(String(16), default="none", index=True)  # none / handoff / handoff_ack / handoff_complete
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     actioned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reobservation_count: Mapped[int] = mapped_column(Integer, default=0)  # anti alert-fatigue: times the same risk was re-seen WITHOUT a duplicate alert
+    last_reobserved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    risk_delta_vs_last: Mapped[float | None] = mapped_column(Float, nullable=True)  # risk change vs the ATM's most recent alert (genuine escalation)
 
 
 class AlertOutcome(Base):

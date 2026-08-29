@@ -407,13 +407,12 @@ function tbodyOf(el) {
 }
 
 function renderAlertTable(tableId, alerts = state.alerts) {
-  const countEl = document.getElementById("alert-count");
-  if (countEl) countEl.textContent = `${alerts.filter((a) => a.status === "new").length} new`;
+  document.querySelectorAll("#alert-count").forEach((c) => (c.textContent = `${alerts.filter((a) => a.status === "new").length} new`));
   const el = document.getElementById(tableId);
   if (!el) return;
   tbodyOf(el).innerHTML = alerts.map(
     (a) => `<tr><td>${fmtTime(a.created_at)}</td><td><b>${esc(a.atm_id)}</b></td><td>${esc(a.city)}</td>
-    <td>${tierBadge(a.tier || tierOf(a.risk_score))}</td><td>${riskPill(a.risk_score)}</td><td>${esc(a.recommended_action)}</td><td>${statusPill(a.status)}</td>
+    <td>${tierBadge(a.tier || tierOf(a.risk_score))}</td><td>${riskPill(a.risk_score)}</td><td>${esc(a.recommended_action)}${alertMeta(a)}</td><td>${statusPill(a.status)}</td>
     <td>${routingBadge(a)}<button class="btn small" data-evid="${esc(a.alert_id)}">Details</button>
     ${hitlButtons(a)}</td></tr>`
   ).join("");
@@ -427,6 +426,17 @@ function routingBadge(a) {
     return `<span class="rt rt-${st}" title="origin ${esc(a.origin_state)} → ${esc(a.state)}">↗ ${esc(a.origin_state)}→${esc(a.state)}</span><br/>`;
   }
   return "";
+}
+
+function alertMeta(a) {
+  let meta = "";
+  if (a.risk_delta_vs_last !== null && a.risk_delta_vs_last !== undefined) {
+    meta += `<span class="rt rt-escl" title="risk rose vs this ATM's most recent alert — genuine escalation">▲ +${a.risk_delta_vs_last.toFixed(2)} escalation</span>`;
+  }
+  if (a.reobservation_count > 0) {
+    meta += `<span class="rt rt-reobs" title="same risk re-seen within cooldown — recorded, not re-alerted (anti alert-fatigue)">re-observed ×${a.reobservation_count}</span>`;
+  }
+  return meta ? `<br/>${meta}` : "";
 }
 
 function tierBadge(tier) {

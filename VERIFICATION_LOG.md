@@ -241,3 +241,51 @@ dashboard stayed blank (the exact state judges saw).
   -> badge `Ledger verified ✓ · 952 blocks`. `A3_UI_FLOW_OK: true`.
 - `node --check frontend/app.js` OK; `py_compile` OK on changed backend files.
 
+
+## A4 — Duplicate / spammy alert feed (2026-08-29) [FIXED + VERIFIED]
+
+**Observed problem (duplicate/spammy feed):** the alert list was full of
+look-alike rows — just 23 alerts, 21 of them from only 3 ATMs
+(`ATM-NOR0027/0158/0160`, 7 rows each) re-firing almost hourly with
+**byte-identical risk scores** (e.g. NOR0027 = 0.9961 every time). Because the
+dedup (`recent_open_alert_for_atm`) only matched STILL-OPEN alerts, once a demo
+user actioned the 09:16 batch, the same ATMs re-fired at 10:51 with the same
+risk — an endless feed of near-duplicate rows.
+
+**Root cause:** the alert-fatigue dedup compared only against *open*
+(new/acknowledged) alerts within the cooldown; closed/already-actioned alerts
+were invisible to it, so same-risk ATMs re-fired immediately after any status
+change. No signal labelled repeats, and no material-change guard on re-fires.
+
+**Fix (backend):**
+- `run_alert_cycle` now dedups against the ATM's MOST RECENT alert (any status)
+  within the cooldown. If the re-flagged risk did NOT materially rise
+  (delta <= ALERT_DEDUP_RISK_DELTA) it records a **re-observation** instead of a
+  duplicate alert: increments `Alert.reobservation_count`, sets
+  `last_reobserved_at`, and writes an `alert_reobserved` ledger block (audit
+  trail for "still watching"). Summary now reports `reobserved: n`.
+- A genuine escalation (delta > ALERT_DEDUP_RISK_DELTA) still creates a new
+  alert, labelled with `risk_delta_vs_last` so reviewers see the rise.
+- New model columns (`reobservation_count`, `last_reobserved_at`,
+  `risk_delta_vs_last`) surfaced through `AlertOut`.
+- Removed the now-unused `recent_open_alert_for_atm`.
+
+**Fix (frontend):**
+- The I4C dashboard had NO alert feed table — `renderAlertTable("i4c-alert-table")`
+  silently no-oped because the element was missing. Added an **Active Alerts**
+  panel (`#i4c-alert-table`) to `dash-i4c` so the primary I4C view actually shows
+  the deduplicated feed.
+- New UI pills: `re-observed ×N` (grey) and `▲ +delta escalation` (red) render
+  on the alert rows; `#alert-count` now updates on every dashboard that shows it.
+- Cache-buster bumped app.js `?v=7` -> `?v=8`.
+
+**Migration:** `ALTER TABLE alerts ADD COLUMN reobservation_count / last_reobserved_at / risk_delta_vs_last` (added to the live DB; server restarted).
+
+**Verification:**
+- HTTP (i4c.admin): alert count **stays 23** across 2 `POST /alerts/run-now`
+  cycles (`created:0`, `skipped:0`, `reobserved:3` each) — the 3 same-risk ATMs
+  are recorded, not duplicated. `reobservation_count` rose 0 -> 6 (2 x 3) and is
+  returned by `GET /alerts`.
+- UI (puppeteer, I4C admin): `#i4c-alert-table` renders 3 unique alerts each
+  tagged **`re-observed ×2`**; no duplicate rows; HITL + routing badges intact.
+- `node --check app.js` OK; `py_compile` OK on changed backend files.
