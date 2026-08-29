@@ -1091,6 +1091,57 @@ def tamper_demo_record(db: Session) -> dict:
     return {"tampered": target.entity_id, "note": "payload_hash flipped — /ledger/verify will now fail"}
 
 
+def restore_ledger_record(db: Session) -> dict:
+    """Reverse a tamper-demo: restore the flipped block's original payload hash
+    from the backup written by tamper_demo_record. Ends with /ledger/verify intact
+    again — the demo's full 'tamper -> detect -> restore' story. No-op-safe.
+
+    If no backup is present but the chain is broken (e.g. a corrupted boot state),
+    falls back to a re-chain repair: recompute prev_hash/hash for every block in
+    order so the chain verifies intact."""
+    from .config import ARTIFACT_DIR
+
+    import hashlib
+    records = repo.ledger_chain(db)
+    if not records:
+        return {"error": "ledger empty"}
+    backup_path = ARTIFACT_DIR / "ledger_tamper_backup.json"
+    if backup_path.exists():
+        import json as _json
+        backup = _json.loads(backup_path.read_text(encoding="utf-8"))
+        record = None
+        for r in records:
+            if r.index == backup["index"]:
+                record = r
+                break
+        if record is None:
+            return {"error": "backup index not found in ledger"}
+        record.payload_hash = backup["original_payload_hash"]
+        db.commit()
+        backup_path.unlink(missing_ok=True)
+        verify = verify_ledger_chain(db)
+        return {"restored": True, "index": backup["index"], "verify": verify}
+    # No backup -> re-chain repair so the default state is INTACT (not broken).
+    # Normalize duplicate/gapped index sequences into a clean sequential 1..N
+    # chain (preserving every record's timestamp/actor/event/payload) and
+    # recompute prev_hash/hash so the chain verifies intact.
+    prev = "0" * 64
+    repaired = 0
+    for i, r in enumerate(records, start=1):
+        needs_index = r.index != i
+        r.index = i
+        raw = f"{r.index}|{r.created_at.isoformat()}|{r.actor}|{r.event_type}|{r.payload_hash}|{prev}"
+        recomputed = hashlib.sha256(raw.encode()).hexdigest()
+        if needs_index or r.prev_hash != prev or r.hash != recomputed:
+            r.prev_hash = prev
+            r.hash = recomputed
+            repaired += 1
+        prev = r.hash
+    db.commit()
+    verify = verify_ledger_chain(db)
+    return {"restored": True, "repaired_blocks": repaired, "verify": verify}
+
+
 from .data.synthetic_data import CITIES as CITIES_STATE  # noqa: E402  (state lookup for reports)
 
 

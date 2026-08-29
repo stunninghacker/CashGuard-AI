@@ -176,3 +176,68 @@ a bare error state in front of judges.
 - **Offline path:** all tile domains blocked via request interception -> tile requests aborted -> offline note shown + `#offline-map` canvas auto-engaged via the real timeout/tileerror path -> **pixel check: 800x420 canvas, 1396 colored heatmap pixels (`rendered:true`)**.
 - Screenshots: `a1-offline-auto.png`, `offline-map-forced.png` (temp evidence for this round).
 
+## A2 — Blank BANK dashboard + Run-Alert-Cycle 403 + role 401/403 (2026-08-29) [FIXED + VERIFIED]
+
+**Blank dashboard root cause:** `/stats/summary` is role-gated to
+`I4C_ADMIN/POLICE_STATE/POLICE_DISTRICT` — a BANK login gets 403, which rejected
+`Promise.all` in `loadAll()`, so `state.risk` never populated and the bank
+dashboard stayed blank (the exact state judges saw).
+
+**Fix:**
+- `loadAll()` fetches `/stats/summary` non-fatally (`.catch(() => null)`) and
+  `render()` tolerates `state.stats === null` — the BANK dashboard renders its
+  data (ATM rows, funnel, recommendations) without the stats block.
+- `render()` role-gates the header "Run Alert Cycle" button (#btn-cycle):
+  hidden for BANK (backend has always allowed only police/I4C).
+- `api()` 403 branch surfaces a global `showNotice()` banner (index.html #notice).
+
+**Verification (headless Chrome, puppeteer-core, script `a2_verify.js`):**
+- BANK (`bank.hdfc`): dashboard renders — `atmRows=127`, funnel populated
+  (`Flagged ₹5,854,900 / Held / Recovered`), `btnCycleHidden:true`, `dashShown:true`.
+- I4C_ADMIN + POLICE_STATE: #btn-cycle visible.
+- HTTP: BANK `/risk-scores` → 127 HDFC ATMs; `/recovery/recommendations` → 20;
+  `/alerts` → 0 — HDFC genuinely has no alerts in the DB (data, not a bug).
+
+## A3 — Ledger tampered by default + Restore Ledger button (2026-08-29) [FIXED + VERIFIED]
+
+**Root cause (two compounding bugs):**
+1. **Route bug** (`backend/api/routes/ledger.py`): the `@router.post("/tamper-demo")`
+   decorator was accidentally stacked on the `ledger_network` handler (which also
+   serves `GET /network`); `ledger_tamper_demo` had NO decorator, so the tamper
+   endpoint was never mounted — clicking "Tamper-demo" returned the replica
+   network status and never flipped a block.
+2. **Structural corruption / index race** (`backend/repositories.py` +
+   `backend/models.py`): `append_ledger` computed `index = last.index + 1` with no
+   concurrency guard. The live scheduler appends frequently; when two appends
+   raced, both wrote the same next index -> **duplicate indices** (probe found
+   **140 duplicate indices** / 906 rows / 738 distinct) which cracks the
+   hash-chain check, so `/ledger/verify` reported BROKEN by default.
+
+**Fix:**
+- `ledger.py`: tamper decorator moved onto `ledger_tamper_demo`; added
+  `POST /ledger/restore` (I4C-only).
+- `backend/models.py`: `AuditRecord.index` is now `unique=True`.
+- `backend/repositories.py` `append_ledger`: concurrency-safe retry loop — on
+  `IntegrityError` it re-seeks to `max(index)+1` and retries (10 attempts), so a
+  duplicate index is impossible even under scheduler races.
+- `backend/services.py` `restore_ledger_record`: restores from the tamper backup;
+  if no backup exists but the chain is broken, it performs a **re-chain repair**
+  that normalizes duplicate/gapped indices to a clean sequential 1..N (preserving
+  every record's data) and recomputes the hash chain so it verifies intact.
+- `frontend/index.html` + `app.js`: "Restore Ledger" button (#btn-ledger-restore)
+  wired to `POST /ledger/restore`; refreshes the badge.
+- Live DB migration: ledger normalized to sequential 1..N and a UNIQUE index
+  `uq_audit_log_index` created on `audit_log("index")` so the fix holds for the
+  running demo DB (server was stopped, migrated, restarted).
+
+**Verification (HTTP as i4c.admin + headless Chrome puppeteer):**
+- Default `/ledger/verify`: **intact:true** (was broken at block 172 before).
+- `POST /ledger/tamper-demo` -> verify **intact:false, broken_at_index` reported**.
+- `POST /ledger/restore` -> verify **intact:true** again.
+- **Scheduler-race regression**: verified intact through 35 s of live scheduler
+  appends (records 930 -> 935) — the unique index + retry prevents the race.
+- UI (puppeteer): initial badge `Ledger verified ✓ · 943 blocks` -> click
+  Tamper-demo -> badge `LEDGER TAMPERED ✗ at block 948` -> click Restore Ledger
+  -> badge `Ledger verified ✓ · 952 blocks`. `A3_UI_FLOW_OK: true`.
+- `node --check frontend/app.js` OK; `py_compile` OK on changed backend files.
+

@@ -330,28 +330,38 @@ def append_ledger(
     """
     import hashlib
     import json as _json
+    from sqlalchemy.exc import IntegrityError
 
-    last = db.scalar(select(models.AuditRecord).order_by(models.AuditRecord.index.desc()).limit(1))
-    prev_hash = last.hash if last else ("0" * 64)
-    index = (last.index + 1) if last else 1
-    if payload_hash == "" and payload is not None:
-        payload_hash = hashlib.sha256(_json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
-    ts = datetime.utcnow()
-    raw = f"{index}|{ts.isoformat()}|{actor}|{event_type}|{payload_hash}|{prev_hash}"
-    record = models.AuditRecord(
-        index=index,
-        created_at=ts,
-        actor=actor,
-        event_type=event_type,
-        entity_id=entity_id,
-        payload_hash=payload_hash,
-        prev_hash=prev_hash,
-        hash=hashlib.sha256(raw.encode()).hexdigest(),
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    return record
+    # Concurrency-safe append: index is UNIQUE at the DB level (models.AuditRecord).
+    # If two processes race to append, one wins and the other re-seeks to the new
+    # max index and retries — so no duplicate index (and no broken chain) is ever
+    # created by the live scheduler.
+    for _attempt in range(10):
+        last = db.scalar(select(models.AuditRecord).order_by(models.AuditRecord.index.desc()).limit(1))
+        prev_hash = last.hash if last else ("0" * 64)
+        index = (last.index + 1) if last else 1
+        if payload_hash == "" and payload is not None:
+            payload_hash = hashlib.sha256(_json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
+        ts = datetime.utcnow()
+        raw = f"{index}|{ts.isoformat()}|{actor}|{event_type}|{payload_hash}|{prev_hash}"
+        record = models.AuditRecord(
+            index=index,
+            created_at=ts,
+            actor=actor,
+            event_type=event_type,
+            entity_id=entity_id,
+            payload_hash=payload_hash,
+            prev_hash=prev_hash,
+            hash=hashlib.sha256(raw.encode()).hexdigest(),
+        )
+        db.add(record)
+        try:
+            db.commit()
+            db.refresh(record)
+            return record
+        except IntegrityError:
+            db.rollback()
+    raise RuntimeError("append_ledger: could not allocate a unique chain index after 10 retries")
 
 
 def ledger_chain(db: Session) -> list[models.AuditRecord]:

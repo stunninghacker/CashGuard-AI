@@ -836,6 +836,9 @@ function bindEvents() {
   wire("btn-ledger-tamper", async () => {
     try { const r = await api("/ledger/tamper-demo", { method: "POST" }); toast(r.error || r.note); ledgerStatus(); } catch (err) { toast("Tamper demo: " + err.message); }
   });
+  wire("btn-ledger-restore", async () => {
+    try { const r = await api("/ledger/restore", { method: "POST" }); toast((r.note) || (r.verify && r.verify.intact ? `Ledger restored — ${r.verify.records} blocks verify intact` : (r.error || "restore performed"))); ledgerStatus(); } catch (err) { toast("Restore failed: " + err.message); }
+  });
   wire("btn-sit-report", async () => {
     try {
       const res = await fetch("/reports/situational", { method: "POST", headers: { Authorization: `Bearer ${getToken()}` } });

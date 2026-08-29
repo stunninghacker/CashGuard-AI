@@ -245,7 +245,7 @@ class AuditRecord(Base):
     __tablename__ = "audit_log"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    index: Mapped[int] = mapped_column(Integer, index=True)          # chain position
+    index: Mapped[int] = mapped_column(Integer, unique=True, index=True)  # chain position (unique => impossible to double-append the same block)
     created_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     actor: Mapped[str] = mapped_column(String(64), default="system")  # user_id + role
     event_type: Mapped[str] = mapped_column(String(32), index=True)   # alert_created / evidence_snapshot / status_changed / report_generated / fund_block_issued / access

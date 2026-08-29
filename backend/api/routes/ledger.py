@@ -45,7 +45,6 @@ def ledger_verify(user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "
     return services.verify_ledger_chain(db)
 
 
-@router.post("/tamper-demo")
 @router.get("/network")
 def ledger_network(user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN"))):
     """Replicated-ledger status (demo-grade 3-node replication; see
@@ -65,6 +64,14 @@ def ledger_network(user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", 
     return net.network_status()
 
 
+@router.post("/tamper-demo")
 def ledger_tamper_demo(user=Depends(require_auth("I4C_ADMIN")), db: Session = Depends(get_db)):
     """Flip one record's payload hash — the next /ledger/verify must fail."""
     return services.tamper_demo_record(db)
+
+
+@router.post("/restore")
+def ledger_restore(user=Depends(require_auth("I4C_ADMIN")), db: Session = Depends(get_db)):
+    """Reverse the tamper-demo: restore the flipped block from its backup so the
+    chain verifies intact again. Completes the 'tamper -> detect -> restore' story."""
+    return services.restore_ledger_record(db)
