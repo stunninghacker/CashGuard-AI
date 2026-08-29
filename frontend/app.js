@@ -826,6 +826,20 @@ async function doLogin() {
   }
 }
 
+/* One-click demo role autofill + sign-in (task C): a judge can select a role
+   from the login screen and be taken straight to the right dashboard. Credentials
+   stay visible on the button tooltip/name for teaching. */
+async function autofillDemo(username, password) {
+  const userEl = document.getElementById("login-username");
+  const passEl = document.getElementById("login-password");
+  if (!userEl || !passEl) { location.reload(); return; }  // stale markup -> fresh reload
+  userEl.value = username;
+  passEl.value = password;
+  loginStatus(`Autofilled ${username} — signing in…`, "");
+  await doLogin();
+}
+window.autofillDemo = autofillDemo;
+
 /* ------------------------------ bindings ------------------------------ */
 function bindEvents() {
   // Each binding is isolated so a single missing element (stale-cache page mix)

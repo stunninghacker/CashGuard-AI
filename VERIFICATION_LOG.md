@@ -340,3 +340,21 @@ the base theme — frosted, translucent surfaces over an ambient glow:
 - All dashboards still render (visible=true, data intact), `overflowX:false`, and
   document heights unchanged (I4C 2006 / police 1576 / bank 1353) — proving the
   glass layer does not break the A5 layout work.
+
+## C — Login role-select autofill (2026-08-29) [DONE + VERIFIED]
+
+**Change:** replaced the plain-text demo-credential list on the login card with
+clickable role-select buttons ("one-click demo sign-in"):
+- 4 glass `role-chip` buttons: State Police, District Police, Bank, I4C Admin,
+  each showing its username. Clicking calls `window.autofillDemo(username, password)`
+  (app.js), which autofills the fields and signs in immediately — no typing, and
+  lands the judge on the correct role-scoped dashboard.
+- Kept the underlying bcrypt+JWT auth unchanged (autofill just drives the existing
+  `doLogin()` path; credentials remain visible for teaching).
+- Cache-buster: `app.js?v=8` -> `?v=9`.
+
+**Verification (headless Chrome, click each chip):**
+- 4 chips rendered.
+- All four one-click sign-ins PASS -> correct dashboard + role badge:
+  officer.statea -> POLICE_STATE · State-A; officer.district1 -> POLICE_DISTRICT ·
+  Northsagar; bank.hdfc -> BANK · HDFC Bank; i4c.admin -> I4C_ADMIN · national.

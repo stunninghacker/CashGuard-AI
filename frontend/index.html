@@ -31,13 +31,24 @@
       <label for="login-password">Password</label>
       <input id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){window.cashguardLogin();}" />
       <button id="btn-login" class="btn primary" onclick="window.cashguardLogin();">Sign in</button>
-      <p id="login-status" class="login-status">Ready — enter a demo credential above and press Sign in.</p>
+      <p id="login-status" class="login-status">Ready — select a demo role below to autofill and sign in (or type a credential).</p>
       <div class="demo-users">
-        <b>Demo users</b>
-        <span class="du">🚔 officer.statea / PoliceStateA!1 <i>(State-A police)</i></span>
-        <span class="du">🚔 officer.district1 / District1!1 <i>(Northsagar police)</i></span>
-        <span class="du">🏦 bank.hdfc / HdfcBank!1 <i>(HDFC Bank)</i></span>
-        <span class="du">🏛️ i4c.admin / I4cAdmin!1 <i>(national)</i></span>
+        <b>One-click demo sign-in — select a role</b>
+        <span class="du-note">Autofills the credential and signs in immediately.</span>
+        <div class="role-grid">
+          <button type="button" class="role-chip" onclick="window.autofillDemo('officer.statea','PoliceStateA!1')" title="State-A police — national dashboard">
+            <span class="role-emoji">🚔</span><span class="role-name">State Police</span><small>officer.statea</small>
+          </button>
+          <button type="button" class="role-chip" onclick="window.autofillDemo('officer.district1','District1!1')" title="Northsagar district police">
+            <span class="role-emoji">🚔</span><span class="role-name">District Police</span><small>officer.district1</small>
+          </button>
+          <button type="button" class="role-chip" onclick="window.autofillDemo('bank.hdfc','HdfcBank!1')" title="HDFC Bank branch intelligence">
+            <span class="role-emoji">🏦</span><span class="role-name">Bank</span><small>bank.hdfc</small>
+          </button>
+          <button type="button" class="role-chip" onclick="window.autofillDemo('i4c.admin','I4cAdmin!1')" title="National cybercrime hub — full oversight">
+            <span class="role-emoji">🏛️</span><span class="role-name">I4C Admin</span><small>i4c.admin</small>
+          </button>
+        </div>
       </div>
       <p class="hint">Hackathon prototype — bcrypt + JWT (access/refresh); production: OAuth2/OIDC + org SSO</p>
     </div>
@@ -220,6 +231,6 @@
   <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn ghost small" aria-label="Dismiss">✕</button></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

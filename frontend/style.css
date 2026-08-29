@@ -84,6 +84,20 @@ main.dash { padding: 20px 24px; max-width: 1600px; margin: 0 auto; display: flex
 .demo-users { margin-top: 14px; text-align: left; font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 .demo-users b { color: var(--text); }
 .demo-users .du i { opacity: .8; }
+.du-note { font-size: 11px; color: var(--muted); font-style: italic; }
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.role-chip {
+  display: flex; align-items: center; gap: 8px; text-align: left; cursor: pointer;
+  background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px;
+  padding: 9px 10px; color: var(--text);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  transition: transform .12s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.role-chip:hover { transform: translateY(-1px); border-color: var(--accent); box-shadow: 0 6px 20px rgba(56,189,248,.22); }
+.role-chip .role-emoji { font-size: 18px; }
+.role-chip .role-name { font-weight: 700; font-size: 12.5px; }
+.role-chip small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+@media (max-width: 420px) { .role-grid { grid-template-columns: 1fr; } }
 
 /* ---------- recovery queue ---------- */
 .rec-row { display: grid; grid-template-columns: 1fr 1.4fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(30,44,74,.5); font-size: 12px; }
