@@ -110,6 +110,16 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | Docs | **PASS** | FAIRNESS_AUDIT.md "Active fairness constraint" section framing it as alert-volume fairness (the enforceable lever), NOT a change to underlying per-group FP rates. |
 | Honesty | maintained | Constraint rebalances actionable pressure proportionally; it does not alter risk scores, the review-before-action rule, or the already-documented per-group FP rates. |
 
+## Item 6 — DATA_PROTECTION.md compliance layer (2026-08-28)
+
+| Check | Outcome | Evidence |
+|-------|---------|----------|
+| Consolidated single-point doc | **PASS** | `DATA_PROTECTION.md` — one judge-facing posture doc; traces every control to code/artifact; links DPDP_ACT_COMPLIANCE.md + PRIVACY_MODEL.md deep-dives. |
+| Ground-truth honesty | **PASS** | §0 states synthetic-only, NO real personal data (traces REAL_DATA_GAP.md); no claim of real processing/savings/consent. |
+| Traces to code | **PASS** | §5 control matrix maps pseudonymization (`backend/models.py`), role-scoped vault, auth, RBAC, tamper-evident ledger, env-injected secrets — all enforced in code. |
+| DPDP alignment | **PASS** | Minimization §5, purpose §5, retention §8, consent §6, breach posture — mapped to existing DPDP_ACT_COMPLIANCE.md; production encryption-at-rest honestly listed as runbook (not claimed for local SQLite demo). |
+| Indexed | **PASS** | DOCS_INDEX.md → added to "Start here (judge reading path)". |
+
 
 
 | Probe | Outcome | Evidence |

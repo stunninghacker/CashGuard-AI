@@ -6,6 +6,7 @@
 - **JUDGE_BRIEF.md** — 2-page judge brief (problem → solution → evidence)
 - **DEMO_SCRIPT.md** — click-by-click demo walkthrough + DEMO_MODE fallback plan
 - **docs/DEMO_CREDENTIALS.md** — synthetic demo logins (**NOT FOR PRODUCTION**)
+- **DATA_PROTECTION.md** — single-point data-protection posture (synthetic-only, DPDP-shaped controls, traceable to code)
 
 ## Read before quoting any metric or claim
 - **LIMITATIONS.md** — evaluation ceiling, jurisdiction limits, explainability method
