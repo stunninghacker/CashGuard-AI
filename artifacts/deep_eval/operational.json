@@ -1,16 +1,16 @@
 {
-  "roc_auc": 0.9261,
-  "pr_auc": 0.4076,
-  "precision_at_100": 0.86,
-  "precision_at_500": 0.624,
-  "precision_at_1000": 0.528,
-  "threshold_precision_0p7": 0.6237,
-  "alert_volume_0p7": 497,
-  "false_alert_rate_0p7": 0.3763,
-  "capture_rate_top1000": 0.1757,
-  "brier": 0.0467,
+  "roc_auc": 0.6249,
+  "pr_auc": 0.1364,
+  "precision_at_100": 0.65,
+  "precision_at_500": 0.38,
+  "precision_at_1000": 0.268,
+  "threshold_precision_0p7": 0.75,
+  "alert_volume_0p7": 32,
+  "false_alert_rate_0p7": 0.25,
+  "capture_rate_top1000": 0.0886,
+  "brier": 0.0573,
   "label": "CONTROLLED SYNTHETIC EVALUATION",
-  "model_version": "2026-08-27T05:33:56.330906",
+  "model_version": "2026-08-29T17:22:14.330832",
   "n_test_rows": 48600,
-  "positive_rate": 0.0618
+  "positive_rate": 0.0622
 }
