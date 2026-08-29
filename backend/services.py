@@ -130,6 +130,60 @@ def _dispatch_webhook(channel: str, payload: dict) -> str:
     return f"[WEBHOOK:{channel}] POST {url} -> {status}"
 
 
+class FairnessCap:
+    """Item 5 — active fairness constraint: per-jurisdiction proportional alert cap.
+
+    Each state receives an alert budget proportional to its share of the national
+    ATM population, so no single jurisdiction can monopolize the actionable
+    (dispatch/action) alert queue. Intelligence is never lost: over-budget alerts
+    are still created but DEMOTED to monitor tier (review-only, no dispatch/action
+    push), preserving auditability while enforcing fairness on the actionable volume.
+
+    This is a SCHEDULING constraint on alert pressure, not a model change. It is
+    config-flag-gated (FAIRNESS_ALERT_CAP, default on) so it can be disabled.
+    """
+
+    def __init__(self, db: Session, cycle_budget: int):
+        self.enabled = False
+        self.state_budget: dict[str, int] = {}
+        self.state_used: dict[str, int] = {}
+        self.capped = 0
+        from .config import FAIRNESS_ALERT_CAP
+
+        if not FAIRNESS_ALERT_CAP or cycle_budget <= 0:
+            return
+        self.enabled = True
+        # national ATM population by state
+        from . import repositories as _repo
+
+        pop = _repo.atm_population_by_state(db)
+        total = sum(pop.values()) or 1
+        for state, n in pop.items():
+            self.state_budget[state] = max(1, int(round(cycle_budget * n / total)))
+            self.state_used[state] = 0
+
+    def consume(self, state: str, tier: str, allow_override: bool = False) -> str:
+        """Record an alert against a state's budget; return the (possibly demoted) tier.
+
+        dispatch-tier alerts at or over budget may still be kept as dispatch if
+        allow_override (a real escalating incident is never suppressed by fairness);
+        otherwise excess alerts are demoted to monitor.
+        """
+        if not self.enabled:
+            return tier
+        budget = self.state_budget.get(state, 1)
+        used = self.state_used.get(state, 0)
+        if used >= budget:
+            if tier in ("dispatch", "action") and not allow_override:
+                self.capped += 1
+                self.state_used[state] = used + 1
+                return "monitor"
+            self.state_used[state] = used + 1
+            return tier
+        self.state_used[state] = used + 1
+        return tier
+
+
 def run_alert_cycle(db: Session, force: bool = False) -> dict:
     """
     One alert cycle:
@@ -144,6 +198,13 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
     flagged = [s for s in scores if s["risk_score"] >= RISK_THRESHOLD]
     created = 0
     skipped = 0
+
+    # Item 5 — active fairness constraint: per-jurisdiction proportional alert cap.
+    # Sizes each state's actionable budget to its share of the national ATM base so
+    # one jurisdiction cannot monopolize the dispatch/action queue. Over-budget high
+    # -risk alerts are still recorded but demoted to monitor (intelligence preserved,
+    # actionable pressure kept proportional). Config-flag-gated.
+    fairness = FairnessCap(db, cycle_budget=len(flagged))
 
     for s in flagged:
         if not force:
@@ -163,6 +224,16 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
         # orders. The full evidence/uncertainty block is shown in the panel.
         if 0.70 <= s["risk_score"] < 0.78:
             action = "INSUFFICIENT EVIDENCE — HOLD ACTION (review recommended; evidence below strength threshold)"
+
+        # Item 5: apply the per-state proportional cap; possibly demote to monitor.
+        proposed_tier = alert_tier(s["risk_score"])
+        effective_tier = fairness.consume(
+            s["state"], proposed_tier, allow_override=(proposed_tier == "dispatch")
+        )
+        if effective_tier != proposed_tier:
+            # Intelligence preserved (still recorded), actionable push demoted to
+            # review-only under the fairness budget for this jurisdiction.
+            action = f"FAIRNESS-CAPPED (per-jurisdiction cap) — MONITOR + review; {action}"
         sms = email = dispatch = ""
         from .config import SHADOW_MODE
 
@@ -200,7 +271,7 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
             state=s["state"],
             police_station_area=s["police_station_area"],
             risk_score=round(s["risk_score"], 4),
-            tier=alert_tier(s["risk_score"]),
+            tier=effective_tier if fairness.enabled else alert_tier(s["risk_score"]),
             recommended_action=action,
             status="shadow" if SHADOW_MODE else "new",
             model_version=_model_version(),

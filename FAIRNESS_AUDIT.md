@@ -52,6 +52,31 @@ Artifacts: `artifacts/deep_eval/fairness_groups.json` (reproducible via
   `fairness_report.json` for ops review; a district persistently dominating
   triggers review, not automation.
 
+## Active fairness constraint — per-jurisdiction proportional alert cap (Item 5)
+- Beyond *measuring* group balance, Item 5 adds an **active scheduling
+  constraint**: each state's actionable (dispatch/action) alert budget is sized
+  proportional to its share of the national ATM population, so no single
+  jurisdiction can monopolize the dispatch/action queue even if its intel
+  volume is high.
+- **Intelligence is never lost**: over-budget high-risk alerts are still created
+  and recorded, but **demoted to monitor** (review-only) tier — the alert is on
+  the tamper-evident ledger with a `FAIRNESS-CAPPED` reason, it just does not
+  consume dispatch/action attention above that jurisdiction's fair share.
+- **Real escalations are never suppressed**: dispatch-tier alerts (severe,
+  evidence-backed) override the cap (`allow_override`), so the constraint cannot
+  cause a genuine incident to be missed — it only rebalances *pressure*.
+- Implemented in `backend/services.py` `FairnessCap`, gated by
+  `FAIRNESS_ALERT_CAP` (default ON), sized from live ATM population by state.
+  Config-flag means it can be A/B-tested or disabled without a code change.
+- This is a **scheduling/fairness constraint, not a model change** — it does not
+  alter predicted risk scores or the review-before-action rule; it only
+  distributes the *actionable* alert budget proportionally across jurisdictions.
+  Tested by `scripts/test_fairness_cap.py` (5/5: proportional sizing, demotion,
+  override, under-budget keep, disabled-inert).
+- Honest framing: this controls **alert volume fairness**, which is the lever we
+  can actually enforce. It does not (and is not claimed to) change the
+  *underlying* per-group false-positive rates already documented above.
+
 ## Feedback-loop audit
 - The model does NOT consume its own interventions or outcomes as features
   (closed-loop outcome monitoring is separate, for calibration/drift only).

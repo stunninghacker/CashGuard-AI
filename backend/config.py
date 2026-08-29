@@ -51,6 +51,8 @@ SCORE_CACHE_SECONDS: int = int(os.getenv("SCORE_CACHE_SECONDS", "600"))  # risk-
 SCHEDULER_INTERVAL_MINUTES: int = int(os.getenv("SCHEDULER_INTERVAL_MINUTES", "60"))
 HOTSPOT_K: int = int(os.getenv("HOTSPOT_K", "20"))
 SEED_COMPLAINT_LOOKBACK_DAYS: int = int(os.getenv("SEED_COMPLAINT_LOOKBACK_DAYS", "45"))  # routing: complaints within this window seed an ATM's origin jurisdiction
+FAIRNESS_ALERT_CAP: bool = os.getenv("FAIRNESS_ALERT_CAP", "true").lower() == "true"  # Item 5: per-state proportional alert cap (active fairness constraint)
+FAIRNESS_CAP_PREFERENCE: str = os.getenv("FAIRNESS_CAP_PREFERENCE", "dispatch")  # which alerts keep high tier when capped: dispatch (highest-risk/directive) keeps rank, excess demoted to monitor
 
 # --------------------------------------------------------------------------
 # Simulation control

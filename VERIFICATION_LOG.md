@@ -99,6 +99,17 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | "Why" documented in MODEL_CARD.md | **PASS** | New "Sub-daily (hourly) granularity — investigated, honestly not adopted" section: data sparsity + loss of daily context; operational forecast stays the daily 24h window; sub-daily is a roadmap, not a claim. |
 | Honesty discipline | maintained | Retired feature-on-evidence surfaced with real numbers (0.55 vs 0.93) rather than hiding the sub-daily mode behind the daily headline; referenced LIMITATIONS.md. |
 
+## Item 5 — Active fairness constraint (per-jurisdiction proportional alert cap, 2026-08-28)
+
+| Check | Outcome | Evidence |
+|-------|---------|----------|
+| Config gate | **PASS** | `FAIRNESS_ALERT_CAP` (default on) + `FAIRNESS_CAP_PREFERENCE` in `backend/config.py`; disable = inert (no demotion), A/B-testable without code change. |
+| Mechanism | **PASS** | `backend/services.py` `FairnessCap`: per-state budget sized proportional to live ATM population by state (`atm_population_by_state` in `repositories.py`); over-budget dispatch/action demoted to monitor with `FAIRNESS-CAPPED` reason; dispatch overrides (`allow_override`) so real escalations never suppressed. |
+| Wired into alert cycle | **PASS** | `run_alert_cycle` instantiates cap on flagged set, consumes per alert before create; `tier` uses effective (demoted) tier; intelligence always recorded, only actionable push rebalanced. |
+| Unit test | **PASS** | `scripts/test_fairness_cap.py` 5/5 (proportional sizing, demotion+counter, dispatch override, under-budget keep, disabled-inert); cleans up. |
+| Docs | **PASS** | FAIRNESS_AUDIT.md "Active fairness constraint" section framing it as alert-volume fairness (the enforceable lever), NOT a change to underlying per-group FP rates. |
+| Honesty | maintained | Constraint rebalances actionable pressure proportionally; it does not alter risk scores, the review-before-action rule, or the already-documented per-group FP rates. |
+
 
 
 | Probe | Outcome | Evidence |

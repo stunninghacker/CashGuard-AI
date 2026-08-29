@@ -123,6 +123,15 @@ def count_atms(db: Session) -> int:
     return int(db.scalar(select(func.count(models.ATM.id))) or 0)
 
 
+def atm_population_by_state(db: Session) -> dict[str, int]:
+    """National ATM population by state — used by the Item 5 fairness cap to
+    size per-jurisdiction alert budgets proportional to coverage."""
+    rows = db.execute(
+        select(models.ATM.state, func.count(models.ATM.id)).group_by(models.ATM.state)
+    ).all()
+    return {state: int(n) for state, n in rows}
+
+
 # ------------------------------- Withdrawals --------------------------------
 def list_withdrawals(
     db: Session,
