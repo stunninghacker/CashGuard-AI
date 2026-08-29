@@ -120,6 +120,17 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | DPDP alignment | **PASS** | Minimization §5, purpose §5, retention §8, consent §6, breach posture — mapped to existing DPDP_ACT_COMPLIANCE.md; production encryption-at-rest honestly listed as runbook (not claimed for local SQLite demo). |
 | Indexed | **PASS** | DOCS_INDEX.md → added to "Start here (judge reading path)". |
 
+## Item 7 — Live demo deployment package (2026-08-28)
+
+| Check | Outcome | Evidence |
+|-------|---------|----------|
+| Multi-stage Dockerfile | **PASS** | `Dockerfile` — builder venv → slim runtime; healthcheck on `/health` (`start-period=120s` for first-boot generate+train); `DATA_DIR=/app/data` for persistent volume; config-gated. |
+| Render Blueprint | **PASS** | `render.yaml` — Docker runtime + `/health` health-check + 1GB disk at `/app/data` + uses sync:false secret placeholders; `ALLOW_TAMPER_DEMO=false`. |
+| Fly config | **PASS** | `fly.toml` — internal_port 8000, `/health` probe, volume mount. |
+| DATA_DIR env-overridable | **PASS** | `backend/config.py` `DATA_DIR` now `os.getenv(...)` (was hardcoded) so volumes work; verified override + default. |
+| Honest URL placeholder | **PASS** | `LIVE_DEMO.md` — deployment package READY, live URL explicitly PLACEHOLDER (not deployed); deployment safety rules enumerated (synthetic-only, tamper OFF, no credential reuse, secrets env-only). |
+| README/index | **PASS** | README "Live demo (deployment-ready)" section + Future Scope updated; DOCS_INDEX references LIVE_DEMO.md. |
+
 
 
 | Probe | Outcome | Evidence |

@@ -39,7 +39,7 @@ DATABASE_URL: str = os.getenv(
 ARTIFACT_DIR: Path = Path(os.getenv("ARTIFACT_DIR", str(BASE_DIR / "artifacts")))
 MODEL_PATH: Path = ARTIFACT_DIR / os.getenv("MODEL_FILE", "model.joblib")
 METRICS_PATH: Path = ARTIFACT_DIR / os.getenv("METRICS_FILE", "metrics.json")
-DATA_DIR: Path = BASE_DIR / "data"
+DATA_DIR: Path = Path(os.getenv("DATA_DIR", str(BASE_DIR / "data")))
 
 # --------------------------------------------------------------------------
 # Alert engine

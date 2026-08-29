@@ -7,6 +7,7 @@
 - **DEMO_SCRIPT.md** — click-by-click demo walkthrough + DEMO_MODE fallback plan
 - **docs/DEMO_CREDENTIALS.md** — synthetic demo logins (**NOT FOR PRODUCTION**)
 - **DATA_PROTECTION.md** — single-point data-protection posture (synthetic-only, DPDP-shaped controls, traceable to code)
+- **LIVE_DEMO.md** — live deployment recorder: package (Dockerfile/render.yaml/fly.toml) is READY, live URL is an honest placeholder (not deployed)
 
 ## Read before quoting any metric or claim
 - **LIMITATIONS.md** — evaluation ceiling, jurisdiction limits, explainability method

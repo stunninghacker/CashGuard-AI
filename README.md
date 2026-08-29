@@ -84,6 +84,23 @@ python -m uvicorn backend.api.main:app --port 8000
 docker compose up --build      # full pipeline inside a container, http://localhost:8000
 ```
 
+### Live demo (deployment-ready)
+The prototype ships with a production deployment package so a judge/ops team can
+stand up a live demo in minutes (Render Blueprint or Fly.io, or any Docker host):
+
+- **`Dockerfile`** — multi-stage, health-checked (`/health`), first-boot
+  generate+train pipeline.
+- **`render.yaml`** — Render Web Service blueprint (persistent disk at
+  `/app/data`, Docker runtime, health check).
+- **`fly.toml`** — Fly.io app config (HTTP service + `/health` probe + volume).
+- **`LIVE_DEMO.md`** — where the live URL goes when a deploy is cut.
+
+> **Honesty.** A live URL is a **placeholder, not yet deployed** — see
+> `LIVE_DEMO.md`. The demo is **synthetic-data only**: it does not expose real
+> personal data, will not ship real I4C/bank/CFCFRMS credentials, and any
+> deployment must set `ALLOW_TAMPER_DEMO=false`. Do not reuse the synthetic demo
+> logins (`docs/DEMO_CREDENTIALS.md`) in production.
+
 ## 5. Demo Script (5 Minutes for Judges)
 
 Full click-by-click walkthrough + failure contingency: **`DEMO_SCRIPT.md`**.
@@ -189,11 +206,14 @@ source-tagged `verified_pattern` / `assumption_general_literature` in the alert 
 - Real-data pilots with I4C/MHA and partner banks; model monitoring & drift detection
 - **Anchor the audit hash chain to a permissioned ledger** (the prototype's
   SHA-256 chain already provides tamper-evidence â€” the SIH "Blockchain & Cybersecurity"
-  theme is implemented live; ledger anchoring is the production upgrade)
+  theme is implemented live; ledger anchoring is the production upgrade — see BLOCKCHAIN_UPGRADE_PATH.md)
 - Federated learning across banks without sharing raw transaction data
-- Hourly granularity (currently daily), sub-city geo grids, district-level routing
-- Inter-agency routing/handoff (depends on non-public MHA/I4C protocols)
-- Fairness/bias audits to avoid over-policing specific areas
+- Hourly granularity (currently daily; see MODEL_CARD.md — evaluated, honestly deferred),
+  sub-city geo grids, district-level routing
+- Inter-agency routing/handoff — **mechanism shipped in-repo** (Item 4); live cross-state
+  routing depends on non-public MHA/I4C protocols + cross-state data (JURISDICTION_ROUTING.md)
+- Fairness/bias audits — **active per-jurisdiction alert cap shipped** (Item 5, FAIRNESS_AUDIT.md)
+- Cut a **live demo deploy** from the shipped package (Dockerfile/render.yaml/fly.toml) — LIVE_DEMO.md
 
 ## 11. Honesty & Honesty Documents (read these before quoting metrics)
 

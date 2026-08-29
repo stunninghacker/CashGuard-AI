@@ -1,0 +1,36 @@
+# fly.toml — CashGuard AI on Fly.io (alternative to Render)
+#
+# Usage:  fly launch --dockerfile Dockerfile  (then fly deploy)
+# The app listens on 0.0.0.0:8000 (FastAPI). /health returns 200 once up.
+# Fly machines restart the container; synthetic data is regenerated on first
+# boot into the attached volume below.
+#
+# NOTE (honesty): demo is synthetic-only; the live URL (the `app` hostname)
+# is NOT yet live — placeholder until a real deploy is cut (see LIVE_DEMO.md).
+app = "cashguard-ai"
+
+[build]
+
+[env]
+  DEMO_MODE = "true"
+  ALLOW_TAMPER_DEMO = "false"
+  DATA_DIR = "/app/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.checks]
+    [http_service.checks.health]
+      interval = "30s"
+      timeout = "5s"
+      grace_period = "120s"
+      method = "GET"
+      path = "/health"
+
+[[mounts]]
+  source = "cashguard_data"
+  destination = "/app/data"

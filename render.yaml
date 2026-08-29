@@ -1,0 +1,35 @@
+# Render Blueprint — CashGuard AI (live demo deployment)
+#
+# Deploy with the Render Blueprint (render.yaml) or drag this repo into Render.
+# Requires a persistent Disk so the SQLite db + training artifacts survive restarts.
+# Health check pings GET /health (FastAPI) after the first-boot data/train pipeline.
+#
+# NOTE (honesty): the demo runs on synthetic data only. No real personal data,
+# no production credentials. Live frontend URL is a placeholder until deployed —
+# see LIVE_DEMO.md / README "Live demo" section.
+services:
+  - type: web
+    name: cashguard-ai
+    runtime: docker
+    repo: https://github.com/stunninghacker/CashGuard-AI
+    plan: starter
+    dockerContext: .
+    regions:
+      - oregon
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: ALLOW_TAMPER_DEMO
+        value: "false"
+      - key: DATA_DIR
+        value: /app/data
+      # In production you would inject real secrets ONLY here (never in code):
+      #   - key: JWT_SECRET        sync: false
+      #   - key: WEBHOOK_URL       sync: false
+      #   - key: CFCFRMS_WEBHOOK_URL sync: false
+    healthCheckPath: /health
+    disk:
+      name: cashguard-data
+      mountPath: /app/data
+      sizeGB: 1
+    autoDeploy: true
