@@ -14,6 +14,7 @@ const state = {
   risk: [], alerts: [], stats: null, banks: [],
   complaints: [], cityCoords: {}, recovery: [], funnel: null, inbox: [],
   showHeat: true, showForecast: true,
+  ledgerDemoOptedIn: false,   // P0.3: tamper alert is opt-in per session
 };
 
 /* ------------------------------ helpers ------------------------------ */
@@ -31,15 +32,26 @@ async function api(path, opts = {}) {
     throw new Error("Session expired — please sign in again");
   }
   if (res.status === 403) {
-    const kind = path.includes("/alerts/run") ? "run-alert-cycle" : path.includes("stats") ? "stats" : path.includes("complaint") ? "complaints" : path.split("?")[0];
-    showNotice(`This action is not available for your role (${403}). ${path}`);
-    throw new Error(`${path} -> 403`);
+    // P0.2: never show a raw backend path or query string on screen. The caller
+    // decides the friendly message; we only tag the route for scoping.
+    const err = new Error("You don't have permission for that action on this account.");
+    err.forbidden = true;
+    err.route = path;
+    throw err;
   }
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`${path} -> ${res.status} ${body.slice(0, 120)}`);
+    // Never leak raw paths/query strings/stack traces/backend bodies to the UI.
+    const err = new Error("That action couldn't be completed. Please try again.");
+    err.route = path;
+    err.status = res.status;
+    throw err;
   }
   return res.json();
+}
+
+function clearNotice() {
+  const el = document.getElementById("notice");
+  if (el) el.classList.add("hidden");
 }
 
 function toast(msg) {
@@ -97,9 +109,11 @@ let tileMode = "loading";        // "online" | "offline" (canvas fallback)
 let tileProviderIdx = 0;
 let tileFailedCount = 0;
 let tileFailTimer = null;
+// OSM tiles work with zero config and no API key (brief P0.1). If they ever
+// fail (no network / rate limit), enableOfflineMap() draws a styled district
+// basemap so the heatmap NEVER shows broken or "API KEY REQUIRED" tiles.
 const TILE_PROVIDERS = [
-  { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: '&copy; OSM &copy; CARTO' },
-  { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: '&copy; OpenStreetMap' },
+  { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: '&copy; OpenStreetMap contributors' },
 ];
 const MAP_TIMEOUT_MS = 9000; // if no tile ever loads in 9s, go offline canvas (silent fail safety)
 
@@ -141,12 +155,30 @@ function drawOfflineMap() {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, W, H);
 
-  // --- basemap mesh (dark, frosted-grid) ---
+  // --- styled offline basemap: neutral ground + a district-outline polygon ---
   const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, "#0b1220");
-  grad.addColorStop(1, "#0a0f1c");
+  grad.addColorStop(0, "#0f141b");
+  grad.addColorStop(1, "#0b0f14");
   ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = "rgba(56,130,246,0.12)"; ctx.lineWidth = 1;
+
+  // neutral fill for the "district" envelope (a GeoJSON-style outline, not bare tiles)
+  const padX = 0.10 * W, padY = 0.12 * H;
+  const poly = [
+    [padX, H - padY], [W / 2, padY], [W - padX, H - padY * 0.8],
+    [W - padX * 0.6, H - padY * 0.2], [W * 0.35, H - padY * 0.1]
+  ];
+  ctx.beginPath();
+  ctx.moveTo(poly[0][0], poly[0][1]);
+  for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i][0], poly[i][1]);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(148,163,184,0.06)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(148,163,184,0.35)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // subdued lat/lng graticule lines
+  ctx.strokeStyle = "rgba(148,163,184,0.10)"; ctx.lineWidth = 1;
   const step = 46;
   for (let x = step / 2; x < W; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
   for (let y = step / 2; y < H; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
@@ -305,10 +337,12 @@ async function loadCityCoords() {
 }
 
 async function loadComplaints() {
+  const { role, scope } = state.user || {};
+  if (!role || role === "BANK") { state.complaints = []; return; }
   try {
     const to = state.asOf || new Date().toISOString();
     const from = new Date(new Date(to).getTime() - 7 * 864e5).toISOString();
-    state.complaints = await api(`/complaints?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}&limit=20000`);
+    state.complaints = await api(`/complaints?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}&limit=20000`).catch(() => []);
   } catch { state.complaints = []; }
 }
 
@@ -336,6 +370,7 @@ async function renderHorizonConfidence() {
 }
 
 async function loadAll() {
+  clearNotice();
   try {
     const q = state.asOf ? `&as_of=${encodeURIComponent(state.asOf)}` : "";
     const [risk, alerts, stats] = await Promise.all([
@@ -653,9 +688,18 @@ async function handoffAck(handoffId, status) {
 async function ledgerStatus() {
   try {
     const v = await api("/ledger/verify");
-    document.getElementById("ledger-badge").innerHTML = v.intact
-      ? `<span class="pill ok">Ledger verified ✓ · ${v.records} blocks</span>`
-      : `<span class="pill bad">LEDGER TAMPERED ✗ at block ${v.broken_at_index}</span>`;
+    const badge = document.getElementById("ledger-badge");
+    // P0.3: a fresh session must never show a red TAMPERED alarm unless the
+    // user has actually started the tamper demo THIS session. A leftover
+    // tampered state from a previous session is surfaced as a calm, opt-in
+    // notice with the restore action front and centre.
+    if (v.intact) {
+      badge.innerHTML = `<span class="pill ok">Ledger verified ✓ · ${v.records} blocks</span>`;
+    } else if (!state.ledgerDemoOptedIn) {
+      badge.innerHTML = `<span class="pill info">Ledger integrity demo available — click "Tamper-demo" to demonstrate tamper detection (a tamper is currently pending from an earlier session).</span>`;
+    } else {
+      badge.innerHTML = `<span class="pill bad">LEDGER TAMPERED ✗ at block ${v.broken_at_index} — tamper detected per demo</span>`;
+    }
     const lst = await api("/ledger");
     document.getElementById("ledger-preview").textContent =
       `Last block: #${lst[lst.length - 1].index} ${lst[lst.length - 1].event_type} by ${lst[lst.length - 1].actor} @ ${fmtTime(lst[lst.length - 1].created_at)}`;
@@ -745,8 +789,11 @@ async function openEvidence(alertId) {
 async function auditBadge(targetId) {
   try {
     const v = await api("/ledger/verify");
-    document.getElementById(targetId).innerHTML = v.intact
-      ? `<span class="pill ok">Ledger ✓ ${v.records}</span>` : `<span class="pill bad">Ledger TAMPERED</span>`;
+    const el = document.getElementById(targetId);
+    // P0.3: show the red TAMPERED state only after the user starts the tamper demo this session.
+    if (v.intact) el.innerHTML = `<span class="pill ok">Ledger ✓ ${v.records}</span>`;
+    else if (!state.ledgerDemoOptedIn) el.innerHTML = `<span class="pill info">Ledger integrity demo available</span>`;
+    else el.innerHTML = `<span class="pill bad">Ledger TAMPERED</span>`;
   } catch { document.getElementById(targetId).innerHTML = ""; }
 }
 
@@ -855,7 +902,10 @@ function connectWS() {
 }
 
 /* ------------------------------ login flow ------------------------------ */
-function showLogin() { document.getElementById("login-modal").classList.remove("hidden"); }
+function showLogin() {
+  clearNotice();
+  document.getElementById("login-modal").classList.remove("hidden");
+}
 
 function loginStatus(msg, kind) {
   const el = document.getElementById("login-status");
@@ -933,10 +983,20 @@ function bindEvents() {
   wire("btn-live", () => { state.asOf = null; document.getElementById("asof-date").value = ""; loadAll(); });
   wire("btn-ledger-verify", ledgerStatus);
   wire("btn-ledger-tamper", async () => {
-    try { const r = await api("/ledger/tamper-demo", { method: "POST" }); toast(r.error || r.note); ledgerStatus(); } catch (err) { toast("Tamper demo: " + err.message); }
+    try {
+      const r = await api("/ledger/tamper-demo", { method: "POST" });
+      state.ledgerDemoOptedIn = true;   // P0.3: only red-flag now that the user started the demo
+      toast(r.error || r.note || "Tamper demo running — ledger now MUTABLE; tamper will be detected");
+      ledgerStatus();
+    } catch (err) { toast("Tamper demo: " + err.message); }
   });
   wire("btn-ledger-restore", async () => {
-    try { const r = await api("/ledger/restore", { method: "POST" }); toast((r.note) || (r.verify && r.verify.intact ? `Ledger restored — ${r.verify.records} blocks verify intact` : (r.error || "restore performed"))); ledgerStatus(); } catch (err) { toast("Restore failed: " + err.message); }
+    try {
+      const r = await api("/ledger/restore", { method: "POST" });
+      state.ledgerDemoOptedIn = false;  // P0.3: reset demo so a fresh state stays benign
+      toast((r.note) || (r.verify && r.verify.intact ? `Ledger restored — ${r.verify.records} blocks verify intact` : (r.error || "restore performed")));
+      ledgerStatus();
+    } catch (err) { toast("Restore failed: " + err.message); }
   });
   wire("btn-sit-report", async () => {
     try {
