@@ -76,6 +76,51 @@ imperfection is documented rather than hidden. Post-fix feature audit
 as a red flag. Any future change that pushes Precision@100 above ~0.9 must be
 investigated as a likely generator leak before it is reported.
 
+## Sub-daily (hourly) granularity — investigated, honestly not adopted
+
+The problem statement's "*abnormal cash withdrawal pattern*" opens a natural
+question: can we forecast at **hourly** granularity (tighter operational windows)
+rather than the daily 24h forecast? We implemented and evaluated it
+(config-gated `HOURLY_MODE`, `scripts/hourly_eval.py`), and the honest result is
+a **clear degradation**, so hourly is reported as **experimental, not the
+operational forecast**. We surface this because retiring a feature on evidence
+is part of engineering honesty.
+
+**How it was tested** — same pipeline, no architectural change: the feature set is
+re-bucketed from daily to hourly and evaluated on a 30-day × 300-ATM hourly slice
+(`artifacts/deep_eval/hourly_eval.json`, `n=216,000` hourly rows, positive rate 6.0%).
+
+| Metric | Daily (operational) | Hourly (experimental) |
+|--------|--------------------:|----------------------:|
+| ROC-AUC | ~0.93 | **0.546** |
+| PR-AUC | 0.41 | 0.116 |
+| Precision@100 | 0.86 | 0.58 |
+| Precision@1000 | 0.52 | 0.29 |
+
+**Why it degrades (the mechanism, not an excuse):**
+1. **Data sparsity at hourly granularity.** The features the model relies on —
+   complaint-linked account velocity, mule counterparty counts, same-ATM burst
+   clustering — were engineered and calibrated on daily aggregates. Re-bucketing
+   to 1h fragments these counters into mostly-zero bins; the signal the model was
+   trained on largely disappears at the sub-daily scale with the current volume of
+   synthetic data.
+2. **Loss of daily context.** The 24h forecast captures the *daily* buildup of
+   mule activity (a network preparing an ATM for a cash-out day). An hourly slice
+   of the same features sees only a thin 60-minute window, discarding the
+   within-day context that carries most of the predictive weight.
+
+**Operational implications / honesty:**
+- The **operational forecast remains the daily 24h window** at AUC ~0.93. Hourly
+  emission is gated off by default.
+- Achieving production-quality sub-daily forecasting is a **new model-design
+  problem** (dedicated hourly feature engineering on more data), not a re-bucket
+  of the existing one. It is documented as a **limitation/roadmap**, not claimed
+  as a capability. See LIMITATIONS.md.
+- This mirrors the "contradict an over-optimistic feature honestly" discipline:
+  we prefer to show the true hourly number (0.55) than to silently hide the sub-daily
+  mode behind the daily headline.
+
+
 ## Known failure modes
 - Sparse data (adversarial world: AUC 0.80 — lowest) and volume-shift worlds
   (P@1000 0.44) → REDUCED-confidence drift flag is surfaced with the forecast.

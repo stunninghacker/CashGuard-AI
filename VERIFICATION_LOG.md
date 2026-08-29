@@ -90,6 +90,15 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | Regression / smoke | **PASS** | security regression 14/14; smoke OK. |
 | HONESTY — current data | documented | Synthetic generator is intra-state (withdrawals cluster near complaint origin), so handoffs do NOT fire in production runs. Mechanism verified on controlled fixtures; activates with zero code changes when cross-state data arrives. No fabricated cross-state cases to make the queue look busy. See JURISDICTION_ROUTING.md. |
 
+## Item 2 — Sub-daily (hourly) granularity, documented honestly (2026-08-28)
+
+| Check | Outcome | Evidence |
+|-------|---------|----------|
+| Hourly mode exists & config-gated | **PASS** | `HOURLY_MODE` flag, `backend/ml/hourly_features.py` (vectorized), `scripts/hourly_eval.py`. |
+| Honest hourly evaluation | **PASS** | `artifacts/deep_eval/hourly_eval.json`: AUC 0.546 (vs daily 0.93), PR-AUC 0.116, P@100 0.58, P@1000 0.29, n=216,000 hourly rows. |
+| "Why" documented in MODEL_CARD.md | **PASS** | New "Sub-daily (hourly) granularity — investigated, honestly not adopted" section: data sparsity + loss of daily context; operational forecast stays the daily 24h window; sub-daily is a roadmap, not a claim. |
+| Honesty discipline | maintained | Retired feature-on-evidence surfaced with real numbers (0.55 vs 0.93) rather than hiding the sub-daily mode behind the daily headline; referenced LIMITATIONS.md. |
+
 
 
 | Probe | Outcome | Evidence |
