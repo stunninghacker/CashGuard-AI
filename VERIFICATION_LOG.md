@@ -358,3 +358,27 @@ clickable role-select buttons ("one-click demo sign-in"):
 - All four one-click sign-ins PASS -> correct dashboard + role badge:
   officer.statea -> POLICE_STATE · State-A; officer.district1 -> POLICE_DISTRICT ·
   Northsagar; bank.hdfc -> BANK · HDFC Bank; i4c.admin -> I4C_ADMIN · national.
+
+## D3 — Alert precision: live PR-tradeoff explorer + tier bands (2026-08-29) [DONE + VERIFIED]
+
+**Context / extend-not-duplicate:** the live precision-recall tradeoff explorer
+already existed end-to-end: backend `/threshold-explorer` serves the artifact-backed
+`threshold_curve.json` (10-point curve, n=48,600 test rows, pos-rate 0.0618) and the
+police dashboard `#thr-explorer` panel has a slider (`#thr-slider`) driving live
+precision/recall/alert-volume/false-alert-rate. Verified working. Extended it with
+the **tier-band breakdown** (the D3 tie-in to the ACT/REVIEW/HOLD dispatch policy,
+and the A4 visual-separation of low-confidence repeats):
+- Added `#thr-bands` panel + `renderThrBands()` (app.js). It shows the three dispatch
+  bands — DISPATCH >= 0.85, ACTION 0.70-0.85, MONITOR < 0.70 (mirrors
+  backend `services.alert_tier`) — and marks exactly ONE active: the tier an alert
+  at the selected slider threshold maps to. Slider 0.70 -> ACTION band; 0.90 ->
+  DISPATCH band; updates live.
+- Glass-consistent `thr-bands`/`band` CSS in style.css.
+- Cache-busters: style.css?v=7->8, app.js?v=9->10.
+
+**Verification (headless Chrome, police role):**
+- Default 0.70: metrics "precision 62.4% · recall 10.3% · 497 alerts · false-alert
+  rate 37.6%", exactly 1 active band (ACTION) PASS.
+- Slider to 0.90: metrics "precision 77.3% · recall 5.7% · 220 alerts · false-alert
+  rate 22.7%", DISPATCH band active (1 band) PASS.
+- Backend `/threshold-explorer` returned the full 10-point curve (HTTP 200).

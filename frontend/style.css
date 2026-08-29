@@ -327,3 +327,23 @@ main.dash, header { position: relative; z-index: 1; }
   backdrop-filter: blur(14px) saturate(150%);
   border: 1px solid var(--glass-border);
 }
+
+/* D3 — threshold-explorer tier-band breakdown (ACT/REVIEW/HOLD dispatch policy) */
+.thr-bands { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.thr-bands .band-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.thr-bands .band {
+  display: flex; align-items: center; gap: 8px; font-size: 12px;
+  padding: 7px 9px; border-radius: 8px; border: 1px solid var(--glass-border);
+  background: var(--glass); color: var(--muted);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  opacity: .55; transition: opacity .2s ease, border-color .2s ease;
+}
+.thr-bands .band b { color: var(--text); font-size: 11.5px; }
+.thr-bands .band .band-act { flex: 1; text-align: right; font-size: 10.5px; }
+.thr-bands .band.active { opacity: 1; }
+.thr-bands .band-dispatch { border-left: 3px solid #f87171; }
+.thr-bands .band-action   { border-left: 3px solid #fbbf24; }
+.thr-bands .band-monitor  { border-left: 3px solid #34d399; }
+.thr-bands .band.active.band-dispatch { border-color: #f87171; box-shadow: inset 0 0 0 1px rgba(248,113,113,.25); }
+.thr-bands .band.active.band-action   { border-color: #fbbf24; box-shadow: inset 0 0 0 1px rgba(251,191,36,.25); }
+.thr-bands .band.active.band-monitor  { border-color: #34d399; box-shadow: inset 0 0 0 1px rgba(52,211,153,.25); }

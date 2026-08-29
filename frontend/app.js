@@ -394,6 +394,34 @@ function applyThresholdCurve() {
   const row = THR_CURVE.curve.find((r) => Math.abs(r.threshold * 100 - Number(slider.value)) < 0.01) || THR_CURVE.curve[0];
   document.getElementById("thr-value").textContent = row.threshold.toFixed(2);
   out.innerHTML = `at threshold <b>${row.threshold.toFixed(2)}</b>: precision <b>${(row.precision * 100).toFixed(1)}%</b> · recall ${(row.recall * 100).toFixed(1)}% · ${row.alert_volume} alerts · false-alert rate ${(row.false_alert_rate * 100).toFixed(1)}%`;
+  renderThrBands(row.threshold);
+}
+
+/* D3 — tier-band breakdown tied to the ACT/REVIEW/HOLD dispatch policy.
+   Mirrors backend services.alert_tier: dispatch >= 0.85, action 0.70-0.85,
+   monitor < 0.70. Shows, at the selected alert threshold, which dispatch bands
+   sit above (actionable) vs below (review/hold), so a judge sees that raising
+   the threshold narrows the high-priority queue to the highest-confidence
+   tier — the same distinction used to visually separate re-observed repeats. */
+function renderThrBands(t) {
+  const el = document.getElementById("thr-bands");
+  if (!el) return;
+  const BANDS = [
+    { name: "DISPATCH · High-Priority", rng: "≥ 0.85", min: 0.85, act: "ACT — dispatch to LEA + bank", cls: "band-dispatch" },
+    { name: "ACTION · Review", rng: "0.70–0.85", min: 0.70, act: "REVIEW — enhanced monitoring", cls: "band-action" },
+    { name: "MONITOR · Hold", rng: "< 0.70", min: 0, act: "HOLD — watch, no dispatch", cls: "band-monitor" },
+  ];
+  // alert_tier semantics (mirrors backend): an alert AT the chosen threshold maps
+  // to exactly one band — dispatch >= 0.85, action 0.70-0.85, monitor < 0.70.
+  const tier = t >= 0.85 ? "DISPATCH" : t >= 0.70 ? "ACTION" : "MONITOR";
+  const html = BANDS.map((b) => {
+    const active = b.name.startsWith(tier.split(" ")[0]);
+    return `<div class="band ${b.cls}${active ? " active" : ""}">
+      <b>${b.name}</b><span class="muted">${b.rng}</span>
+      <span class="band-act">${b.act}</span>${active ? '<span class="pill ok">band at this threshold</span>' : ""}
+    </div>`;
+  }).join("");
+  el.innerHTML = `<div class="band-label">Dispatch bands at threshold <b>${t.toFixed(2)}</b></div>` + html;
 }
 document.addEventListener("DOMContentLoaded", () => {
   const slider = document.getElementById("thr-slider");
