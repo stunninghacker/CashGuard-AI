@@ -61,6 +61,18 @@ FEATURE_COLUMNS = [
 ]
 
 
+def _shift_day_past(frame: pd.DataFrame) -> pd.DataFrame:
+    """
+    FORECAST-SAFETY: shift a day-keyed aggregate forward by one day so a row
+    keyed `day == d` carries ONLY data observed strictly BEFORE the start of day
+    d (i.e. ≤ d-1). Without this, rolling windows computed at day d would
+    include day d's own complaints/withdrawals — the very window being
+    predicted — which leaked the label and inflated validation scores.
+    """
+    frame["day"] = frame["day"] + pd.Timedelta(days=1)
+    return frame
+
+
 def _haversine_km(lat1, lon1, lat2, lon2) -> np.ndarray:
     """Great-circle distance in km (vectorised)."""
     r = 6371.0
@@ -163,6 +175,7 @@ def build_features(
         cc.groupby("city")["n"].rolling(8, min_periods=1).sum().reset_index(level=0, drop=True)
     )
     cc = cc[["city", "day", "n_complaints_city_24h", "n_complaints_city_7d"]]
+    cc = _shift_day_past(cc)
 
     # ------------------------- complaints: hours since last -------------------------
     comp_s = comp[["victim_city", "filing_timestamp"]].sort_values(["victim_city", "filing_timestamp"])
@@ -184,6 +197,7 @@ def build_features(
     )
     asof["hours_since_last_complaint_city"] = asof["hours_since_last_complaint_city"].fillna(24 * 366)
     asof = asof.rename(columns={"victim_city": "city"})[["city", "day", "hours_since_last_complaint_city"]]
+    asof = _shift_day_past(asof)
 
     # ------------------------- complaints: district 24h -------------------------
     districts = sorted(comp["victim_district"].unique())
@@ -209,6 +223,7 @@ def build_features(
     )  # city -> district mapping
     cd["city"] = cd["victim_district"].map({v: k for k, v in city_district.items()})
     cd = cd[["city", "day", "n_complaints_district_24h"]]
+    cd = _shift_day_past(cd)
 
     # ------------------------- complaints: type distribution (7d) -------------------------
     ct_raw = comp.groupby(["victim_city", "day", "complaint_type"], as_index=False).size()
@@ -224,6 +239,7 @@ def build_features(
     for t in COMPLAINT_TYPES:
         ct[f"t_{t}_7d"] = rolled[t]
     ct = ct[["city", "day"] + [f"t_{t}_7d" for t in COMPLAINT_TYPES]]
+    ct = _shift_day_past(ct)
 
     # ------------------------- complaints: centroid (7d) -------------------------
     clat = (
@@ -247,6 +263,7 @@ def build_features(
     cen["clat"] = np.where(cen["n_complaints_city_7d"] > 0, cen["lat_sum"] / cen["n_complaints_city_7d"].clip(lower=1), cen["city"].map({c: m["lat"] for c, m in CITIES.items()}))
     cen["clon"] = np.where(cen["n_complaints_city_7d"] > 0, cen["lon_sum"] / cen["n_complaints_city_7d"].clip(lower=1), cen["city"].map({c: m["lon"] for c, m in CITIES.items()}))
     cen = cen[["city", "day", "clat", "clon"]]
+    cen = _shift_day_past(cen)
 
     # ------------------------- withdrawals: hourly ATM matrices -------------------------
     hours_all = pd.date_range(start - pd.Timedelta(hours=25), end + pd.Timedelta(hours=23), freq="h")
@@ -323,6 +340,7 @@ def build_features(
         acct_grid.groupby("atm_id")["account_token"].rolling(2, min_periods=1).sum().reset_index(level=0, drop=True)
     )
     acct_grid = acct_grid[["atm_id", "day", "distinct_accounts_24h"]]
+    acct_grid = _shift_day_past(acct_grid)
 
     # ------------------------- withdrawals: counterparty count (mule accounts, day level) -------------------------
     mule_ids = set(comp["linked_account_token"].unique())
@@ -343,6 +361,7 @@ def build_features(
         cp_grid.groupby("atm_id")["account_token"].rolling(2, min_periods=1).sum().reset_index(level=0, drop=True)
     )
     cp_grid = cp_grid[["atm_id", "day", "counterparty_count_24h"]]
+    cp_grid = _shift_day_past(cp_grid)
 
     # ------------------------- geospatial: distance features -------------------------
     geo = atms[["atm_id", "city", "latitude", "longitude"]].merge(

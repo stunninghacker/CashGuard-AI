@@ -66,11 +66,24 @@
     <div class="header-meta">
       <span id="as-of" class="pill info">Forecast as of —</span>
       <span id="role-badge" class="pill">—</span>
+      <button id="btn-sim-load" class="btn warn" title="Load a clearly-labelled SCRIPTED scenario so the alert workflow can be demonstrated. Not live model output.">🧪 Load Simulated Scenario</button>
+      <button id="btn-sim-exit" class="btn ghost hidden" title="Return to the honest live risk view">Exit Simulated Mode</button>
       <button id="btn-cycle" class="btn accent" title="Run the alert engine now (demo)">⚡ Run Alert Cycle</button>
       <button id="btn-refresh" class="btn">⟳ Refresh</button>
       <button id="btn-switch" class="btn ghost">Switch User</button>
     </div>
   </header>
+
+  <!-- Persistent banner + watermark for the OPT-IN simulated scenario. Hidden by
+       default (honest live view). Unmissable while an explicitly-loaded scripted
+       scenario is on screen so judges can never mistake it for live output. -->
+  <div id="sim-banner" class="sim-banner hidden">
+    <span>🧪 <b>SIMULATED SCENARIO</b> — this screen shows SCRIPTED example data, NOT live
+      model output. The leak-fixed risk engine reports low risk for calm days and produced no
+      alerts; this stands in for a cash-out spree. Risk levels, alerts, evidence &amp; dispatch
+      logs are scripted. &nbsp;<button id="btn-sim-banner-exit" class="btn small ok">Exit &amp; return to live</button></span>
+  </div>
+  <div id="sim-watermark" class="sim-watermark hidden">SIMULATED SCENARIO — NOT LIVE</div>
 
   <!-- Police dashboard -->
   <main id="dash-police" class="dash hidden">
@@ -161,6 +174,7 @@
   <!-- I4C dashboard -->
   <main id="dash-i4c" class="dash hidden">
     <section class="stats-grid" id="i4c-stats"></section>
+    <p class="ev-notice" id="i4c-scale-note" style="margin:6px 2px 0"></p>
     <section class="panel">
       <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket · deduplicated)</span></h2><span class="pill warn" id="alert-count"></span></div>
       <div class="table-scroll"><table id="i4c-alert-table" class="data-table">
@@ -240,6 +254,6 @@
   <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn ghost small" aria-label="Dismiss">✕</button></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

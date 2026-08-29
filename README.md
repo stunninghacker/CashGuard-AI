@@ -10,6 +10,15 @@
 
 > **Docs map**: [DOCS_INDEX.md](DOCS_INDEX.md) — 30-second index of every document in this repo.
 
+> **⚠ DATA-LEAKAGE CORRECTION (2026-08-29)**: An earlier reported **ROC-AUC 0.927** was
+> **invalid** — training built features and labels on the same calendar day, so rolling-window
+> features leaked the target into features (label leakage). Fixed by shifting day-keyed feature
+> frames forward 1 day. The **honest forecast-safe ROC-AUC is 0.6273**. Consequently the live
+> model reports LOW risk (max ~0.11) and no alerts on calm days; the populated alert workflow
+> is shown only via the opt-in, clearly-labelled **"Load Simulated Scenario"** button (SCRIPTED,
+> not live output). Any "0.92x" figure elsewhere in this repo is pre-correction (leaky) and is
+> NOT current. Full details: `MODEL_CARD.md` and `VERIFICATION_LOG.md` (P1.5).
+
 ## 1. Problem Statement (Short Version)
 
 India's National Cyber Crime Reporting Portal receives ~8,000 complaints/day. Most financial

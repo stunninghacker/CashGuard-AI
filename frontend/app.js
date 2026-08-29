@@ -15,6 +15,8 @@ const state = {
   complaints: [], cityCoords: {}, recovery: [], funnel: null, inbox: [],
   showHeat: true, showForecast: true,
   ledgerDemoOptedIn: false,   // P0.3: tamper alert is opt-in per session
+  simulatedOptedIn: false,    // P1.5: scripted scenario is opt-in, off by default (honest live)
+  simulatedEvidence: {},      // evidence payloads for the loaded scripted scenario
 };
 
 /* ------------------------------ helpers ------------------------------ */
@@ -376,6 +378,23 @@ async function renderHorizonConfidence() {
 async function loadAll() {
   clearNotice();
   try {
+    const asOfEl = document.getElementById("as-of");
+    document.getElementById("role-badge").textContent = `${state.user.role} · ${state.user.scope}`;
+    if (state.simulatedOptedIn) {
+      // Honest OPT-IN simulated scenario: pull the scripted payload and keep the
+      // persistent banner/watermark visible. City coords from live are preserved
+      // so the map geometry still renders; the simulated ATMs carry their own coords.
+      const scen = await api("/simulated/scenario");
+      if (!scen || !scen.simulated) { throw new Error("simulated scenario unavailable"); }
+      state.risk = scen.risk_scores || [];
+      state.alerts = scen.alerts || [];
+      state.stats = scen.stats || null;
+      state.simulatedEvidence = scen.evidence || {};
+      if (asOfEl) asOfEl.textContent = `SIMULATED scenario as of ${fmtTime(scen.as_of || new Date().toISOString())}`;
+      setSimulationUI(true);
+      render();
+      return;
+    }
     const q = state.asOf ? `&as_of=${encodeURIComponent(state.asOf)}` : "";
     const [risk, alerts, stats] = await Promise.all([
       api(`/risk-scores${q}`),
@@ -384,17 +403,52 @@ async function loadAll() {
     ]);
     state.risk = risk; state.alerts = alerts; state.stats = stats;
     await Promise.all([loadCityCoords(), loadComplaints()]);
-    const asOfEl = document.getElementById("as-of");
     if (asOfEl) asOfEl.textContent = state.asOf
       ? `Forecast replay as of ${fmtTime(state.asOf)}`
       : (state.stats ? `Forecast as of ${fmtTime(state.stats.generated_at)}` : `Forecast as of ${fmtTime(new Date().toISOString())}`);
-    document.getElementById("role-badge").textContent = `${state.user.role} · ${state.user.scope}`;
+    setSimulationUI(false);
     render();
   } catch (err) { toast("Load failed: " + err.message); }
 }
 
+/* P1.5 — the simulated-scenario UI state is driven ONLY by state.simulatedOptedIn.
+   It persists across re-renders and role switches while active. */
+function setSimulationUI(active) {
+  state.simulatedOptedIn = !!active;
+  document.body.classList.toggle("sim-active", state.simulatedOptedIn);
+  const banner = document.getElementById("sim-banner");
+  const wm = document.getElementById("sim-watermark");
+  if (banner) banner.classList.toggle("hidden", !state.simulatedOptedIn);
+  if (wm) wm.classList.toggle("hidden", !state.simulatedOptedIn);
+  const loadBtn = document.getElementById("btn-sim-load");
+  const exitBtn = document.getElementById("btn-sim-exit");
+  if (loadBtn) loadBtn.classList.toggle("hidden", state.simulatedOptedIn);
+  if (exitBtn) exitBtn.classList.toggle("hidden", !state.simulatedOptedIn);
+}
+
+async function loadSimulatedScenario() {
+  // Explicit user action (button) — never auto-triggered on load.
+  try {
+    await api("/simulated/scenario"); // 401/403 guard so we don't break on stale token
+    state.simulatedOptedIn = true;
+    toast("Loaded SCRIPTED simulated scenario — labelled, not live output");
+    loadAll();
+  } catch (err) {
+    toast("Could not load simulated scenario: " + err.message);
+    setSimulationUI(false);
+  }
+}
+
+function exitSimulated() {
+  state.simulatedOptedIn = false;
+  state.simulatedEvidence = {};
+  setSimulationUI(false);
+  loadAll();
+}
+
 /* ------------------------------ renderers ------------------------------ */
 function render() {
+  setSimulationUI(state.simulatedOptedIn);   // banner/watermark persist on any render path
   document.querySelectorAll("main.dash").forEach((d) => d.classList.add("hidden"));
   if (state.user.role === "BANK") { document.getElementById("dash-bank").classList.remove("hidden"); renderBank(); }
   else if (state.user.role === "I4C_ADMIN") { document.getElementById("dash-i4c").classList.remove("hidden"); renderI4C(); }
@@ -539,7 +593,19 @@ function hitlAction(alertId, status) {
 }
 
 async function setAlertStatus(alertId, status, reason = "") {
+  await setAlertStatusAction(alertId, status, reason);
+}
+
+async function setAlertStatusAction(alertId, status, reason = "") {
   try {
+    if (state.simulatedOptedIn) {
+      // P1.5: simulated mode updates the in-memory alert only (NOT persisted).
+      const a = state.alerts.find((x) => x.alert_id === alertId);
+      if (a) a.status = status;
+      toast(`Alert ${alertId} → ${status} (simulated — not persisted to ledger)`);
+      renderAlertTable(state.user.role === "I4C_ADMIN" ? "i4c-alert-table" : (state.user.role === "BANK" ? "bank-alert-table" : "alert-table"), state.alerts);
+      return;
+    }
     await api(`/alerts/${alertId}/status`, { method: "POST", body: JSON.stringify({ status, reason }) });
     toast(`Alert ${alertId} → ${status} (ledger-recorded)`);
     loadAll();
@@ -615,11 +681,19 @@ async function renderOutcomes() {
 async function renderI4C() {
   renderMap();
   const s = state.stats;
+  // P1.4 reconciliation: alert KPIs are derived from the SAME alert array that
+  // feeds the alerts table below, so the cards and the table can never
+  // disagree (previously the cards read /stats/summary's live DB count — 0 —
+  // while the table showed the demo alert set, an on-screen contradiction).
+  const alertTotal = state.alerts.length;
+  const alertActioned = state.alerts.filter((a) => a.status === "actioned").length;
   document.getElementById("i4c-stats").innerHTML = [
     ["🕵️", s.complaints_24h, "Complaints (24h)"], ["📅", s.complaints_7d, "Complaints (7d)"],
-    ["🏧", s.high_risk_atms, "High-risk ATMs"], ["🚨", s.alerts_total, "Alerts"],
-    ["✅", s.alerts_actioned, "Actioned"], ["💸", s.fraud_withdrawals_7d, "Fraud withdrawals (7d)"],
-  ].map(([e, n, l]) => `<div class="stat"><div class="num">${e} ${n.toLocaleString()}</div><div class="lbl">${l}</div></div>`).join("");
+    ["🏧", s.high_risk_atms, "High-risk ATMs"], ["🚨", alertTotal, "Alerts"],
+    ["✅", alertActioned, "Actioned"], ["💸", s.fraud_withdrawals_7d, "Fraud withdrawals (7d)"],
+  ].map(([e, n, l]) => `<div class="stat"><div class="num">${e} ${(n ?? 0).toLocaleString()}</div><div class="lbl">${l}</div></div>`).join("");
+  const scale = document.getElementById("i4c-scale-note");
+  if (scale) scale.textContent = `Demo-scale synthetic dataset — ${(s.complaints_7d ?? 0).toLocaleString()} complaints (7d) across current window; figures are illustrative, not live production traffic.`;
 
   try {
     state.funnel = await api("/recovery/funnel?days=7");
@@ -635,15 +709,21 @@ async function renderI4C() {
   try {
     const m = await api("/train/status");
     if (m.metrics) {
-      document.getElementById("model-metrics").innerHTML = [
+      const leakNote = `<div class="ev-block" style="border:1px solid #f87171;margin-bottom:10px">
+        <h3>⚠ Model Honesty — Data-Leakage Corrected</h3>
+        <p class="ev-meta">An earlier reported <b>ROC-AUC 0.927</b> was <b>invalid</b>: training built labels and features on the <b>same calendar day</b>, so rolling window features leaked the target into the features (label leakage). Fixed by shifting day-keyed feature frames forward 1 day. The <b>honest, forecast-safe model now scores ${fmtMetric(m.metrics.roc_auc, 4)} (held-out). Leaky AUC → forecast-safe: <b>0.9275 → 0.6344</b> (proof artifact).</p>
+        <p class="ev-meta" style="color:var(--yellow)">Honest consequence: for calm demo days the model reports LOW risk (max ~0.11) for every ATM and produces NO alerts. A populated alert workflow is shown only via the opt-in "Load Simulated Scenario" button, which is clearly labelled SCRIPTED ‑ not live output.</p>
+      </div>`;
+      document.getElementById("model-metrics").innerHTML = leakNote + [
         ["Model", m.metrics.model_type + " + " + (m.metrics.calibration || "—")],
-        ["ROC-AUC", fmtMetric(m.metrics.roc_auc, 4)], ["Precision@20/50/100/1000", `${fmtMetric(m.metrics.precision_at_20, null)} / ${fmtMetric(m.metrics.precision_at_50, null)} / ${fmtMetric(m.metrics.precision_at_100, null)} / ${fmtMetric(m.metrics.precision_at_1000, null)}`],
+        ["ROC-AUC (forecast-safe)", fmtMetric(m.metrics.roc_auc, 4)],
+        ["Precision@20/50/100/1000", `${fmtMetric(m.metrics.precision_at_20, null)} / ${fmtMetric(m.metrics.precision_at_50, null)} / ${fmtMetric(m.metrics.precision_at_100, null)} / ${fmtMetric(m.metrics.precision_at_1000, null)}`],
         ["Baseline P@20 (volume)", fmtMetric(m.metrics.baseline_volume_precision_at_20, null)], ["Lift vs volume @100", fmtMetric(m.metrics.lift_vs_volume_at_100, null)],
         ["Lift vs proximity @100", fmtMetric(m.metrics.lift_vs_proximity_at_100, null)],
         ["Lead time (median)", `${fmtMetric(m.metrics.lead_time_median_hours, null)} h`],
         ["Threshold (≥0.7) precision", fmtMetric(m.metrics.precision_at_threshold_0p7, 2)],
       ].map(([k, v]) => `<div class="m-row"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("") +
-      `<p class="ev-notice">Measured on SYNTHETIC labels — see LIMITATIONS.md. Top-K certainty is carried by legitimate complaint-linked signal (counterparty_count_24h); precision decays to ${fmtMetric(m.metrics.precision_at_1000, null)} at K=1000 and threshold (≥0.7) precision is ${fmtMetric(m.metrics.precision_at_threshold_0p7, 2)}. Full detail: LIMITATIONS.md.</p>`;
+      `<p class="ev-notice">Honest, forecast-safe metrics (AUC ${fmtMetric(m.metrics.roc_auc, 4)}) measured on SYNTHETIC labels — see LIMITATIONS.md and docs/ Model Card. This replaces any earlier "verified 0.927" figure, which was invalidated by the label-leakage fix. Full detail: LIMITATIONS.md.</p>`;
     }
   } catch { document.getElementById("model-metrics").innerHTML = `<p class="muted">Train to see metrics.</p>`; }
 
@@ -717,20 +797,64 @@ async function ledgerStatus() {
   } catch { document.getElementById("ledger-badge").innerHTML = `<span class="pill info">Sign in to verify</span>`; }
 }
 
+/* P1.8 — readable inbox parsing. Incoming webhook payloads are rendered as
+   human-readable key/value lines (+masked account tokens, no raw secrets),
+   with a per-message "view raw payload" toggle falling back to the raw JSON.
+   Never trusts a payload field as HTML (all escaped). */
+function parseInboxPayload(payload) {
+  let obj = payload;
+  if (typeof obj === "string") { try { obj = JSON.parse(obj); } catch { /* keep string */ } }
+  if (obj === null || typeof obj !== "object") return [];
+  const pick = (keys) => { for (const k of keys) { const v = obj[k]; if (v !== undefined && v !== null) return v; } return null; };
+  const rows = [];
+  const push = (k, v) => { if (v !== undefined && v !== null && v !== "") rows.push([k, v]); };
+  push("ATM", pick(["atm_id", "atm", "target_atm"]));
+  push("Bank", pick(["bank", "bank_name", "home_bank"]));
+  push("City", pick(["city", "victim_city", "area"]));
+  push("Role", pick(["role", "recipient_role", "jurisdiction_role"]));
+  push("Action", pick(["action", "suggested_action", "recommended_action"]));
+  push("Status", pick(["status", "routing_status"]));
+  push("Risk", pick(["risk", "risk_score"]));
+  push("Amount", pick(["amount", "amount_inr", "amount_at_risk"]));
+  push("Tier", pick(["tier", "priority_tier"]));
+  push("Note", pick(["note", "message", "summary"]));
+  return rows;
+}
+
+function inboxBody(m) {
+  const rows = parseInboxPayload(m.payload);
+  const raw = esc(JSON.stringify(m.payload)).slice(0, 220);
+  const body = rows.length
+    ? rows.map(([k, v]) => `<div class="inbox-kv"><span class="muted">${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("")
+    : `<span class="mono">${raw}</span>`;
+  return `${body}<button class="btn small ghost inbox-rawbtn" type="button">${rows.length ? "View raw payload" : "details"}</button>
+    <div class="inbox-raw mono hidden">${raw}</div>`;
+}
+
 async function renderInbox() {
   try {
     state.inbox = await api("/mock-i4c-inbox");
     document.getElementById("inbox-panel").innerHTML = state.inbox.slice(0, 15).map(
-      (m) => `<div class="inbox-msg"><span class="pill info">${esc(m.channel)}</span> <span class="muted">${fmtTime(m.received_at)}</span><br/><span class="mono">${esc(JSON.stringify(m.payload).slice(0, 160))}</span></div>`
+      (m) => `<div class="inbox-msg"><span class="pill info">${esc(m.channel)}</span> <span class="muted">${fmtTime(m.received_at)}</span><br/>${inboxBody(m)}<span class="muted">📩 ${esc(m.direction === "outgoing" ? "dispatch sent" : (m.direction || "received"))}</span></div>`
     ).join("") || `<p class="muted">No intel received yet — run an alert cycle.</p>`;
+    document.querySelectorAll("#inbox-panel .inbox-rawbtn").forEach((b) =>
+      b.addEventListener("click", (e) => {
+        const raw = e.currentTarget.closest(".inbox-msg").querySelector(".inbox-raw");
+        if (raw) raw.classList.toggle("hidden");
+      })
+    );
   } catch { document.getElementById("inbox-panel").innerHTML = `<p class="muted">—</p>`; }
 }
 
 /* ------------------------------ evidence panel ------------------------------ */
 async function openEvidence(alertId) {
   try {
-    const ev = await api(`/alerts/${alertId}/evidence`);
-    const j = ev.jurisdiction || {};
+    // P1.5: in a loaded scripted scenario, evidence is served from the in-memory
+    // simulated payload (scripted values), NOT a live DB lookup.
+    const ev = state.simulatedOptedIn && state.simulatedEvidence[alertId]
+      ? state.simulatedEvidence[alertId]
+      : await api(`/alerts/${alertId}/evidence`);
+    const isSimulated = state.simulatedOptedIn;   const j = ev.jurisdiction || {};
     const contribs = (ev.feature_contributions || []).map(
       (f) => `<div class="feat-row"><span><b>${esc(f.feature)}</b> <span class="muted">(importance ${f.global_importance})</span></span><span>value ${f.value} → <b>${esc(f.percentile)}</b></span></div>`
     ).join("");
@@ -756,6 +880,7 @@ async function openEvidence(alertId) {
     ].map(([k, v]) => `<div class="feat-row"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("");
     document.getElementById("ev-alert-id").textContent = ev.alert_id;
     document.getElementById("ev-body").innerHTML = `
+      ${isSimulated ? `<div class="ev-block" style="border:1px solid #f87171"><h3>⚠ SCRIPTED SIMULATED SCENARIO</h3><p class="ev-meta" style="color:var(--yellow)">This evidence panel, its risk score and its SMS/email/dispatch logs are SCRIPTED for demonstration — NOT output of the live leak-fixed risk engine (honest AUC 0.63, which reports low scores for calm days and produced no alerts).</p></div>` : ""}
       <div class="ev-block">
         <h3>Recency & Coverage</h3>
         <p class="ev-meta">Data through: <b>${fmtTime(ev.data_through)}</b> · ATMs scored: ${ev.atms_scored}/${ev.atms_total} (${ev.scoring_coverage_pct}%)</p>
@@ -867,11 +992,7 @@ async function renderMuleGraph() {
 
 /* ------------------------------ actions ------------------------------ */
 async function setAlertStatus(alertId, status) {
-  try {
-    await api(`/alerts/${alertId}/status`, { method: "POST", body: JSON.stringify({ status }) });
-    toast(`Alert ${alertId} → ${status} (ledger-recorded)`);
-    loadAll();
-  } catch (err) { toast("Update failed: " + err.message); }
+  await setAlertStatusAction(alertId, status, "");
 }
 
 async function updateRecovery(recId, status) {
@@ -884,6 +1005,10 @@ async function updateRecovery(recId, status) {
 }
 
 async function runAlertCycle() {
+  if (state.simulatedOptedIn) {
+    toast("Run Alert Cycle is disabled in SIMULATED mode — it would create FAKE live alerts. Exit the scenario to run the real engine.");
+    return;
+  }
   try {
     const r = await api("/alerts/run-now", { method: "POST" });
     const s = r.summary;
@@ -900,6 +1025,7 @@ function connectWS() {
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
+        if (state.simulatedOptedIn) return;   // no live feed while a scripted scenario is shown
         if (msg.event === "alert") {
           toast(`🚨 LIVE: ${msg.payload.atm_id} flagged ${(msg.payload.risk_score * 100).toFixed(0)}% (${msg.payload.city})`);
           loadAll();
@@ -950,6 +1076,8 @@ async function doLogin() {
     const j = await res.json();
     localStorage.setItem(TOKEN_KEY, j.access_token);
     state.user = j.user;
+    state.simulatedOptedIn = false; state.simulatedEvidence = {};   // fresh session = honest live default
+    setSimulationUI(false);
     document.getElementById("login-modal").classList.add("hidden");
     loginStatus(`Signed in as ${j.user.display_name} — loading data…`, "ok");
     connectWS();
@@ -984,7 +1112,10 @@ function bindEvents() {
   wire("btn-login", doLogin);
   wire("btn-refresh", loadAll);
   wire("btn-cycle", runAlertCycle);
-  wire("btn-switch", () => { localStorage.removeItem(TOKEN_KEY); showLogin(); });
+  wire("btn-sim-load", loadSimulatedScenario);
+  wire("btn-sim-exit", exitSimulated);
+  wire("btn-sim-banner-exit", exitSimulated);
+  wire("btn-switch", () => { localStorage.removeItem(TOKEN_KEY); state.simulatedOptedIn = false; setSimulationUI(false); showLogin(); });
   wire("ev-close", () => document.getElementById("evidence-modal").classList.add("hidden"));
   wire("btn-replay", () => {
     const val = document.getElementById("asof-date").value;

@@ -503,3 +503,62 @@ fabricated-artifact bug was found and fixed.
 `FINAL_10_10_BASELINE_WAR.md`, `FINAL_10_10_INTERVENTION_ECONOMICS.md`,
 `FINAL_10_10_FAIRNESS.md`, `FINAL_10_10_SCORECARD.md`.
 - Status: KILL-TEST findings captured; commits `6f65329`, `81feb58`, `e7fd42f`.
+
+
+--------------------------------------------------------------------------------
+## P1.5 — DATA-LEAKAGE CORRECTION + honest Forecast-Safe rebuild + demo framing (2026-08-29)
+--------------------------------------------------------------------------------
+
+### Context
+While executing Fix & Polish P1, the "demo cache" risk scores (max 0.996) were found
+inconsistent with live model output (all ~0.014). Investigation (read-only:
+leak_proof.py in temp dir) exposed a SAME-DAY LABEL-LEAKAGE bug.
+
+### Leak (mechanism, proven)
+- features.py built day-keyed features and labels for the SAME calendar day; rolling
+  window [d, d+24h) included target day d, leaking the label into the features.
+- Inference was accidentally safe (forecast day is an empty future day).
+- Proof: leaky held-out AUC 0.9275 / AP 0.4212 vs forecast-safe 0.6344 / AP 0.1361
+  (delta +0.294). Per-feature label-correlation drops: counterparty_count_24h
+  0.2733?0.0804; distinct_accounts_24h 0.0774?0.0039; t_phishing_7d 0.0726?0.0294;
+  n_complaints_city/district_24h 0.0365?0.0104.
+
+### Fix
+- _shift_day_past() in backend/ml/features.py shifts day-keyed aggregate frames forward
+  1 day (cc, asof, cd, ct, cen, acct_grid, cp_grid). Hourly + Hawkes already safe.
+- Retrained honest forecast-safe model: artifacts/model.joblib, metrics.json,
+  deep_eval/threshold_curve.json (AUC 0.6273).
+
+### Honest post-fix reality (proven negative for a populated live alert view)
+- Live score_all(): all 900 ATMs 0.04–0.11 (max 0.107). Injected extreme cash-out spree
+  (inject_test.py, read-only): honest scores only 0.043–0.048; raw probs <=0.050;
+  re-seed does NOT produce high honest scores. Class-weight sweep (2/4/8x) collapses
+  calibrated scores ? 0 alerts. => No honest mechanism populates high-risk alerts; any
+  populated real-alert table would be fabrication.
+
+### DEMO FRAMING (user decision — Option B, explicit constraints honoured)
+- Server runs WITHOUT DEMO_MODE => live default = honest sparse state (max ~0.11, 0 alerts)
+  for every role on fresh load, with Threshold Explorer + honest Model Card.
+- NEW backend: GET /simulated/scenario (backend/api/routes/simulated.py, registered) —
+  opt-in ONLY. Returns SCRIPTED scenario: 12 alerts, 12 risk ATMs (banks incl HDFC/SBI/
+  Kotak/Axis/ICICI/BoB/PNB across 4 states/districts), 12 evidence panels, delivery logs,
+  all carrying simulated:true + disclosure. Never auto-served.
+- Frontend (app.js/index.html/style.css): "?? Load Simulated Scenario" labelled button
+  (off by default, not auto-triggered) -> persistent unmissable SIMULATED banner + diagonal
+  watermark on every screen; "Exit Simulated Mode" -> live. state.simulatedOptedIn drives
+  it across renders/role-switches; resets on fresh login. Run Alert Cycle + WS live feed
+  suppressed in sim mode; simulated alert status updates are in-memory and labelled
+  "(simulated — not persisted)". openEvidence uses the simulated payload (scripted
+  disclosure) when opted-in.
+- Model Card (renderI4C): prominent "Model Honesty — Data-Leakage Corrected" panel,
+  0.9275?0.6344 story + honest consequence note.
+- P1.8: I4C inbox now renders parsed readable KV fields + "view raw payload" toggle (all
+  escaped; no raw secrets).
+
+### Verification (puppeteer-core, temp dir p1_shots/)
+- All 4 roles LIVE: banner hidden, honest sparse live. SIM: sim-active true, banner +
+  watermark visible, exit visible, "SIMULATED scenario as of ..." in as-of pill.
+- I4C SIM: 12 alert-table rows (first city Northex City); evidence modal opens sim alert
+  ALT-SIM-ATM-NOR0001 with "SCRIPTED SIMULATED SCENARIO" disclosure; model-metrics shows
+  the Data-Leakage panel. Only 404 is pre-existing /favicon.ico.
+- Bank SIM: HDFC bank view populated (3 HDFC ATMs / 3 HDFC alerts).

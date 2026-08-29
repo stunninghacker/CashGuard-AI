@@ -31,6 +31,12 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
   · API (FastAPI, repo-layer swappable to PostgreSQL/real APIs) · Frontend (role-based).
 
 ## Slide 3 — Live Demo (2 min 30 sec)
+> **Honesty-first default (post-leak-fix):** on a calm demo day the leak-corrected model
+> scores every ATM low and shows **no alerts** — say this out loud *up front*, then click
+> **"🧪 Load Simulated Scenario"** to demonstrate the populated alert → evidence →
+> SMS/email/dispatch → bank → action workflow. Every screen in that mode carries an
+> unmissable **SIMULATED SCENARIO — NOT LIVE** banner/watermark; "Exit Simulated Mode"
+> returns to the honest sparse live view. Do NOT present the scripted alerts as live output.
 1. `python run.py` — show pipeline logs (calibration summary → data → train → serve).
 2. **Police view**: Leaflet heatmap (red = critical), city filter, top-20 hotspots table.
 3. **⚡ Run Alert Cycle** → SMS/email mock logs for SHOs & branch managers, dedupe cooldown.
@@ -43,9 +49,11 @@ withdrawals. Every parameter is source-tagged verified-vs-assumed and disclosed 
 
 ## Slide 4 — The Numbers (30 sec)
 - 200k transactions, 12.4k complaints, 900 ATMs, 5 **fictional** cities, 6 months.
-- **ROC-AUC 0.927 · lift vs volume 14–18× · lift vs proximity 17× at P@100** (the
-  model crushes both naive baselines, disclosed) · **median lead-time 14.9 h**
-  — annotated as horizon-dependent, a design property not an accuracy claim.
+- **⚠ correct these verbally if quoting the old 0.927**: a same-day label-leakage bug was
+  found and fixed; the honest forecast-safe **ROC-AUC is 0.6273** (P@20/50/100/200/500/1000 =
+  0.65/0.64/0.61/0.57/0.372/0.261 · prf@0.7 = 32 alerts / P 0.75 / FAR 0.25). The old
+  "0.927 · lift 14–18× · 17× at P@100" figures are pre-correction (leaky) and superseded;
+  baselines need re-running on the corrected features. Details: `MODEL_CARD.md`.
 - **Precision@K is honest by construction**: 0.90/0.90/0.83 at
   K = 20/50/100, decaying to 0.52 at K = 1000; threshold(≥0.7) precision 0.66,
   false-alert rate 0.34. We deliberately de-separated the generator (hot-ATM

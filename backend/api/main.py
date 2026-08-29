@@ -34,6 +34,7 @@ from .routes import (
     recovery,
     reports,
     risk,
+    simulated,
     stats,
     train,
     withdrawals,
@@ -123,6 +124,7 @@ app.include_router(stats.router)
 app.include_router(reports.router)
 app.include_router(ledger.router)
 app.include_router(recovery.router)
+app.include_router(simulated.router)
 app.include_router(realtime_routes.router)
 app.include_router(mule_graph.router)
 

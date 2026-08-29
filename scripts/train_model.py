@@ -24,10 +24,13 @@ from backend.ml.train import train  # noqa: E402
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train the hotspot classifier")
     parser.add_argument("--days-back", type=int, default=None, help="restrict training to last N days")
+    parser.add_argument("--pos-weight-multiplier", type=float, default=1.0,
+                        help="up-weight the rare positive class (>1.0 trades precision for recall)")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    metrics = train(engine, days_back=args.days_back, seed=args.seed)
+    metrics = train(engine, days_back=args.days_back, seed=args.seed,
+                    pos_weight_multiplier=args.pos_weight_multiplier)
     print(json.dumps(metrics, indent=2))
     print(f"Model saved to {METRICS_PATH.parent / 'model.joblib'}")
 

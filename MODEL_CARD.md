@@ -8,6 +8,37 @@
 | Training data | Controlled synthetic generator (`backend/data/synthetic_data.py`, config in `calibration_config.yaml`, citations in `CALIBRATION_NOTES.md`) |
 | Evaluation split | Chronological train → validation → test (early stopping + calibration on validation ONLY) |
 
+## ⚠ DATA-LEAKAGE CORRECTION — read this first (2026-08-29)
+
+**An earlier reported ROC-AUC ≈ 0.927 was INVALID and is superseded.** The leak and
+the fix are documented in full below and in `VERIFICATION_LOG.md` (P1.5).
+
+- **What was wrong (label leakage):** `backend/ml/features.py` built features and labels
+  for the **same calendar day**. The rolling-window features
+  (`rolling(2)`, `rolling(8)`, e.g. `counterparty_count_24h`, `withdrawals_24h`) used a
+  window `[d, d+24h)` that **included the target day `d` itself**, so the label for day `d`
+  leaked into the features for day `d`. Inference was accidentally safe (the forecast day
+  is an empty future day), but the *evaluation* AUC of ~0.927 was inflated by this leak,
+  not by model skill.
+- **The fix:** day-keyed aggregate frames are now shifted **forward 1 day** before rolling
+  (forecast-safe features). See `_shift_day_past` in `backend/ml/features.py` and the
+  read-only proof `leak_proof.py` (temp dir).
+- **Honest forecast-safe numbers (current):** held-out ROC-AUC **0.6273** (leaky 0.9275 →
+  corrected 0.6344 delta +0.294 in the proof); P@20/50/100/200/500/1000 =
+  0.65/0.64/0.61/0.57/0.372/0.261; prf@0.70 = 32 alerts / P 0.75 / R 0.008 / FAR 0.25.
+  See `artifacts/metrics.json` and `artifacts/deep_eval/threshold_curve.json`.
+- **Honest operational consequence:** on calm demo days the corrected model scores every
+  ATM ~0.03–0.11 (max ≈ 0.11) and produces **no alerts**. Any populated high-risk alert
+  view you see in the dashboard is served only via the explicitly-labelled, opt-in
+  **"Load Simulated Scenario"** button and is SCRIPTED — it is **not** live model output.
+- **Any earlier "0.92x" figure in this repo is to be read as the pre-correction (leaky)
+  number and is NOT current.** If you are evaluating the model for honesty, judge it on
+  the corrected 0.63 with this disclosure.
+- The daily-vs-hourly narrative and the "why precision@K is not perfect" generator work
+  below predate this specific same-day leak; their qualitative conclusions about not
+  hiding imperfection still stand, but **all quantitative AUC figures in them are stale
+  (leaky) unless re-run on the corrected features.**
+
 ## Intended use
 - District/state-level **advisory** forecasting of ATMs at elevated risk of
   fraud cash-out in the next 24h; decision *support* for police and bank
@@ -22,8 +53,10 @@
   outcomes replaces the synthetic evaluation.
 
 ## Evaluation methodology (CONTROLLED SYNTHETIC EVALUATION — not real-world accuracy)
-- ROC-AUC 0.9261 · Precision@100 = 0.86 · @500 = 0.62 · @1000 = 0.53 · threshold(≥0.7) precision 0.62
-- Alert volume at 0.7: 497 ATM-days · false-alert rate 0.38 (surfaced honestly)
+- ⚠ All headline figures below are the **post-correction (forecast-safe)** numbers. See
+  the data-leakage banner at the top — the prior ≈0.927 is superseded.
+- ROC-AUC 0.6273 · Precision@20/50/100/200/500/1000 = 0.65/0.64/0.61/0.57/0.372/0.261 · threshold(≥0.7) precision 0.75
+- Alert volume at 0.7: 32 ATM-days · false-alert rate 0.25 (surfaced honestly)
 - Calibration: Brier 0.0467 · PR-AUC 0.4076
 - Intervention simulation: top-10/day captures ~5.1% of simulated exposure (CI 5.0–5.1),
   median time-to-intervention 14.4 h

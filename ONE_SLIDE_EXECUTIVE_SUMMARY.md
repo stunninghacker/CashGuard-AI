@@ -13,10 +13,12 @@ map of risk (2/6/12/24/48h horizons, honest confidence) → per-ATM evidence
 (why, what-if, how confident) → human-reviewed action → recovery funnel →
 tamper-evident audit trail.
 
-**Measured (synthetic labels, artifact-backed):** beats simple baselines
-11–14× on intervention value; AUC 0.927; precision honest (P@100 0.86,
-P@1000 0.53, 38% false-alert rate disclosed); drift-tested across 12
-adversarial worlds; scales to 8,000 complaints/day.
+**Measured (synthetic labels, artifact-backed):** a same-day label-leakage bug was
+found and fixed (see `MODEL_CARD.md`); the honest forecast-safe **ROC-AUC is 0.6273**
+(P@20/50/100/200/500/1000 = 0.65/0.64/0.61/0.57/0.372/0.261 · prf@0.7 = 32 alerts / P 0.75 /
+FAR 0.25). On calm demo days the live model reports low risk and **no alerts**; the populated
+alert workflow is shown only via the opt-in, clearly-labelled **"Load Simulated Scenario"**
+button (SCRIPTED, not live output). Any earlier "0.927" figure is superseded.
 
 **Honesty:** no real data claimed, no real savings claimed — a 14-step
 real-data validation protocol and 30-day shadow-mode pilot are the

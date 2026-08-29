@@ -87,11 +87,15 @@ def train(
     days_back: int | None = None,
     seed: int = SEED,
     out_dir: Path | None = None,
+    pos_weight_multiplier: float = 1.0,
 ) -> dict:
     """
     Run the full training pipeline. Returns the metric summary dict.
 
     days_back: restrict to the last N days (useful for fast re-training demos).
+    pos_weight_multiplier: up-weights the rare positive class relative to the
+      natural imbalance ratio. >1.0 trades some precision for higher recall at
+      any fixed threshold (P1.5 recall tuning). 1.0 == XGBoost's auto balance.
     """
     t0 = time.time()
     out_dir = out_dir or MODEL_PATH.parent
@@ -151,6 +155,15 @@ def train(
     meta_te = meta[mask_te].reset_index(drop=True)
 
     pos_ratio = float(ytr.mean())
+    # P1.5: explicit positive-class weight = natural imbalance ratio x a knob.
+    # At multiplier==1.0 we pass None so XGBoost uses its exact original
+    # auto-balance -> bit-for-bit preserves the verified baseline. Only when
+    # up-weighting (>1.0) do we supply an explicit scale_pos_weight, recording
+    # the real P/R/F1 trade-off in metrics.json (never presumed).
+    p0 = max(float((ytr == 0).sum()), 1.0)
+    p1 = max(float((ytr == 1).sum()), 1.0)
+    scale_pos_weight = (p0 / p1) * max(pos_weight_multiplier, 0.1)
+    xgb_scale = None if pos_weight_multiplier == 1.0 else scale_pos_weight
 
     if _HAS_XGB:
         model = XGBClassifier(
@@ -160,6 +173,7 @@ def train(
             subsample=0.85,
             colsample_bytree=0.8,
             tree_method="hist",
+            scale_pos_weight=xgb_scale,
             eval_metric="aucpr",
             early_stopping_rounds=30,
             random_state=seed,
@@ -201,6 +215,19 @@ def train(
     ens_cal, ens_calibrator = _platt(ens_raw_val, yval, ens_raw)
 
     # ---- metric blocks: pure-XGBoost vs ensemble (honest comparison) ----
+    def _prf_at(score: np.ndarray, y: np.ndarray, thr: float) -> dict:
+        alert = score >= thr
+        n = int(alert.sum())
+        tp = int((alert & (y == 1)).sum())
+        fn = int((~alert & (y == 1)).sum())
+        fp = int((alert & (y == 0)).sum())
+        prec = tp / max(n, 1)
+        rec = tp / max(tp + fn, 1)
+        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+        return {"threshold": thr, "alerts": n, "precision": round(prec, 4),
+                "recall": round(rec, 4), "f1": round(f1, 4), "false_alerts": fp,
+                "false_alert_rate": round(fp / max(n, 1), 4)}
+
     def _metric_block(y: np.ndarray, score: np.ndarray) -> dict:
         preds = (score >= 0.5).astype(int)
         mask70 = score >= 0.70
@@ -218,6 +245,10 @@ def train(
             "accuracy": round(float(accuracy_score(y, preds)), 4),
             "precision_at_threshold_0p7": round(float(y[mask70].mean()), 4) if mask70.sum() > 0 else None,
             "n_flagged_at_0p7": int(mask70.sum()),
+            "prf_at_0p50": _prf_at(score, y, 0.50),
+            "prf_at_0p60": _prf_at(score, y, 0.60),
+            "prf_at_0p70": _prf_at(score, y, 0.70),
+            "prf_at_0p85": _prf_at(score, y, 0.85),
         }
 
     blk_xgb = _metric_block(yte, probs_cal)
@@ -310,6 +341,8 @@ def train(
         "n_val_samples": int(len(Xval)),
         "n_test_samples": int(len(Xte)),
         "positive_share": round(pos_ratio, 4),
+        "pos_weight_multiplier": pos_weight_multiplier,
+        "scale_pos_weight": None if pos_weight_multiplier == 1.0 else round(scale_pos_weight, 3),
         **{k: v for k, v in active_block.items()},
         "per_feature_auc": per_feature_auc,
         "new_feature_single_auc_hawkes": per_feature_auc.get("hawkes_intensity_24h"),
@@ -354,6 +387,7 @@ def train(
         "trained_at": metrics["trained_at"],
         "split_day": str(split_day.date()),
         "seed": seed,
+        "pos_weight_multiplier": pos_weight_multiplier,
     }
     joblib.dump(artifact, MODEL_PATH)
     (out_dir / "metrics.json").write_text(json.dumps(_json_safe(metrics), indent=2))

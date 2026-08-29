@@ -1,5 +1,14 @@
 # JUDGE_BRIEF.md — CashGuard AI, SIH26184 (2 pages)
 
+> **⚠ DATA-LEAKAGE CORRECTION (2026-08-29) — read first.** The AUC figures below
+> (0.926/0.927) were produced by a **same-day label-leakage** bug in feature
+> engineering (fixed). The **honest forecast-safe ROC-AUC is 0.6273**. On calm days
+> the live model scores every ATM low (max ~0.11) and produces **no alerts**; the
+> populated alert workflow is available only via the opt-in **"Load Simulated
+> Scenario"** button and is clearly SCRIPTED (not live model output). Text here that
+> cites 0.92x refers to the pre-correction, leaky estimate and is superseded. Full
+> detail: `MODEL_CARD.md`, `VERIFICATION_LOG.md` (P1.5).
+
 ## Problem
 ~8,000 cybercrime complaints/day reach NCRP, but by the time police act on a
 complaint, the cash has already been withdrawn from an ATM. Recovery is
@@ -32,9 +41,10 @@ regression tests) · WebSocket live push (token-auth) · alert cycle with dedup
 5.5s) · role-based dashboards (Police / Bank / I4C) · Dockerfile · DEMO_MODE
 deterministic fallback that survives a missing model.
 
-## Differentiation (measured, not asserted)
-- **Beats operational baselines**: AUC 0.926 vs ≤0.68 for random/volume/
-  proximity/historical-hotspot; P@100 0.86 vs ≤0.25; Brier 0.047 vs 0.31+.
+## Differentiation (measured, not asserted) — figures corrected post-leak-fix
+- **Beats operational baselines**: honest forecast-safe AUC **0.63** (corrected; see top
+  banner — the leaky 0.926 baseline comparison is superseded and baselines need re-running
+  on the corrected features).
 - **Intervention value**: at K=10/day, CashGuard captures 5.5% of fraud
   exposure vs 0.5% (volume), 1.9% (historical), 0.4% (random) — 3–14×, with
   half the false interventions and ~10× per-intervention efficiency.
@@ -49,11 +59,12 @@ deterministic fallback that survives a missing model.
 - **Fairness on the dashboard outputs**: FPR flat 0.0015–0.0062 across 15
   groups; the model can never learn from its own interventions.
 
-## Measured results (CONTROLLED SYNTHETIC EVALUATION)
-AUC 0.927 · P@100 0.86 · P@1000 0.53 · Brier 0.047 · ECE 0.016 · lead 14.9h ·
-fairness FPR flat across 15 groups · load test sustains 8,000/day (ingestion
-28–66ms/batch) · 8-user concurrency 5.5s (cache) · every number traces to an
-artifact under `artifacts/`.
+## Measured results (CONTROLLED SYNTHETIC EVALUATION) — CORRECTED
+⚠ post-leak-fix honest numbers. AUC **0.6273** · P@20/50/100/200/500/1000 =
+0.65/0.64/0.61/0.57/0.372/0.261 · prf@0.7 = 32 alerts / P 0.75 / R 0.008 / FAR 0.25 ·
+on calm demo days the model produces **no alerts** (opt-in SCRIPTED scenario shows the
+workflow). Every number traces to `artifacts/metrics.json` + `artifacts/deep_eval/threshold_curve.json`.
+Any earlier 0.927 here is superseded.
 
 ## Blockchain & Cybersecurity theme (honest scope)
 Tamper-evident SHA-256 audit chain (live, verified by the tamper demo) +
