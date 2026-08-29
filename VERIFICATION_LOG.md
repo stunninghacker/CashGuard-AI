@@ -131,6 +131,16 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | Honest URL placeholder | **PASS** | `LIVE_DEMO.md` — deployment package READY, live URL explicitly PLACEHOLDER (not deployed); deployment safety rules enumerated (synthetic-only, tamper OFF, no credential reuse, secrets env-only). |
 | README/index | **PASS** | README "Live demo (deployment-ready)" section + Future Scope updated; DOCS_INDEX references LIVE_DEMO.md. |
 
+## Item 8 — BLOCKCHAIN_UPGRADE_PATH.md (audit-integrity upgrade path, 2026-08-28)
+
+| Check | Outcome | Evidence |
+|-------|---------|----------|
+| Honest staged path | **PASS** | New `BLOCKCHAIN_UPGRADE_PATH.md`: Stage 0 (hash chain + Raft replicated log, in-repo/working) → Stage 1 (multi-party permissioned replicated log, real transport) → Stage 2 (anchor root hash to permissioned ledger/testnet) → Stage 3 (optional non-PII hashed on-chain metadata). |
+| Traces to real artifacts | **PASS** | References `append_ledger` SHA-256 chain (`repositories.py`), `ledger.py` API, `ledger_replication.py`, `LEDGER_ANCHOR_RPC_URL` integration point. |
+| Terminology discipline | **PASS** | Explicit: current system is a hash chain / append-only log, NOT a blockchain (never mislabeled); blockchain applies only to the external permissioned-ledger stage (not exercised). |
+| Scoped design | **PASS** | Justifies permissioned (not public) ledger for the fixed set of authorities + sensitive data; data-minimization preserved (only root-hash commitments anchored). |
+| Indexed / README | **PASS** | DOCS_INDEX deep-detail entry; README Future Scope bullet references the doc. Honesty matches BLOCKCHAIN_JUSTIFICATION.md (§"nearest-similar-red-flags" tone). |
+
 
 
 | Probe | Outcome | Evidence |

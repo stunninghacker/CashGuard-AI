@@ -21,6 +21,7 @@
 - **artifacts/metrics.json** — training metrics, baselines, lead time, per-feature AUC
 - **artifacts/deep_evaluation.json** + **artifacts/deep_eval/** — deep-eval suite (horizons, drift, fairness, simulation, baseline war, permutation tests, generalization splits, transfer readiness, ledger replication) — regenerate with `python scripts/` (each script is one command)
 - **BLOCKCHAIN_JUSTIFICATION.md** — honest account: tamper-evident chain + 3-node replication (real) vs testnet anchoring (integration point, not exercised)
+- **BLOCKCHAIN_UPGRADE_PATH.md** — staged path: hash chain → multi-party replicated log → permissioned-ledger anchoring (Item 8)
 
 ## Deeper technical detail (reference only, not required reading)
 - **FAIRNESS_AUDIT.md** — group false-positive rates (15 groups, flat 0.0015–0.0062) + feedback-loop audit
