@@ -337,8 +337,12 @@ async function loadCityCoords() {
 }
 
 async function loadComplaints() {
-  const { role, scope } = state.user || {};
-  if (!role || role === "BANK") { state.complaints = []; return; }
+  const { role } = state.user || {};
+  // Explicit allowlist — ONLY police/I4C may read complaints. The permission
+  // check runs BEFORE the fetch is dispatched, so a Bank session never even
+  // sends /complaints (no chance of surfacing a raw 403 + query string).
+  const ALLOWED = ["POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN"];
+  if (!role || !ALLOWED.includes(role)) { state.complaints = []; return; }
   try {
     const to = state.asOf || new Date().toISOString();
     const from = new Date(new Date(to).getTime() - 7 * 864e5).toISOString();
@@ -689,14 +693,21 @@ async function ledgerStatus() {
   try {
     const v = await api("/ledger/verify");
     const badge = document.getElementById("ledger-badge");
-    // P0.3: a fresh session must never show a red TAMPERED alarm unless the
-    // user has actually started the tamper demo THIS session. A leftover
-    // tampered state from a previous session is surfaced as a calm, opt-in
-    // notice with the restore action front and centre.
-    if (v.intact) {
+    // P0.3: the DEFAULT for any fresh session is VERIFIED. A red TAMPERED state
+    // is only ever shown after the user explicitly starts the tamper demo THIS
+    // session. If the server still carries a tampered state from an earlier
+    // session (shared in-memory across role switches / page reloads), silently
+    // reset it so the default is always verified — never leaks into a new view.
+    if (!v.intact && !state.ledgerDemoOptedIn) {
+      try {
+        const rr = await api("/ledger/restore", { method: "POST" });
+        const vv = await api("/ledger/verify");
+        badge.innerHTML = `<span class="pill ok">Ledger verified ✓ · ${vv.records} blocks</span>`;
+      } catch {
+        badge.innerHTML = `<span class="pill info">Ledger integrity check unavailable</span>`;
+      }
+    } else if (v.intact) {
       badge.innerHTML = `<span class="pill ok">Ledger verified ✓ · ${v.records} blocks</span>`;
-    } else if (!state.ledgerDemoOptedIn) {
-      badge.innerHTML = `<span class="pill info">Ledger integrity demo available — click "Tamper-demo" to demonstrate tamper detection (a tamper is currently pending from an earlier session).</span>`;
     } else {
       badge.innerHTML = `<span class="pill bad">LEDGER TAMPERED ✗ at block ${v.broken_at_index} — tamper detected per demo</span>`;
     }
