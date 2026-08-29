@@ -17,6 +17,8 @@ const state = {
   ledgerDemoOptedIn: false,   // P0.3: tamper alert is opt-in per session
   simulatedOptedIn: false,    // P1.5: scripted scenario is opt-in, off by default (honest live)
   simulatedEvidence: {},      // evidence payloads for the loaded scripted scenario
+  _loadGen: 0,                // P1.5: monotonic token; a stale in-flight loadAll() must never
+                              // overwrite a newer load's state OR toggle the sim chrome off.
 };
 
 /* ------------------------------ helpers ------------------------------ */
@@ -377,6 +379,8 @@ async function renderHorizonConfidence() {
 
 async function loadAll() {
   clearNotice();
+  const gen = ++state._loadGen;       // newest init wins; stale loads bail before touching state/chrome
+  const stale = () => gen !== state._loadGen;
   try {
     const asOfEl = document.getElementById("as-of");
     document.getElementById("role-badge").textContent = `${state.user.role} · ${state.user.scope}`;
@@ -386,6 +390,7 @@ async function loadAll() {
       // so the map geometry still renders; the simulated ATMs carry their own coords.
       const scen = await api("/simulated/scenario");
       if (!scen || !scen.simulated) { throw new Error("simulated scenario unavailable"); }
+      if (stale()) return;
       state.risk = scen.risk_scores || [];
       state.alerts = scen.alerts || [];
       state.stats = scen.stats || null;
@@ -401,8 +406,10 @@ async function loadAll() {
       api("/alerts?limit=200"),
       api("/stats/summary").catch(() => null),   // role-scoped; non-fatal (BANK)
     ]);
+    if (stale()) return;                        // a newer load superseded us — discard, don't clobber
     state.risk = risk; state.alerts = alerts; state.stats = stats;
     await Promise.all([loadCityCoords(), loadComplaints()]);
+    if (stale()) return;
     if (asOfEl) asOfEl.textContent = state.asOf
       ? `Forecast replay as of ${fmtTime(state.asOf)}`
       : (state.stats ? `Forecast as of ${fmtTime(state.stats.generated_at)}` : `Forecast as of ${fmtTime(new Date().toISOString())}`);
@@ -434,14 +441,27 @@ async function loadSimulatedScenario() {
     toast("Loaded SCRIPTED simulated scenario — labelled, not live output");
     loadAll();
   } catch (err) {
+    // P1.5 fix: a failed guard/load must NEVER leave stale simulated data rendered
+    // under the live chrome (the "toggle shows off but sim data shows" state). Clear
+    // the simulated state and repopulate honest live; never just turn chrome off.
     toast("Could not load simulated scenario: " + err.message);
-    setSimulationUI(false);
+    state.simulatedOptedIn = false;
+    state.simulatedEvidence = {};
+    state.alerts = [];
+    state.risk = [];
+    state.stats = null;
+    loadAll();   // token-guarded; repopulates honest live
   }
 }
 
 function exitSimulated() {
   state.simulatedOptedIn = false;
   state.simulatedEvidence = {};
+  // Clear sim data up front so a failed live reload can never leave stale
+  // simulated data rendered under the live chrome.
+  state.alerts = [];
+  state.risk = [];
+  state.stats = null;
   setSimulationUI(false);
   loadAll();
 }
@@ -851,10 +871,17 @@ async function openEvidence(alertId) {
   try {
     // P1.5: in a loaded scripted scenario, evidence is served from the in-memory
     // simulated payload (scripted values), NOT a live DB lookup.
-    const ev = state.simulatedOptedIn && state.simulatedEvidence[alertId]
-      ? state.simulatedEvidence[alertId]
-      : await api(`/alerts/${alertId}/evidence`);
-    const isSimulated = state.simulatedOptedIn;   const j = ev.jurisdiction || {};
+    const sim = state.simulatedOptedIn;
+    let ev = sim ? state.simulatedEvidence[alertId] : null;
+    if (!ev && sim) {
+      // Never mix a live DB evidence lookup under a simulated chrome. If the
+      // scripted payload lacks this alert's evidence, say so instead of leaking
+      // real data into a SCRIPTED panel.
+      toast("Evidence not available for this alert in the simulated scenario.");
+      return;
+    }
+    if (!ev) ev = await api(`/alerts/${alertId}/evidence`);
+    const isSimulated = sim;   const j = ev.jurisdiction || {};
     const contribs = (ev.feature_contributions || []).map(
       (f) => `<div class="feat-row"><span><b>${esc(f.feature)}</b> <span class="muted">(importance ${f.global_importance})</span></span><span>value ${f.value} → <b>${esc(f.percentile)}</b></span></div>`
     ).join("");
