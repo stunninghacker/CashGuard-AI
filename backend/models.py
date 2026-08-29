@@ -109,6 +109,30 @@ class Account(Base):
     activity_spike_flag: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
+class Transfer(Base):
+    """Directed account-to-account payment edge (money-trail / mule chain).
+
+    Mirrors the CFCFRMS "linked bank account" and bank core-banking transfer
+    feeds: fraud proceeds move source -> intermediate mule hops -> the terminal
+    cash-out account that withdraws at an ATM. Built as the edge table the
+    mule-graph module (backend/ml/mule_graph.py) turns into a directed graph to
+    flag likely cash-out (terminal) nodes via graph centrality + anomaly.
+
+    PII-SAFE: from_token / to_token are PII-pseudonymized account identifiers
+    (mock vault maps them); raw account details never appear here or on any
+    dashboard.
+    """
+
+    __tablename__ = "transfers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    transfer_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, index=True)
+    from_token: Mapped[str] = mapped_column(String(64), index=True)  # source account (pseudonymized)
+    to_token: Mapped[str] = mapped_column(String(64), index=True)    # recipient account (pseudonymized)
+    amount: Mapped[float] = mapped_column(Float, default=0.0)
+
+
 class VaultEntry(Base):
     """
     MOCK re-identification vault (PII pseudonymization, Phase 1).

@@ -499,6 +499,93 @@ def print_calibration_summary(cfg: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Account-to-account money-trail graph (mandate: mule/money-trail module)
+# ---------------------------------------------------------------------------
+def generate_transfers(
+    rng: random.Random,
+    pii: Pseudonymizer,
+    mule_tokens: list[str],
+    complaints: list[models.Complaint],
+    start: datetime,
+    end: datetime,
+    cfg: dict,
+) -> list[models.Transfer]:
+    """
+    Synthesise directed account-to-account transfer edges (the money trail).
+
+    For the graph module to be a *real* predictive signal (not decoration), the
+    terminal node of each chain must be the account that actually cashes out at
+    the ATM — here, the complaint-linked mule account that performs fraud
+    withdrawals. So we model:
+        entry(source of funds) -> hop(s) -> terminal(mule) -> [ATM cash-out]
+    and let the mule-graph module learn that *terminal cash-out nodes* are latent
+    in the transfer graph (many inbound, little/no outbound, deep in the layering
+    chain, high inbound velocity) — a graph-centrality / anomaly signal.
+
+    A background of benign transfer edges is included so terminal detection must
+    actually separate mule cash-out nodes from ordinary high-volume recipients.
+    """
+    t = cfg["transfers"]
+    depth_min = int(t["chain_depth_min"])
+    depth_max = int(t["chain_depth_max"])
+    mix = float(t["edge_mix_fraction"])
+    n_benign = int(t["n_benign_edges"])
+    overlap = float(t["benign_recipient_overlap"])
+
+    ml = set(mule_tokens)
+    transfers: list[models.Transfer] = []
+    span = (end - start).days
+
+    def _edge(src: str, dst: str, amount: float, days_ago: int, hours_back: int = 0) -> models.Transfer:
+        ts = end - timedelta(days=max(0, days_ago), hours=hours_back, minutes=rng.randint(0, 59))
+        if ts < start:
+            ts = start + timedelta(minutes=rng.randint(0, 59))
+        return models.Transfer(
+            transfer_id=_rid("XFR", 12),
+            timestamp=ts,
+            from_token=src,
+            to_token=dst,
+            amount=round(amount, 2),
+        )
+
+    # --- mule (terminal) chains: entry -> hop(s) -> terminal mule ---------
+    # Keep one entry per mule so the subgraph is sparse and structurally like a
+    # real layered network; edge amounts mix the fraud loss across hops.
+    for mule in mule_tokens:
+        # approximate the fraud loss this mule is expected to cash out
+        loss = rng.lognormvariate(np.log(65000), 1.0)
+        depth = rng.randint(depth_min, depth_max)
+        # previous hop = the terminal mule, walk backwards to build the chain
+        prev = mule
+        amount = loss
+        for hop_i in range(depth):
+            src = pii.account(_account_raw(rng))  # entry (i==0) or intermediate hop
+            this_amount = amount * (mix if hop_i == 0 else rng.uniform(0.25, 0.6))
+            transfers.append(_edge(src, prev, this_amount, days_ago=rng.randint(1, 6), hours_back=rng.randint(0, 12)))
+            prev = src
+            amount -= this_amount
+
+    # --- benign background edges (realistic graph noise) -------------------
+    # Normal accounts (non-mule) transfer small amounts to random counterparties.
+    # A fraction of recipients overlap the mule/entry node set so the graph is
+    # not cleanly separable by account membership alone.
+    normal_pool = [pii.account(_account_raw(rng)) for _ in range(int(t["n_entry_nodes"]))]
+    pool = list(ml) + list(normal_pool)
+    for _ in range(n_benign):
+        src = rng.choice(pool)
+        if rng.random() < overlap:
+            dst = rng.choice(list(ml))
+        else:
+            dst = pii.account(_account_raw(rng))
+        transfers.append(
+            _edge(src, dst, round(rng.lognormvariate(np.log(4200), 1.0), 2), days_ago=rng.randint(0, span - 1))
+        )
+
+    transfers.sort(key=lambda x: x.timestamp)
+    return transfers
+
+
+# ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
 def generate_all(
@@ -526,6 +613,7 @@ def generate_all(
         rng, pii, atms, complaints, mule_tokens, start, end, cfg, final_city=final_city,
     )
     accounts = generate_accounts(rng, pii, mule_tokens, start, end, cfg)
+    transfers = generate_transfers(rng, pii, mule_tokens, complaints, start, end, cfg)
 
     db.add_all(atms)
     db.commit()
@@ -540,6 +628,9 @@ def generate_all(
     for i in range(0, len(withdrawals), 5000):
         db.add_all(withdrawals[i : i + 5000])
         db.commit()
+    for i in range(0, len(transfers), 5000):
+        db.add_all(transfers[i : i + 5000])
+        db.commit()
 
     n_fraud = sum(1 for w in withdrawals if w.is_fraud_withdrawal)
     return {
@@ -548,6 +639,7 @@ def generate_all(
         "withdrawals": len(withdrawals),
         "fraud_withdrawals": n_fraud,
         "mule_accounts": len(mule_tokens),
+        "account_transfers": len(transfers),
         "vault_entries": len(pii.raw_to_token),
         "final_wave_city": final_city,
         "period": f"{start:%Y-%m-%d} -> {end:%Y-%m-%d}",

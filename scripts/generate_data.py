@@ -33,7 +33,7 @@ def export_csvs() -> None:
 
     from backend.database import engine
 
-    for table in ("complaints", "atms", "withdrawals", "accounts", "vault", "alerts", "audit_log", "recovery_recommendations", "reports", "inbox"):
+    for table in ("complaints", "atms", "withdrawals", "accounts", "transfers", "vault", "alerts", "audit_log", "recovery_recommendations", "reports", "inbox"):
         try:
             df = pd.read_sql(f"SELECT * FROM {table}", engine)
             df.to_csv(DATA_DIR / f"{table}.csv", index=False)
@@ -76,8 +76,8 @@ def main() -> None:
 
         for table in (
             models.RecoveryRecommendation, models.Report, models.InboxMessage,
-            models.AuditRecord, models.Alert, models.Withdrawal, models.Account,
-            models.Complaint, models.ATM, models.VaultEntry, models.User,
+            models.AuditRecord, models.Alert, models.Withdrawal, models.Transfer,
+            models.Account, models.Complaint, models.ATM, models.VaultEntry, models.User,
         ):
             db.query(table).delete()
         db.commit()

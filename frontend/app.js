@@ -613,6 +613,7 @@ async function renderI4C() {
   await renderInbox();
   await renderHandoffs();
   await renderOutcomes();
+  await renderMuleGraph();
 }
 
 async function renderHandoffs() {
@@ -758,6 +759,52 @@ async function hotspotReport(alertId) {
     const j = await res.json();
     toast(`Intelligence report ${j.report_id} generated (ledger-recorded)`);
   } catch (err) { toast("Report failed: " + err.message); }
+}
+
+/* ------------------------------ mule graph (money trail) ------------------------------ */
+async function renderMuleGraph() {
+  const panel = document.getElementById("mule-graph-table");
+  const detail = document.getElementById("mule-graph-detail");
+  if (!panel) return;
+  try {
+    const res = await api("/mule-graph/terminal-nodes?k=50");
+    const nodes = res.nodes || [];
+    if (!nodes.length) {
+      panel.querySelector("tbody").innerHTML = `<tr><td colspan="8" class="muted">No terminal nodes in scope.</td></tr>`;
+      detail.textContent = "—";
+      return;
+    }
+    panel.querySelector("tbody").innerHTML = nodes.map((n, i) =>
+      `<tr data-token="${esc(n.account_token)}">
+        <td>${i + 1}</td>
+        <td class="mono" title="${esc(n.account_token)}">${maskedAccount(n.account_token)}</td>
+        <td>${(n.terminal_risk * 100).toFixed(1)}%</td>
+        <td>—</td><td>—</td><td>—</td><td>—</td>
+        <td><button class="btn small" data-trail="${esc(n.account_token)}">🔍 Trail</button></td>
+      </tr>`
+    ).join("");
+    panel.querySelectorAll("button[data-trail]").forEach((b) =>
+      b.addEventListener("click", async (e) => {
+        const token = e.currentTarget.dataset.trail;
+        detail.innerHTML = `<p class="muted">Loading trail for ${maskedAccount(token)}…</p>`;
+        try {
+          const trail = await api(`/mule-graph/trail/${token}`);
+          detail.innerHTML = `
+            <div class="ev-block"><h3>Money Trail for ${esc(maskedAccount(trail.account_token))}</h3>
+              <p class="ev-meta">Terminal Risk: <b>${(trail.terminal_risk * 100).toFixed(1)}%</b> · In-Degree: ${trail.in_degree} · Out-Degree: ${trail.out_degree} · Inflow: ₹${trail.inflow_inr.toLocaleString()} · Chain Depth: ${trail.chain_depth}</p>
+              <h4>Layering Chains (source → … → terminal)</h4>
+              <p class="mono">${(trail.chains || []).map(c => c.join(" → ")).join("<br/>") || "—"}</p>
+              <h4>Edges (transfers in window)</h4>
+              <p class="mono">${(trail.edges || []).slice(0, 20).map(e => `${esc(e.source)} → ${esc(e.target)} : ₹${e.amount.toLocaleString()}`).join("<br/>") || "—"}</p>
+            </div>
+          `;
+        } catch (err) { detail.innerHTML = `<p class="muted err">Trail load failed: ${err.message}</p>`; }
+      })
+    );
+    detail.textContent = "Click 🔍 Trail on a row to see the money-trail chains and edges.";
+  } catch (err) {
+    panel.querySelector("tbody").innerHTML = `<tr><td colspan="8" class="muted err">Failed to load: ${err.message}</td></tr>`;
+  }
 }
 
 /* ------------------------------ actions ------------------------------ */

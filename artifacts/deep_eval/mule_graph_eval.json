@@ -1,0 +1,105 @@
+{
+  "as_of": "2026-08-24T00:04:00",
+  "window_days": 30,
+  "forecast_days": 5,
+  "n_edges": 14761,
+  "n_nodes": 23984,
+  "n_fraud_cashout_accounts": 541,
+  "precision_at_k": {
+    "20": 0.05,
+    "50": 0.1,
+    "100": 0.06
+  },
+  "recall_at_k": {
+    "20": 0.0018,
+    "50": 0.0092,
+    "100": 0.0111
+  },
+  "baseline_inflow_precision_at_k": {
+    "20": 0.05,
+    "50": 0.04,
+    "100": 0.02
+  },
+  "top_terminal_nodes": [
+    {
+      "account_token": "acct_801424494423",
+      "terminal_risk": 0.7222
+    },
+    {
+      "account_token": "acct_df572c619035",
+      "terminal_risk": 0.6565
+    },
+    {
+      "account_token": "acct_f84ae0612cdf",
+      "terminal_risk": 0.6534
+    },
+    {
+      "account_token": "acct_52063f216344",
+      "terminal_risk": 0.6532
+    },
+    {
+      "account_token": "acct_7e745513c77d",
+      "terminal_risk": 0.6419
+    },
+    {
+      "account_token": "acct_73cceb1c227f",
+      "terminal_risk": 0.6344
+    },
+    {
+      "account_token": "acct_a0e70da52f65",
+      "terminal_risk": 0.6333
+    },
+    {
+      "account_token": "acct_e3c3cb668937",
+      "terminal_risk": 0.6314
+    },
+    {
+      "account_token": "acct_d2fa2cd0bb1a",
+      "terminal_risk": 0.6285
+    },
+    {
+      "account_token": "acct_b4b5fec48a67",
+      "terminal_risk": 0.6254
+    },
+    {
+      "account_token": "acct_675d02c26949",
+      "terminal_risk": 0.6253
+    },
+    {
+      "account_token": "acct_7bb691813dac",
+      "terminal_risk": 0.6238
+    },
+    {
+      "account_token": "acct_74762a802530",
+      "terminal_risk": 0.6182
+    },
+    {
+      "account_token": "acct_edd52754be83",
+      "terminal_risk": 0.6167
+    },
+    {
+      "account_token": "acct_ee31418300b2",
+      "terminal_risk": 0.6118
+    },
+    {
+      "account_token": "acct_eade0748272a",
+      "terminal_risk": 0.6108
+    },
+    {
+      "account_token": "acct_6add9eb5ba43",
+      "terminal_risk": 0.6079
+    },
+    {
+      "account_token": "acct_058f0863fdd1",
+      "terminal_risk": 0.6078
+    },
+    {
+      "account_token": "acct_2da78b6be353",
+      "terminal_risk": 0.6077
+    },
+    {
+      "account_token": "acct_596fcb1145a4",
+      "terminal_risk": 0.6066
+    }
+  ]
+}

@@ -8,6 +8,9 @@ SCHEDULER_INTERVAL_MINUTES (default 60). Each cycle:
     3. dedupes against open alerts (cooldown window)
     4. creates Alert records + mock SMS/email logs
 
+Additionally, runs auto-escalation for stale unacknowledged alerts
+(every cycle, checks alerts older than ALERT_AUTO_ESCALATE_MINUTES).
+
 The same cycle can be triggered on demand (POST /api/alerts/run-now) — used
 in the demo to show the full alert pipeline live.
 
@@ -18,9 +21,9 @@ from __future__ import annotations
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 
-from ..config import SCHEDULER_INTERVAL_MINUTES
+from ..config import SCHEDULER_INTERVAL_MINUTES, ALERT_AUTO_ESCALATE_MINUTES
 from ..database import SessionLocal
-from ..services import run_alert_cycle
+from ..services import run_alert_cycle, auto_escalate_stale_alerts
 
 _scheduler: BackgroundScheduler | None = None
 
@@ -31,6 +34,10 @@ def _job() -> None:
     try:
         summary = run_alert_cycle(db)
         print(f"[scheduler] Alert cycle done: {summary}", flush=True)
+        # Auto-escalate stale alerts
+        escalated = auto_escalate_stale_alerts(db, ALERT_AUTO_ESCALATE_MINUTES)
+        if escalated:
+            print(f"[scheduler] Auto-escalated {escalated} stale alerts", flush=True)
     except Exception as exc:  # pragma: no cover - keep the loop alive
         print(f"[scheduler] Alert cycle failed: {exc}", flush=True)
     finally:

@@ -98,6 +98,33 @@ pii:
   anti_profiling_source_status: verified_pattern
   anti_profiling_citation: Risk = transaction behaviour + complaint linkage + transaction
     geography only (enforced in code; see LIMITATIONS.md).
+transfers:
+  # Money-trail graph (mandate: mule-account/money-trail module).
+  # Each fraud complaint's linked (terminal/cash-out) mule account is fed by a
+  # synthetic chain: entry(source) -> hop(s) -> terminal(mule). Terminal mules
+  # are exactly the accounts that make the ATM fraud cash-outs, so graph
+  # terminal-node risk is a genuine predictive signal, not decoration.
+  n_entry_nodes: 6000
+  n_benign_edges: 40000
+  chain_depth_min: 1
+  chain_depth_max: 3
+  chain_depth_source_status: assumption_general_literature
+  chain_depth_source_citation: Real fraud money trails are multi-hop through layering
+    accounts before cash-out (RBI/FATF guidance); hop count is not a public statistic,
+    so a short 1-3 hop chain is a modelling choice.
+  entry_to_terminal_share: 1.0
+  entry_to_terminal_share_source_status: assumption_general_literature
+  entry_to_terminal_share_citation: Every synthetic mule is modelled as cash-out at an
+    ATM, so every entry is modelled as terminating at that ATM-cash-out mule. Real
+    networks also have non-withdrawing mules; noted as a simplification in LIMITATIONS.md.
+  edge_mix_fraction: 0.35
+  edge_mix_fraction_source_status: assumption_general_literature
+  edge_mix_fraction_citation: Layering mixes amounts across hops before a lump cash-out;
+    mixing ratio is a modelling choice.
+  benign_recipient_overlap: 0.5
+  benign_recipient_overlap_source_status: assumption_general_literature
+  benign_recipient_overlap_citation: Background transfer graph shares some nodes with
+    the mule subgraph so terminal detection must separate signal from noise.
 ui:
   fictional_locations: true
   footer_banner: Hackathon Prototype — Synthetic Data. Locations are fictionalized

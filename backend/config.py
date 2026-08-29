@@ -49,6 +49,7 @@ ALERT_COOLDOWN_HOURS: int = int(os.getenv("ALERT_COOLDOWN_HOURS", "6"))  # no du
 ALERT_DEDUP_RISK_DELTA: float = float(os.getenv("ALERT_DEDUP_RISK_DELTA", "0.1"))  # dedup is bypassed when risk rose by more than this
 SCORE_CACHE_SECONDS: int = int(os.getenv("SCORE_CACHE_SECONDS", "600"))  # risk-score inference cache TTL (scores valid within a window; recompute on data change)
 SCHEDULER_INTERVAL_MINUTES: int = int(os.getenv("SCHEDULER_INTERVAL_MINUTES", "60"))
+ALERT_AUTO_ESCALATE_MINUTES: int = int(os.getenv("ALERT_AUTO_ESCALATE_MINUTES", "120"))  # auto-escalate unacknowledged alerts after N minutes
 HOTSPOT_K: int = int(os.getenv("HOTSPOT_K", "20"))
 SEED_COMPLAINT_LOOKBACK_DAYS: int = int(os.getenv("SEED_COMPLAINT_LOOKBACK_DAYS", "45"))  # routing: complaints within this window seed an ATM's origin jurisdiction
 FAIRNESS_ALERT_CAP: bool = os.getenv("FAIRNESS_ALERT_CAP", "true").lower() == "true"  # Item 5: per-state proportional alert cap (active fairness constraint)

@@ -338,6 +338,36 @@ def run_alert_cycle(db: Session, force: bool = False) -> dict:
             "skipped": skipped, "reobserved": reobserved}
 
 
+def auto_escalate_stale_alerts(db: Session, timeout_minutes: int) -> int:
+    """
+    Auto-escalate alerts that have been 'new' or 'acknowledged' for longer than
+    timeout_minutes without human action. Called by the scheduler.
+    Returns the number of alerts escalated.
+    """
+    from datetime import timedelta
+    cutoff = datetime.utcnow() - timedelta(minutes=timeout_minutes)
+    stale = db.query(models.Alert).filter(
+        models.Alert.status.in_(["new", "acknowledged"]),
+        models.Alert.created_at < cutoff,
+    ).all()
+    count = 0
+    for alert in stale:
+        repo.update_alert_status(db, alert, "escalated",
+                                 reason=f"Auto-escalated after {timeout_minutes} min without acknowledgement")
+        repo.append_ledger(db, actor="scheduler (auto-escalation)", event_type="status_changed",
+                           entity_id=alert.alert_id,
+                           payload={"status": "escalated", "reason": f"auto_timeout_{timeout_minutes}min"})
+        from .realtime import enqueue_broadcast
+        enqueue_broadcast("alert_status", {
+            "alert_id": alert.alert_id, "status": "escalated",
+            "reason": f"Auto-escalated after {timeout_minutes} min without acknowledgement"
+        })
+        count += 1
+    if count:
+        db.commit()
+    return count
+
+
 HITL_STATUSES = {
     "acknowledged": "seen — no decision yet",
     "actioned": "response completed",

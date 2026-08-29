@@ -207,6 +207,14 @@
         <div class="panel-head"><h2>Inter-Agency Jurisdiction Handoffs</h2><span class="ev-notice">cross-state routing queue (Item 4)</span><span id="handoff-count" class="pill info"></span></div>
         <div id="handoff-panel" class="muted">loading…</div>
       </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Money Trail — Terminal Cash-Out Graph <span class="ev-notice">(graph centrality + anomaly signal)</span></h2></div>
+        <div class="table-scroll"><table id="mule-graph-table" class="data-table">
+          <thead><tr><th>#</th><th>Account</th><th>Terminal Risk</th><th>In-Degree</th><th>Out-Degree</th><th>Inflow (INR)</th><th>Chain Depth</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div id="mule-graph-detail" class="muted"></div>
+      </section>
     </div>
   </main>
 
@@ -232,6 +240,6 @@
   <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn ghost small" aria-label="Dismiss">✕</button></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

@@ -433,6 +433,33 @@ def _scoped_complaint_stmt(user) -> None:
     return None  # BANK sees complaints only via linked-account evidence, not as a list
 
 
+def _scoped_account_stmt(user):
+    """Row-level scoping for accounts — enforced HERE, never in the frontend."""
+    if user.role == "I4C_ADMIN":
+        return None
+    if user.role == "BANK":
+        return models.Account.home_bank == user.scope
+    # Police roles see all accounts (investigation crosses bank boundaries)
+    return None
+
+
+def list_accounts(db: Session, user=None, limit: int = 5000) -> list[models.Account]:
+    """List accounts with RBAC scoping applied."""
+    stmt = select(models.Account)
+    if user is not None:
+        scope_filter = _scoped_account_stmt(user)
+        if scope_filter is not None:
+            stmt = stmt.where(scope_filter)
+    stmt = stmt.limit(limit)
+    return list(db.scalars(stmt).all())
+
+
+def accounts_in_user_scope(db: Session, user) -> set[str]:
+    """Return set of account_tokens visible to this user (for fast membership checks)."""
+    accounts = list_accounts(db, user=user, limit=10000)
+    return {a.account_token for a in accounts}
+
+
 def create_report(db: Session, report_id: str, report_type: str, title: str, payload: str, pdf_path: str, ledger_hash: str) -> models.Report:
     report = models.Report(report_id=report_id, report_type=report_type, title=title,
                            payload=payload, pdf_path=pdf_path, ledger_hash=ledger_hash,
