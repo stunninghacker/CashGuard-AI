@@ -3,6 +3,14 @@
 Audited 2026-08-27 against the running application (live probes where noted).
 Status per control: ✅ verified live · ⚠️ documented gap / demo-scope caveat.
 
+> **Re-verified live 2026-08-30 (Phase 16 re-test)** against the current build on 127.0.0.1:8000.
+> Confirmed: anonymous `/risk-scores` → 401; bad password → 401; `officer.district1` sees only
+> Northsagar (180 ATMs, `district=Northsagar`); `officer.statea` sees only State-A; `i4c.admin`
+> sees all 5 states (900 ATMs); WS `/ws/alerts` without token rejected; `bank.hdfc` denied
+> `POST /train` (403); `bank.hdfc` `/recovery/recommendations` is **bank-scoped** — a query-param
+> `bank_name` override for a different bank is ignored (`scope_bank = user.scope`, returns 0, not
+> another bank's rows), i.e. no BOLA via the param. RBAC row-level isolation holds on the current build.
+
 ## Authentication
 | Control | Status | Evidence |
 |---|---|---|
