@@ -78,23 +78,140 @@ function priorityBadge(h) {
 
 /* ------------------------------ map ------------------------------ */
 let map = null, atmLayer = null, complaintLayer = null;
+let tileMode = "loading";        // "online" | "offline" (canvas fallback)
+let tileProviderIdx = 0;
+let tileFailedCount = 0;
+let tileFailTimer = null;
+const TILE_PROVIDERS = [
+  { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: '&copy; OSM &copy; CARTO' },
+  { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: '&copy; OpenStreetMap' },
+];
+const MAP_TIMEOUT_MS = 9000; // if no tile ever loads in 9s, go offline canvas (silent fail safety)
+
+function leafletTileUrl() {
+  const p = TILE_PROVIDERS[tileProviderIdx % TILE_PROVIDERS.length];
+  tileProviderIdx++;
+  return p;
+}
+
+function enableOfflineMap() {
+  /* Guaranteed-offline fallback: replace the tile map with a self-drawn
+     canvas "district vector basemap" built from the ATMs' own lat/lon bounds,
+     so a heatmap ALWAYS renders even with internet fully disabled. */
+  if (tileMode === "offline") return;
+  tileMode = "offline";
+  clearTimeout(tileFailTimer);
+  const el = document.getElementById("map");
+  if (!el) return;
+  const hadNote = el._tileNotice;
+  el.innerHTML = `<canvas id="offline-map" class="offline-map"></canvas>
+    <div class="map-fallback" style="top:6px">Offline vector map — live offline heatmap from ATM coordinates.</div>`;
+  el._tileNotice = hadNote;
+  requestAnimationFrame(() => drawOfflineMap());
+}
+
+function drawOfflineMap() {
+  /* Canvas projection of the flagship heatmap when tiles are unreachable.
+     Draws a dark grid "district" basemap on the fictional-ATM bounds and
+     plots risk + complaint circles from the SAME lat/lon the Leaflet path uses. */
+  const canvas = document.getElementById("offline-map");
+  const rows = (state.risk || []).filter((r) =>
+    (state.cityFilter === "All" || r.city === state.cityFilter) &&
+    (state.bankFilter === "All" || r.bank_name === state.bankFilter)
+  ).filter((r) => typeof r.latitude === "number" && typeof r.longitude === "number");
+  const W = canvas.clientWidth || 800, H = canvas.clientHeight || 420;
+  canvas.width = W * (window.devicePixelRatio || 1);
+  canvas.height = H * (window.devicePixelRatio || 1);
+  if (canvas.getContext) canvas.getContext("2d").setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+
+  // --- basemap mesh (dark, frosted-grid) ---
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, "#0b1220");
+  grad.addColorStop(1, "#0a0f1c");
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = "rgba(56,130,246,0.12)"; ctx.lineWidth = 1;
+  const step = 46;
+  for (let x = step / 2; x < W; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = step / 2; y < H; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  const pts = rows.length ? rows : state.risk.filter((r) => typeof r.latitude === "number");
+  let minLat = 8, maxLat = 37, minLng = 68, maxLng = 97; // India-ish default
+  if (pts.length) {
+    minLat = Math.min(...pts.map((r) => r.latitude));
+    maxLat = Math.max(...pts.map((r) => r.latitude));
+    minLng = Math.min(...pts.map((r) => r.longitude));
+    maxLng = Math.max(...pts.map((r) => r.longitude));
+    const pad = 0.12 * Math.max(maxLat - minLat, maxLng - minLng, 1);
+    minLat -= pad; maxLat += pad; minLng -= pad; maxLng += pad;
+  }
+  const X = (lng) => ((lng - minLng) / (maxLng - minLng || 1)) * (W - 20) + 10;
+  const Y = (lat) => H - 10 - ((lat - minLat) / (maxLat - minLat || 1)) * (H - 20);
+
+  // complaint heat (soft pulses)
+  if (state.showHeat) {
+    const counts = aggregateComplaints();
+    for (const [city, coords] of Object.entries(state.cityCoords)) {
+      const n = counts[city] || 0; if (!n) continue;
+      const cx = X(coords[1]), cy = Y(coords[0]);
+      const r = 14 + Math.min(n, 40);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, "rgba(249,115,22,0.28)");
+      g.addColorStop(1, "rgba(249,115,22,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // risk heatmap (forecast)
+  if (state.showForecast) {
+    for (const r of pts) {
+      const cx = X(r.longitude), cy = Y(r.latitude);
+      const rad = 4 + r.risk_score * 16;
+      const col = riskColor(r.risk_score);
+      ctx.globalAlpha = 0.40 + r.risk_score * 0.45;
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.fillStyle = "rgba(148,163,184,0.55)";
+  ctx.font = "11px Inter, system-ui, sans-serif";
+  ctx.fillText(`${pts.length} ATM risk points rendered offline`, 14, 20);
+}
 
 function initMap() {
   if (map) return;
-  if (typeof L === "undefined") return;  // Leaflet failed to load — degrade gracefully
+  if (tileMode === "offline") { requestAnimationFrame(drawOfflineMap); return; }
+  if (typeof L === "undefined") { enableOfflineMap(); return; }  // Leaflet failed to load — go offline canvas
   map = L.map("map", { zoomControl: true }).setView([21.2, 78.5], 5);
-  const tiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; OSM &copy; CARTO', maxZoom: 18,
+  const startProvider = TILE_PROVIDERS[0];
+  const tiles = L.tileLayer(startProvider.url, {
+    attribution: startProvider.attribution, maxZoom: 18,
   });
+  let loadedAny = false;
+  tiles.on("tileload", () => { loadedAny = true; tileMode = "online"; clearTimeout(tileFailTimer); });
   tiles.on("tileerror", () => {
-    // tile imagery unreachable (offline) — map engine + risk markers still work
-    const mapEl = document.getElementById("map");
-    if (mapEl && !mapEl._tileNotice) {
-      mapEl._tileNotice = true;
-      mapEl.insertAdjacentHTML("beforeend",
-        `<div class="map-fallback" style="bottom:6px;top:auto">Tile imagery offline — risk markers remain live on the gray canvas.</div>`);
+    tileFailedCount++;
+    // Switch provider on repeated failures; after exhausting providers, go offline canvas.
+    if (tileMode !== "offline" && !loadedAny && tileProviderIdx < TILE_PROVIDERS.length && tileFailedCount >= 3) {
+      const mapEl = document.getElementById("map");
+      const note = mapEl && !mapEl._tileNotice
+        ? (mapEl._tileNotice = true, mapEl.insertAdjacentHTML("beforeend",
+            `<div class="map-fallback" style="bottom:6px;top:auto">Primary tile imagery unreachable — switching to fallback provider.</div>`))
+        : null;
+      map.removeLayer(tiles);
+      const next = TILE_PROVIDERS[tileProviderIdx % TILE_PROVIDERS.length]; tileProviderIdx++;
+      const t2 = L.tileLayer(next.url, { attribution: next.attribution, maxZoom: 18 });
+      t2.on("tileload", () => { loadedAny = true; tileMode = "online"; clearTimeout(tileFailTimer); });
+      t2.on("tileerror", () => { tileFailedCount++; if (!loadedAny && tileFailedCount >= 6) enableOfflineMap(); });
+      t2.addTo(map);
+    } else if (tileMode !== "offline" && !loadedAny && tileFailedCount >= 6) {
+      enableOfflineMap();
     }
   });
+  // Silent-fail safety: if nothing ever loads within the timeout, go offline canvas.
+  tileFailTimer = setTimeout(() => { if (!loadedAny && tileMode !== "offline") enableOfflineMap(); }, MAP_TIMEOUT_MS);
   tiles.addTo(map);
   atmLayer = L.layerGroup().addTo(map);
   complaintLayer = L.layerGroup().addTo(map);
@@ -102,15 +219,12 @@ function initMap() {
 
 function renderMap() {
   try {
+    if (!map) initMap();               // build the engine before using layers
+    if (tileMode === "offline") { drawOfflineMap(); return; }
     if (typeof L === "undefined" || !atmLayer) {
-      const mapEl = document.getElementById("map");
-      if (mapEl && !mapEl._notice) {
-        mapEl._notice = true;
-        mapEl.innerHTML = `<div class="map-fallback">Map tiles unavailable (offline?) — data tables below remain live.</div>`;
-      }
+      enableOfflineMap();
       return;
     }
-    initMap();
     atmLayer.clearLayers();
     complaintLayer.clearLayers();
     const rows = state.risk.filter((r) =>

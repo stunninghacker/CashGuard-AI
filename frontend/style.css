@@ -62,6 +62,7 @@ main.dash { padding: 20px 24px; max-width: 1600px; margin: 0 auto; display: flex
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .map-panel { padding-bottom: 10px; }
 #map { height: 520px; border-radius: 10px; border: 1px solid var(--border); z-index: 1; }
+.offline-map { width: 100%; height: 100%; display: block; border-radius: 10px; }
 
 .legend { display: flex; gap: 12px; font-size: 12px; margin-left: auto; }
 .lg.low { color: var(--green); } .lg.med { color: var(--yellow); }

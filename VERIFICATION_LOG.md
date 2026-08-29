@@ -149,3 +149,30 @@ epo.get_alert(..., user=user) on the alert/evidence/status/report routes. Retest
 | Report scoping | **PASS after fix** | district read of a situational report was 200 → fixed (`_report_in_scope`); retest: situational → 404, own-district hotspot → 200, foreign-bank → 404 |
 | Corrupt model file | **PASS (safe failure)** | clean EOFError on load, no silent wrong predictions; DEMO_MODE unaffected; restore → 200 |
 | Regression suite | **PASS** | `scripts/test_security_regression.py` — 14/14 (anon, JWT, expiry, forged role, WS, RBAC, IDOR + control, report scope, traversal, train role, demo auth) |
+
+# Live-demo hardening round (2026-08-29) — itemized fixes
+
+## A1 — Offline-resilient risk heatmap (map fallback) [FIXED + VERIFIED]
+
+**Root cause of the original "Map tiles unavailable (offline?)"** — `renderMap()`
+short-circuited on `!atmLayer` (null on first call) *before* ever calling
+`initMap()`, so the Leaflet map never initialized; on total tile failure it showed
+a bare error state in front of judges.
+
+**Fix (`frontend/app.js`):**
+- `renderMap()` now calls `initMap()` first (builds the engine + layers) before
+  using them, so the real Leaflet map initializes.
+- Multi-provider tile fallback: CARTO `dark_all` -> OSM standard, auto-switch on
+  repeated `tileerror`.
+- **Guaranteed-offline canvas fallback** (`enableOfflineMap()` + `drawOfflineMap()`):
+  when all tile providers fail (or after a 9s silent-fail timeout), the `#map`
+  is replaced by a self-drawn **canvas vector "district" basemap** built from the
+  ATMs' own lat/lon bounds, plotting the SAME risk + complaint heatmap circles —
+  so a heatmap ALWAYS renders, even with internet fully disabled. Never a bare
+  error state. CSS `.offline-map` added.
+
+**Verification (headless Chrome, puppeteer-core):**
+- **Online path:** CARTO tiles load - observed `200 https://a.basemaps.cartocdn.com/...png`; no offline canvas (`offlineCanvas:false`).
+- **Offline path:** all tile domains blocked via request interception -> tile requests aborted -> offline note shown + `#offline-map` canvas auto-engaged via the real timeout/tileerror path -> **pixel check: 800x420 canvas, 1396 colored heatmap pixels (`rendered:true`)**.
+- Screenshots: `a1-offline-auto.png`, `offline-map-forced.png` (temp evidence for this round).
+
