@@ -1,13 +1,13 @@
 {
   "label": "CONTROLLED SYNTHETIC EVALUATION",
-  "baseline_auc": 0.9274,
-  "label_permutation_auc": 0.4754,
+  "baseline_auc": 0.9259,
+  "label_permutation_auc": 0.4881,
   "identity_check": {
     "identity_columns_in_features": [],
-    "row_order_permutation_auc": 0.9265,
-    "base_auc": 0.9274
+    "row_order_permutation_auc": 0.926,
+    "base_auc": 0.9259
   },
-  "city_permutation_auc": 0.9265,
-  "day_of_week_permutation_auc": 0.9257,
-  "conclusion": "Label permutation collapses AUC to chance (0.475); features carry NO ATM/city/district identity columns (identity lives in meta only); row-order permutation leaves performance identical (0.9265 vs 0.9274, no order memorization); city-feature permutation is negligible (behavioural features carry the signal, consistent with the ablation); day-of-week permutation minor (0.9257)."
+  "city_permutation_auc": 0.925,
+  "day_of_week_permutation_auc": 0.9269,
+  "conclusion": "Label permutation collapses AUC to chance (the pipeline cannot memorize arbitrary labels); features carry NO ATM/city/district identity columns (identity lives in meta only), and row-order permutation leaves performance identical (no order memorization); city-feature permutation has a negligible effect (behavioural/mule features carry the signal, consistent with the ablation); day-of-week permutation has a minor effect."
 }

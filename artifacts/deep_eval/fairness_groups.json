@@ -2,136 +2,136 @@
   {
     "group": "all",
     "rows": 48600,
-    "positive_rate": 0.0618,
-    "alert_rate_0p7": 0.0102,
-    "false_positive_rate_0p7": 0.0038,
-    "precision_0p7": 0.6237,
-    "recall_0p7": 0.1032
+    "positive_rate": 0.0622,
+    "alert_rate_0p7": 0.0107,
+    "false_positive_rate_0p7": 0.0036,
+    "precision_0p7": 0.6583,
+    "recall_0p7": 0.1127
   },
   {
     "group": "jurisdiction:District-3",
     "rows": 9720,
-    "positive_rate": 0.0566,
-    "alert_rate_0p7": 0.0096,
-    "false_positive_rate_0p7": 0.0046,
-    "precision_0p7": 0.5161,
-    "recall_0p7": 0.0873
+    "positive_rate": 0.0621,
+    "alert_rate_0p7": 0.0088,
+    "false_positive_rate_0p7": 0.0042,
+    "precision_0p7": 0.5233,
+    "recall_0p7": 0.0745
   },
   {
     "group": "jurisdiction:Eastvale",
     "rows": 9720,
-    "positive_rate": 0.0567,
-    "alert_rate_0p7": 0.0078,
-    "false_positive_rate_0p7": 0.0029,
-    "precision_0p7": 0.6316,
-    "recall_0p7": 0.0871
+    "positive_rate": 0.0579,
+    "alert_rate_0p7": 0.0094,
+    "false_positive_rate_0p7": 0.0033,
+    "precision_0p7": 0.6484,
+    "recall_0p7": 0.1048
   },
   {
     "group": "jurisdiction:Greenfield District",
     "rows": 9720,
-    "positive_rate": 0.0566,
-    "alert_rate_0p7": 0.0087,
-    "false_positive_rate_0p7": 0.0032,
-    "precision_0p7": 0.6353,
-    "recall_0p7": 0.0982
+    "positive_rate": 0.052,
+    "alert_rate_0p7": 0.0095,
+    "false_positive_rate_0p7": 0.0035,
+    "precision_0p7": 0.6304,
+    "recall_0p7": 0.1149
   },
   {
     "group": "jurisdiction:Metro-West",
     "rows": 9720,
-    "positive_rate": 0.06,
-    "alert_rate_0p7": 0.009,
-    "false_positive_rate_0p7": 0.0036,
-    "precision_0p7": 0.5977,
-    "recall_0p7": 0.0892
+    "positive_rate": 0.0525,
+    "alert_rate_0p7": 0.0095,
+    "false_positive_rate_0p7": 0.0035,
+    "precision_0p7": 0.6304,
+    "recall_0p7": 0.1137
   },
   {
     "group": "jurisdiction:Northsagar",
     "rows": 9720,
-    "positive_rate": 0.0793,
-    "alert_rate_0p7": 0.016,
-    "false_positive_rate_0p7": 0.0049,
-    "precision_0p7": 0.6923,
-    "recall_0p7": 0.1401
+    "positive_rate": 0.0867,
+    "alert_rate_0p7": 0.0162,
+    "false_positive_rate_0p7": 0.0037,
+    "precision_0p7": 0.7707,
+    "recall_0p7": 0.1435
   },
   {
     "group": "complaint_area:low",
     "rows": 19440,
-    "positive_rate": 0.0583,
-    "alert_rate_0p7": 0.0084,
-    "false_positive_rate_0p7": 0.0032,
-    "precision_0p7": 0.6135,
-    "recall_0p7": 0.0882
+    "positive_rate": 0.0552,
+    "alert_rate_0p7": 0.0094,
+    "false_positive_rate_0p7": 0.0034,
+    "precision_0p7": 0.6393,
+    "recall_0p7": 0.109
   },
   {
     "group": "complaint_area:mid",
     "rows": 9720,
-    "positive_rate": 0.0566,
-    "alert_rate_0p7": 0.0096,
-    "false_positive_rate_0p7": 0.0046,
-    "precision_0p7": 0.5161,
-    "recall_0p7": 0.0873
+    "positive_rate": 0.0621,
+    "alert_rate_0p7": 0.0088,
+    "false_positive_rate_0p7": 0.0042,
+    "precision_0p7": 0.5233,
+    "recall_0p7": 0.0745
   },
   {
     "group": "complaint_area:high",
     "rows": 19440,
-    "positive_rate": 0.068,
-    "alert_rate_0p7": 0.0124,
-    "false_positive_rate_0p7": 0.0041,
-    "precision_0p7": 0.6722,
-    "recall_0p7": 0.1226
+    "positive_rate": 0.0693,
+    "alert_rate_0p7": 0.0128,
+    "false_positive_rate_0p7": 0.0036,
+    "precision_0p7": 0.7189,
+    "recall_0p7": 0.1328
   },
   {
     "group": "atm_volume:low",
-    "rows": 16200,
-    "positive_rate": 0.0564,
-    "alert_rate_0p7": 0.0053,
-    "false_positive_rate_0p7": 0.0015,
-    "precision_0p7": 0.7093,
-    "recall_0p7": 0.0668
+    "rows": 16308,
+    "positive_rate": 0.0586,
+    "alert_rate_0p7": 0.0057,
+    "false_positive_rate_0p7": 0.0017,
+    "precision_0p7": 0.7097,
+    "recall_0p7": 0.0691
   },
   {
     "group": "atm_volume:mid",
-    "rows": 16308,
-    "positive_rate": 0.0691,
-    "alert_rate_0p7": 0.0119,
-    "false_positive_rate_0p7": 0.0038,
-    "precision_0p7": 0.6804,
-    "recall_0p7": 0.1171
+    "rows": 16092,
+    "positive_rate": 0.0703,
+    "alert_rate_0p7": 0.0137,
+    "false_positive_rate_0p7": 0.004,
+    "precision_0p7": 0.7104,
+    "recall_0p7": 0.1387
   },
   {
     "group": "atm_volume:high",
-    "rows": 16092,
-    "positive_rate": 0.06,
-    "alert_rate_0p7": 0.0135,
-    "false_positive_rate_0p7": 0.0062,
-    "precision_0p7": 0.5392,
-    "recall_0p7": 0.1212
+    "rows": 16200,
+    "positive_rate": 0.0579,
+    "alert_rate_0p7": 0.0126,
+    "false_positive_rate_0p7": 0.0053,
+    "precision_0p7": 0.5784,
+    "recall_0p7": 0.1258
   },
   {
     "group": "atm_age:low",
     "rows": 16200,
-    "positive_rate": 0.0577,
-    "alert_rate_0p7": 0.0104,
-    "false_positive_rate_0p7": 0.0043,
-    "precision_0p7": 0.5858,
-    "recall_0p7": 0.106
+    "positive_rate": 0.0608,
+    "alert_rate_0p7": 0.0117,
+    "false_positive_rate_0p7": 0.0044,
+    "precision_0p7": 0.6263,
+    "recall_0p7": 0.1208
   },
   {
     "group": "atm_age:mid",
     "rows": 16200,
-    "positive_rate": 0.0622,
-    "alert_rate_0p7": 0.0104,
-    "false_positive_rate_0p7": 0.0043,
-    "precision_0p7": 0.5893,
-    "recall_0p7": 0.0982
+    "positive_rate": 0.0586,
+    "alert_rate_0p7": 0.0093,
+    "false_positive_rate_0p7": 0.0034,
+    "precision_0p7": 0.6333,
+    "recall_0p7": 0.1001
   },
   {
     "group": "atm_age:high",
     "rows": 16200,
-    "positive_rate": 0.0656,
-    "alert_rate_0p7": 0.0099,
-    "false_positive_rate_0p7": 0.003,
-    "precision_0p7": 0.7,
-    "recall_0p7": 0.1054
+    "positive_rate": 0.0673,
+    "alert_rate_0p7": 0.011,
+    "false_positive_rate_0p7": 0.0031,
+    "precision_0p7": 0.7135,
+    "recall_0p7": 0.1164
   }
 ]

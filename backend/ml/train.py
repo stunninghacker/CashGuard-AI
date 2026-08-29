@@ -258,8 +258,17 @@ def train(
 
     baseline_vol = {k: _baseline_precision_at_k(order_volume, yte, k) for k in (20, 50, 100)}
     baseline_prox = {k: _baseline_precision_at_k(order_proximity, yte, k) for k in (20, 50, 100)}
-    lift_vol = {k: round(active_block[f"precision_at_{k}"] / max(v, 1e-9), 3) for k, v in baseline_vol.items()}
-    lift_prox = {k: round(active_block[f"precision_at_{k}"] / max(v, 1e-9), 3) for k, v in baseline_prox.items()}
+
+    def _lift(active_prec: float, base_prec: float) -> float | None:
+        # A zero baseline captures NO fraud in top-K, so the lift ratio is
+        # mathematically undefined (not a valid 9e8). Report None honestly
+        # rather than emitting a fabricated huge number into metrics.json.
+        if base_prec <= 0.0:
+            return None
+        return round(active_prec / base_prec, 3)
+
+    lift_vol = {k: _lift(active_block[f"precision_at_{k}"], v) for k, v in baseline_vol.items()}
+    lift_prox = {k: _lift(active_block[f"precision_at_{k}"], v) for k, v in baseline_prox.items()}
 
     # ---- LEAD-TIME ----
     # For every test-period TRUE POSITIVE that was flagged (score >= 0.5):
