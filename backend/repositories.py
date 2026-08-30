@@ -142,7 +142,10 @@ def list_withdrawals(
     date_to: datetime | None = None,
     limit: int = 100,
     offset: int = 0,
+    user=None,  # RBAC (red-team finding 2): BANK may only see its OWN bank's ATM withdrawals
 ) -> list[models.Withdrawal]:
+    from . import models as _m
+
     stmt = select(models.Withdrawal).order_by(models.Withdrawal.timestamp.desc())
     if atm_id:
         stmt = stmt.where(models.Withdrawal.atm_id == atm_id)
@@ -154,6 +157,14 @@ def list_withdrawals(
         stmt = stmt.where(models.Withdrawal.timestamp >= date_from)
     if date_to:
         stmt = stmt.where(models.Withdrawal.timestamp <= date_to)
+    # Bank isolation: a BANK-scoped user must not see other banks' ATM transactions.
+    # Scope is enforced here (never in the frontend), by restricting to the ATMs the
+    # user's bank actually owns.
+    if user is not None and getattr(user, "role", None) == "BANK":
+        owned_atm_ids = db.scalars(
+            select(_m.ATM.atm_id).where(_m.ATM.bank_name == user.scope)
+        ).all()
+        stmt = stmt.where(models.Withdrawal.atm_id.in_(owned_atm_ids))
     stmt = stmt.limit(limit).offset(offset)
     return list(db.scalars(stmt).all())
 

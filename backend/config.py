@@ -87,6 +87,14 @@ JWT_SECRET: str = os.getenv("JWT_SECRET", AUTH_SECRET)
 JWT_ALGORITHM: str = "HS256"
 JWT_TTL_MINUTES: int = int(os.getenv("JWT_TTL_MINUTES", "30"))
 JWT_REFRESH_TTL_HOURS: int = int(os.getenv("JWT_REFRESH_TTL_HOURS", "24"))
+# SECURITY (red-team finding 1 / critical): the JWT secret defaults to a public,
+# well-known value. Anyone who knows this repo can forge an HS256 access token for
+# ANY user (e.g. u-i4c) and gain full I4C_ADMIN privileges with zero credentials.
+# Serving the API with the default secret is therefore refused UNLESS the operator
+# explicitly opts in for the hackathon demo via ALLOW_INSECURE_DEFAULT_JWT=1.
+# Production MUST export a strong random JWT_SECRET (>= 32 chars).
+ALLOW_INSECURE_DEFAULT_JWT: bool = os.getenv("ALLOW_INSECURE_DEFAULT_JWT", "").lower() in ("1", "true", "yes")
+DEFAULT_JWT_SECRET_MARKER: str = "dev-secret-change-in-production"
 
 # --------------------------------------------------------------------------
 # Outbound webhooks (Phase 5 — real path to a LOCAL mock inbox in the demo)

@@ -59,6 +59,15 @@ def create_alert(
     atm = repo.get_atm(db, payload.atm_id)
     if atm is None:
         raise HTTPException(status_code=404, detail=f"ATM {payload.atm_id} not found")
+    # Jurisdiction write-check (red-team finding 3 / medium): a POLICE_STATE user may
+    # only raise alerts for ATMs inside their own state. Previously any POLICE_STATE
+    # scope could fabricate an alert for an out-of-jurisdiction ATM (mass/injection).
+    if user.role == "POLICE_STATE" and (atm.state or "").lower() != (user.scope or "").lower():
+        raise HTTPException(
+            status_code=403,
+            detail=f"ATM {payload.atm_id} is in state '{atm.state}' which is outside "
+                   f"your jurisdiction '{user.scope}'",
+        )
     alert = repo.create_alert(
         db,
         alert_id=f"ALT-{atm.atm_id}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",

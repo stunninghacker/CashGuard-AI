@@ -33,4 +33,5 @@ def list_withdrawals(
         db,
         atm_id=atm_id, account_token=account_token, fraud_only=fraud_only,
         date_from=date_from, date_to=date_to, limit=limit, offset=offset,
+        user=user,  # RBAC bank-scoping (red-team finding 2)
     )

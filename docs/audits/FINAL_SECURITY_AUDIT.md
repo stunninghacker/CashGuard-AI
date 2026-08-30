@@ -9,7 +9,25 @@ Status per control: ✅ verified live · ⚠️ documented gap / demo-scope cave
 > sees all 5 states (900 ATMs); WS `/ws/alerts` without token rejected; `bank.hdfc` denied
 > `POST /train` (403); `bank.hdfc` `/recovery/recommendations` is **bank-scoped** — a query-param
 > `bank_name` override for a different bank is ignored (`scope_bank = user.scope`, returns 0, not
-> another bank's rows), i.e. no BOLA via the param. RBAC row-level isolation holds on the current build.
+> another bank's rows), i.e. no BOLA via the param.
+
+> **Phase 11/12 security red-team added 2026-08-30 — 3 findings discovered, root-caused and FIXED**
+> (full detail in `FINAL_SECURITY_RED_TEAM.md` + `RBAC_MATRIX.md`):
+> 1. **CRITICAL — default JWT secret → HS256 token forgery → full I4C admin.** The running app used the
+>    public default `dev-secret-change-in-production`. Forged `sub='u-i4c'` token got `200` on
+>    `/auth/me` and `POST /reports/situational` (admin action executed); control DISTRICT token got `403`
+>    (RBAC role logic intact, secret was the flaw). **FIX:** `_secure_boot_check()` in `backend/api/main.py`
+>    now REFUSES to serve unless `JWT_SECRET` is not the public default OR `ALLOW_INSECURE_DEFAULT_JWT=1`
+>    (demo). Verified: default secret → BLOCKED; strong secret / explicit opt-in → STARTED.
+> 2. **HIGH — `/withdrawals` had NO bank scoping (bank→bank IDOR).** `repo.list_withdrawals` never filtered
+>    by bank; `backend/api/routes/withdrawals.py:32` passed no `user`. Live: `bank.hdfc` read withdrawals
+>    from **543 non-HDFC ATMs** (636 distinct vs 127 HDFC-owned). **FIX:** `list_withdrawals(..., user=)` now
+>    joins to ATMs and restricts `BANK` scope to `ATM.bank_name == user.scope`. Verified across the full
+>    dataset: BANK-HDFC sees **exactly its 127 ATMs, 0 non-HDFC rows**; police/I4C still see all.
+> 3. **MEDIUM — `POST /alerts` allowed out-of-jurisdiction writes.** A `POLICE_STATE` user could create an
+>    alert for any ATM, including another state. **FIX:** `create_alert` returns `403` when the ATM's state
+>    is outside a `POLICE_STATE` caller's scope (`I4C_ADMIN` national stays open). Verified: out-of-state
+>    403, in-state OK, I4C OK.
 
 ## Authentication
 | Control | Status | Evidence |
@@ -23,7 +41,7 @@ Status per control: ✅ verified live · ⚠️ documented gap / demo-scope cave
 | Control | Status | Evidence |
 |---|---|---|
 | District officer sees only own district | ✅ | `/risk-scores` as `officer.district1` returns ONLY Northsagar rows (verified via API JSON, not UI) |
-| Bank sees only own bank | ✅ | `bank.hdfc` returns ONLY HDFC Bank rows (verified live) |
+| Bank sees only own bank (withdrawals) | ✅ **FIXED 2026-08-30** | `bank.hdfc` `/withdrawals` was UN-scoped (read 543 non-HDFC ATMs). Now `list_withdrawals(..., user=)` scopes to `ATM.bank_name == user.scope`; re-verified full dataset: 0 other-bank rows. `/atms`,`/risk-scores`,`/recovery` were already bank-scoped. |
 | State officer sees only own state | ✅ | `officer.statea` → State-A only (verified live) |
 | I4C national view | ✅ | `i4c.admin` → all 5 states |
 | Recovery/reports/evidence/training endpoints | ✅ | Role-gated (`BANK`/`I4C_ADMIN`/`POLICE_*`); `/train` is I4C_ADMIN-only |
@@ -64,4 +82,7 @@ Status per control: ✅ verified live · ⚠️ documented gap / demo-scope cave
 3. TLS termination is a deployment concern.
 4. OAuth2.0/OIDC + org SSO replaces the prototype token scheme (integration
    point marked in `backend/security.py`).
-5. Auth secret must be env-forced (dev default is flagged in code).
+5. ✅ **FIXED 2026-08-30** — Auth/JWT secret hardening: `_secure_boot_check()` refuses to serve
+   with the public default JWT secret unless explicitly opted in
+   (`ALLOW_INSECURE_DEFAULT_JWT=1`, demo only). A strong `JWT_SECRET` is now enforced for any
+   non-demo run.

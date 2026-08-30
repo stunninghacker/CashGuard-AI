@@ -41,8 +41,39 @@ from .routes import (
 )
 
 
+def _secure_boot_check() -> None:
+    """SECURITY (red-team finding 1 / CRITICAL): never serve with the well-known
+    default JWT secret. Anyone knowing this public value can forge an HS256 access
+    token for any user (e.g. u-i4c) and gain full I4C_ADMIN privileges with zero
+    credentials. Serving is refused unless the operator explicitly opts in for the
+    demo (ALLOW_INSECURE_DEFAULT_JWT=1) or sets a strong JWT_SECRET."""
+    from ..config import (
+        ALLOW_INSECURE_DEFAULT_JWT,
+        DEFAULT_JWT_SECRET_MARKER,
+        JWT_SECRET,
+    )
+
+    if JWT_SECRET != DEFAULT_JWT_SECRET_MARKER:
+        return  # operator supplied a real secret — fine
+    if ALLOW_INSECURE_DEFAULT_JWT:
+        import logging as _logging
+
+        _logging.getLogger("cashguard.bootstrap").warning(
+            "Serving with the INSECURE default JWT secret (demo opt-in). "
+            "NOT acceptable for any non-demo deployment. Set JWT_SECRET >= 32 chars."
+        )
+        return
+    raise RuntimeError(
+        "Refusing to start: JWT_SECRET is the public default (used by a known red-team "
+        "finding: HS256 token forgery => full I4C privilege escalation). Set a strong "
+        "JWT_SECRET in the environment or explicitly set ALLOW_INSECURE_DEFAULT_JWT=1 "
+        "for the hackathon demo only."
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _secure_boot_check()
     init_db()
     db = SessionLocal()
     try:
