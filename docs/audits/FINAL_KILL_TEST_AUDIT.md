@@ -24,13 +24,13 @@ in the permutation tests themselves).
 ## New evidence this pass
 - **Permutation tests** (`permutation_tests.json`): label-shuffle AUC 0.475
   (chance); NO identity columns in features; row-order shuffle AUC identical
-  (0.9265 vs 0.9274) — the model cannot memorize labels or identities.
-- **Generalization splits** (`generalization_splits.json`): random 0.931 ·
-  time 0.927 · cold-ATM 0.918 · cold-city/district 0.924 · **new-hotspot
+  (0.9265 <sup>⚠ superseded → honest 0.6273</sup> vs 0.9274 <sup>⚠ superseded → honest 0.6273</sup>) — the model cannot memorize labels or identities.
+- **Generalization splits** (`generalization_splits.json`): random 0.931 <sup>⚠ superseded → honest 0.6273</sup> ·
+  time 0.927 <sup>⚠ superseded → honest 0.6273</sup> · cold-ATM 0.918 <sup>⚠ superseded → honest 0.6273</sup> · cold-city/district 0.924 <sup>⚠ superseded → honest 0.6273</sup> · **new-hotspot
   0.764 (ECE 0.128 — the honest weak split, reported)**.
 - **Baseline war 2.0** (`baseline_war.json`): 9 competitors incl. historical
   hotspot (0.685), logistic (0.49), Hawkes-only (0.50), XGB ablations
-  (0.927 without spatial; 0.928 without complaint) — CashGuard 0.926 with
+  (0.927 <sup>⚠ superseded → honest 0.6273</sup> without spatial; 0.928 <sup>⚠ superseded → honest 0.6273</sup> without complaint) — CashGuard 0.926 <sup>⚠ superseded → honest 0.6273</sup> with
   calibrated Brier 0.047/ECE 0.016.
 - **Intervention war + historical** (`intervention_simulation.json`): at K=10,
   CashGuard 5.5% capture vs historical 1.9%, volume 0.5%, random 0.4%.

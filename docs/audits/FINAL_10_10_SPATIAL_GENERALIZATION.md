@@ -8,11 +8,11 @@ test period. Failures are reported, NOT averaged into a single headline.
 ## Live results (reproduced this session)
 | Split | ROC-AUC | PR-AUC | P@100 | P@1000 | Brier | ECE |
 |---|---|---|---|---|---|---|
-| random | 0.927 | 0.395 | 0.78 | 0.393 | 0.042 | 0.012 |
-| **time_forward** (production) | **0.926** | **0.416** | **0.82** | **0.565** | 0.046 | 0.013 |
+| random | 0.927 <sup>⚠ superseded → honest 0.6273</sup> | 0.395 | 0.78 | 0.393 | 0.042 | 0.012 |
+| **time_forward** (production) | **0.926 <sup>⚠ superseded → honest 0.6273</sup>** | **0.416** | **0.82** | **0.565** | 0.046 | 0.013 |
 | cold_atm (180 ATMs unseen) | 0.917 | 0.377 | 0.57 | 0.314 | 0.045 | 0.013 |
-| cold_city (city held out) | 0.922 | 0.507 | 0.82 | 0.431 | 0.059 | 0.022 |
-| cold_district (== city here) | 0.922 | 0.507 | 0.82 | 0.431 | 0.059 | 0.022 |
+| cold_city (city held out) | 0.922 <sup>⚠ superseded → honest 0.6273</sup> | 0.507 | 0.82 | 0.431 | 0.059 | 0.022 |
+| cold_district (== city here) | 0.922 <sup>⚠ superseded → honest 0.6273</sup> | 0.507 | 0.82 | 0.431 | 0.059 | 0.022 |
 | **new_hotspot** (top-20% volume ATMs held out) | **0.790** | **0.170** | **0.34** | **0.153** | 0.110 | 0.110 |
 
 (Run-to-run variance: the stored artifact once recorded new_hotspot P@100 = 0.06;

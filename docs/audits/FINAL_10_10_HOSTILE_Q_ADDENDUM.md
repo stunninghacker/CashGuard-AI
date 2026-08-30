@@ -46,7 +46,7 @@ fresh-verified in the 2026-08-29 kill-test session.
 
 ## 82. **What is your generator-seed variance?** (✔)
    Model seeds (same data): AUC stable to 0.0006 spread, P@100 0.84–0.86.
-   Generator seeds (fresh draws): AUC 0.918–0.927 (stable), but **top-100
+   Generator seeds (fresh draws): AUC 0.918 <sup>⚠ superseded → honest 0.6273</sup>–0.927 <sup>⚠ superseded → honest 0.6273</sup> (stable), but **top-100
    precision 0.50–0.67** — draw-sensitive. We quote ranges, never the fixed-seed
    peak.
 
@@ -77,7 +77,7 @@ fresh-verified in the 2026-08-29 kill-test session.
    not auto-retrained on its own actions. Concentration + repeat-targeting
    monitors and randomized review exist. ✔ (architecture verified)
 
-## 88. **Your adversarial AUC in 'normal' world is 0.85, lower than your main 0.93. Why?**
+## 88. **Your adversarial AUC in 'normal' world is 0.85, lower than your main 0.93 <sup>⚠ superseded → honest 0.6273</sup>. Why?**
    Different split/seed regime between the two evaluation harnesses (main is a
    dedicated chronological 70/30; adversarial_worlds uses its own world splits).
    Both are honest, internally consistent evaluations, not contradictory — the
@@ -124,7 +124,7 @@ fresh-verified in the 2026-08-29 kill-test session.
    We report per-split, never a single good number.
 
 ## 97. **How much of your advantage is the Platt calibration vs the model?**
-   XGBoost-only and ensemble differ: XGB AUC 0.927 vs ensemble AUC 0.80; active
+   XGBoost-only and ensemble differ: XGB AUC 0.927 <sup>⚠ superseded → honest 0.6273</sup> vs ensemble AUC 0.80; active
    model selection picks XGB. Calibration adds reliable probabilities and the
    threshold/HOLD policy; it does not inflate ranking.
 

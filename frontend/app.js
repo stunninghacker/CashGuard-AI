@@ -337,6 +337,18 @@ async function loadCityCoords() {
     const banks = [...new Set(atms.map((a) => a.bank_name))].sort();
     const fill = (id, opts) => { const el = document.getElementById(id); el.innerHTML = opts.map((o) => `<option>${esc(o)}</option>`).join(""); el.insertAdjacentHTML("afterbegin", `<option>All</option>`); };
     fill("dd-state", states); fill("dd-city", cities); fill("dd-bank", banks);
+
+    // Data-driven jurisdiction disclosure (State Police view): lists the districts
+    // actually populated under this state, so identical District-Police data is
+    // legibly explained rather than read as "jurisdiction scoping does nothing".
+    const scopeNote = document.getElementById("state-scope-note");
+    if (scopeNote && (state.user?.role === "POLICE_STATE")) {
+      const scopeName = state.user.scope || "State";
+      const dists = [...new Set(atms.map((a) => a.district).filter(Boolean))].sort();
+      scopeNote.textContent = dists.length === 0
+        ? `${scopeName} · no district data currently loaded`
+        : `${scopeName} · ${dists.length} active district${dists.length > 1 ? "s" : ""} (${dists.join(", ")}) — District Police views show the same ATMs within this scope`;
+    }
   } catch { /* non-fatal */ }
 }
 
@@ -401,10 +413,13 @@ async function loadAll() {
       return;
     }
     const q = state.asOf ? `&as_of=${encodeURIComponent(state.asOf)}` : "";
+    const statsP = state.user.role === "BANK"
+      ? Promise.resolve(null)                                  // BANK never renders state.stats; don't hit the police-only endpoint
+      : api("/stats/summary").catch(() => null);               // role-scoped; non-fatal
     const [risk, alerts, stats] = await Promise.all([
       api(`/risk-scores${q}`),
       api("/alerts?limit=200"),
-      api("/stats/summary").catch(() => null),   // role-scoped; non-fatal (BANK)
+      statsP,
     ]);
     if (stale()) return;                        // a newer load superseded us — discard, don't clobber
     state.risk = risk; state.alerts = alerts; state.stats = stats;

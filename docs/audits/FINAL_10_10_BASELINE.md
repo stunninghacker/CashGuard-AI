@@ -18,7 +18,7 @@ Trained 2026-08-29, split_day 2026-07-07, active model = XGBoost.
 
 | Metric | Value | Notes |
 |---|---|---|
-| ROC-AUC | **0.9272** | time-forward split |
+| ROC-AUC | **0.9272 <sup>⚠ superseded → honest 0.6273</sup>** | time-forward split |
 | Precision@20 | 0.90 | |
 | Precision@50 | 0.80 | |
 | Precision@100 | 0.84 | |
@@ -30,10 +30,10 @@ Trained 2026-08-29, split_day 2026-07-07, active model = XGBoost.
 ## 3. Reproducibility (re-run in this session)
 | Check | Script | Result |
 |---|---|---|
-| Model-seed stability | `seed_stability.py` | AUC 0.9258–0.9264; P@100 0.84–0.86 (stable) |
-| Generator-seed stability | `seed_stability.py` | AUC 0.9178–0.9266; **P@100 0.50–0.67** (draw-sensitive) |
+| Model-seed stability | `seed_stability.py` | AUC 0.9258 <sup>⚠ superseded → honest 0.6273</sup>–0.9264 <sup>⚠ superseded → honest 0.6273</sup>; P@100 0.84–0.86 (stable) |
+| Generator-seed stability | `seed_stability.py` | AUC 0.9178–0.9266 <sup>⚠ superseded → honest 0.6273</sup>; **P@100 0.50–0.67** (draw-sensitive) |
 | Leakage permutation | `permutation_tests.py` | label-shuffle AUC 0.488; no identity columns; city-perm ≈ 0 |
-| Spatial generalisation | `generalization_splits.py` | random 0.927 · t-forward 0.926 · cold-ATM 0.917 · cold-city 0.922 · **new-hotspot 0.790** |
+| Spatial generalisation | `generalization_splits.py` | random 0.927 <sup>⚠ superseded → honest 0.6273</sup> · t-forward 0.926 <sup>⚠ superseded → honest 0.6273</sup> · cold-ATM 0.917 · cold-city 0.922 <sup>⚠ superseded → honest 0.6273</sup> · **new-hotspot 0.790** |
 | Fairness | `fairness_audit.py` | FPR 0.0017–0.0053 across 15 groups |
 | Security regression | `test_security_regression.py` | 12/12 PASS |
 | Jurisdiction routing | `test_jurisdiction_routing.py` | 4/4 PASS |
@@ -59,11 +59,11 @@ captured zero positives at K=20, `0.0 / 1e-9 = 9e8`. Fixed to return `null`
 ## 6. Honest limitations (must be stated to a judge; NOT fixed away)
 1. **Signal lives on the withdrawal side, not the complaint side.**
    `counterparty_count_24h` single-feature AUC 0.83; every complaint/spatial
-   feature ≤ 0.55. Ablation: complaints-only 0.50 → financial 0.93. The
+   feature ≤ 0.55. Ablation: complaints-only 0.50 → financial 0.93 <sup>⚠ superseded → honest 0.6273</sup>. The
    SIH problem is complaint-driven prediction; our model is behaviour-driven,
    reactive-ish at short horizons. Documented, not hidden.
 2. **New-hotspot generalisation is the weak split** (P@100 0.34 vs 0.81
-   time-forward; ROC 0.79 vs 0.93). Cannot reliably flag genuinely novel
+   time-forward; ROC 0.79 vs 0.93 <sup>⚠ superseded → honest 0.6273</sup>). Cannot reliably flag genuinely novel
    hotspot emergence — the hardest, most important case.
 3. **Sub-daily horizons are HOLD**: 2h/6h/12h PR-AUC 0.04–0.16 →
    "INSUFFICIENT CONFIDENCE". Only the 24h horizon is operationally usable.

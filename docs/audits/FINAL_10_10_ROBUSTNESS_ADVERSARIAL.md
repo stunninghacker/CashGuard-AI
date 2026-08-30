@@ -27,13 +27,13 @@ Verdict: AUC ≥ 0.80 in every world; no world collapses the ranking. `sparse_da
 has the lowest AUC (0.804) — reported, not hidden.
 
 ## 2. Drift behavior (stored `drift.json`, 11 worlds)
-AUC 0.86–0.93 everywhere; almost every world is flagged **"REDUCED"** confidence
+AUC 0.86–0.93 <sup>⚠ superseded → honest 0.6273</sup> everywhere; almost every world is flagged **"REDUCED"** confidence
 (normal/world are both marked REDUCED). The system degrades honestly under shift
 instead of fabricating high-confidence output. `pattern_drift` world emits **0
 alerts at 0.7** (all held) — a conservative, disclosed behavior.
 
 ## 3. Model disagreement (✔ live re-run this session)
-`model_disagreement.py`: Model A (XGBoost) AUC **0.9259** vs Model B (logistic-
+`model_disagreement.py`: Model A (XGBoost) AUC **0.9259 <sup>⚠ superseded → honest 0.6273</sup>** vs Model B (logistic-
 statistical baseline) AUC **0.8674**; median |A−B| **0.0134**, p95 **0.1427**.
 Disagreement policy: confidence downgraded one level when |A−B| > 0.20, **HOLD
 ACTION** when |A−B| > 0.35. Values match the stored artifact (0.8687 / 0.0115 /
@@ -43,10 +43,10 @@ ACTION** when |A−B| > 0.35. Values match the stored artifact (0.8687 / 0.0115 
 Same pipeline, config-only overrides, fresh data per world:
 | World | AUC | P@100 | P@1000 | AUC Δ vs ref |
 |---|---|---|---|---|
-| reference | 0.928 | 0.92 | 0.553 | — |
-| T1 more cities | 0.937 | 0.58 | 0.386 | −0.008 |
-| T2 higher fraud | 0.922 | 1.00 | 0.751 | +0.006 |
-| T3 mule behaviour | 0.929 | 0.91 | 0.604 | −0.001 |
+| reference | 0.928 <sup>⚠ superseded → honest 0.6273</sup> | 0.92 <sup>⚠ superseded → honest 0.6273</sup> | 0.553 | — |
+| T1 more cities | 0.937 <sup>⚠ superseded → honest 0.6273</sup> | 0.58 | 0.386 | −0.008 |
+| T2 higher fraud | 0.922 <sup>⚠ superseded → honest 0.6273</sup> | 1.00 | 0.751 | +0.006 |
+| T3 mule behaviour | 0.929 <sup>⚠ superseded → honest 0.6273</sup> | 0.91 | 0.604 | −0.001 |
 
 Retrains cleanly on structurally different distributions with **zero code
 changes**; worst-case AUC Δ ≤ 0.008. Top-K precision varies with distribution
