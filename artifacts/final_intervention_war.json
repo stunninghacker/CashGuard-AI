@@ -1,6 +1,7 @@
 {
   "label": "CONTROLLED SYNTHETIC SIMULATION \u2014 not a real-world loss claim",
-  "method": "test-period forecast days; top-K per day per strategy; jittered across 10 seeds; 24h capture window; identical split for all strategies",
+  "method": "test-period forecast days; top-K per day per strategy; jittered across 10 seeds; 24h capture window; identical split for all strategies; complaint_proximity = # complaints within 2.0 km in prior 24h",
+  "r_km": 2.0,
   "baseline": {
     "interventions": 0,
     "loss_prevented_pct": 0.0,
@@ -20,9 +21,13 @@
         0.102,
         0.283
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        3049.08,
+        1696.587,
+        4623.419
+      ],
       "false_interventions_mean": 252.6,
       "missed_events_mean": 10693.1,
-      "efficiency_inr_per_intervention_mean": 3049.08,
       "time_to_intervention_median_h": 18.1
     },
     {
@@ -38,9 +43,13 @@
         0.292,
         0.649
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        3380.048,
+        2388.137,
+        5323.528
+      ],
       "false_interventions_mean": 505.6,
       "missed_events_mean": 10672.7,
-      "efficiency_inr_per_intervention_mean": 3380.05,
       "time_to_intervention_median_h": 17.9
     },
     {
@@ -56,9 +65,13 @@
         0.585,
         0.944
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        3043.877,
+        2391.167,
+        3857.48
+      ],
       "false_interventions_mean": 1014.8,
       "missed_events_mean": 10635.5,
-      "efficiency_inr_per_intervention_mean": 3043.88,
       "time_to_intervention_median_h": 18.6
     },
     {
@@ -74,9 +87,13 @@
         1.558,
         2.443
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        3198.339,
+        2542.406,
+        3992.668
+      ],
       "false_interventions_mean": 2535.2,
       "missed_events_mean": 10513.2,
-      "efficiency_inr_per_intervention_mean": 3198.34,
       "time_to_intervention_median_h": 18.4
     },
     {
@@ -92,9 +109,13 @@
         3.453,
         4.374
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        3219.206,
+        2823.163,
+        3572.091
+      ],
       "false_interventions_mean": 5071.4,
       "missed_events_mean": 10309.6,
-      "efficiency_inr_per_intervention_mean": 3219.21,
       "time_to_intervention_median_h": 18.3
     },
     {
@@ -110,9 +131,13 @@
         0.46,
         0.5
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        7818.09,
+        7492.38,
+        8142.874
+      ],
       "false_interventions_mean": 263.8,
       "missed_events_mean": 10656.8,
-      "efficiency_inr_per_intervention_mean": 7818.09,
       "time_to_intervention_median_h": 8.6
     },
     {
@@ -128,9 +153,13 @@
         0.82,
         0.91
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        7223.332,
+        6720.614,
+        7449.154
+      ],
       "false_interventions_mean": 523.0,
       "missed_events_mean": 10625.2,
-      "efficiency_inr_per_intervention_mean": 7223.33,
       "time_to_intervention_median_h": 14.6
     },
     {
@@ -146,9 +175,13 @@
         1.434,
         1.556
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        6099.467,
+        5861.866,
+        6356.614
+      ],
       "false_interventions_mean": 1029.8,
       "missed_events_mean": 10562.5,
-      "efficiency_inr_per_intervention_mean": 6099.47,
       "time_to_intervention_median_h": 15.1
     },
     {
@@ -164,9 +197,13 @@
         3.177,
         3.419
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        5403.74,
+        5189.767,
+        5586.102
+      ],
       "false_interventions_mean": 2517.0,
       "missed_events_mean": 10365.9,
-      "efficiency_inr_per_intervention_mean": 5403.74,
       "time_to_intervention_median_h": 15.8
     },
     {
@@ -182,9 +219,13 @@
         5.792,
         6.21
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        4878.002,
+        4733.883,
+        5074.9
+      ],
       "false_interventions_mean": 5021.5,
       "missed_events_mean": 10100.6,
-      "efficiency_inr_per_intervention_mean": 4878.0,
       "time_to_intervention_median_h": 16.9
     },
     {
@@ -200,9 +241,13 @@
         1.4,
         1.4
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        22893.5,
+        22893.5,
+        22893.5
+      ],
       "false_interventions_mean": 216.0,
       "missed_events_mean": 10580.0,
-      "efficiency_inr_per_intervention_mean": 22893.5,
       "time_to_intervention_median_h": 16.1
     },
     {
@@ -218,9 +263,13 @@
         2.33,
         2.33
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        19055.82,
+        19055.82,
+        19055.82
+      ],
       "false_interventions_mean": 434.0,
       "missed_events_mean": 10500.0,
-      "efficiency_inr_per_intervention_mean": 19055.82,
       "time_to_intervention_median_h": 16.8
     },
     {
@@ -236,9 +285,13 @@
         3.49,
         3.49
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        14254.72,
+        14254.72,
+        14254.72
+      ],
       "false_interventions_mean": 883.0,
       "missed_events_mean": 10382.0,
-      "efficiency_inr_per_intervention_mean": 14254.72,
       "time_to_intervention_median_h": 16.6
     },
     {
@@ -254,9 +307,13 @@
         7.723,
         7.9
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        12806.659,
+        12619.217,
+        12910.907
+      ],
       "false_interventions_mean": 2206.3,
       "missed_events_mean": 9920.0,
-      "efficiency_inr_per_intervention_mean": 12806.66,
       "time_to_intervention_median_h": 15.8
     },
     {
@@ -272,10 +329,124 @@
         12.32,
         12.413
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        10098.228,
+        10068.195,
+        10139.635
+      ],
       "false_interventions_mean": 4527.5,
       "missed_events_mean": 9414.9,
-      "efficiency_inr_per_intervention_mean": 10098.23,
       "time_to_intervention_median_h": 16.8
+    },
+    {
+      "strategy": "complaint_proximity",
+      "k": 5,
+      "capture_rate_mean_ci95": [
+        0.004,
+        0.004,
+        0.004
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        0.384,
+        0.34,
+        0.438
+      ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        6280.023,
+        5515.944,
+        7105.294
+      ],
+      "false_interventions_mean": 249.2,
+      "missed_events_mean": 10673.4,
+      "time_to_intervention_median_h": 12.7
+    },
+    {
+      "strategy": "complaint_proximity",
+      "k": 10,
+      "capture_rate_mean_ci95": [
+        0.006,
+        0.006,
+        0.006
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        0.599,
+        0.542,
+        0.638
+      ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        4890.111,
+        4414.173,
+        5222.295
+      ],
+      "false_interventions_mean": 498.6,
+      "missed_events_mean": 10650.6,
+      "time_to_intervention_median_h": 14.9
+    },
+    {
+      "strategy": "complaint_proximity",
+      "k": 20,
+      "capture_rate_mean_ci95": [
+        0.011,
+        0.011,
+        0.012
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        1.205,
+        1.115,
+        1.288
+      ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        4914.558,
+        4544.848,
+        5257.165
+      ],
+      "false_interventions_mean": 1005.4,
+      "missed_events_mean": 10593.3,
+      "time_to_intervention_median_h": 17.4
+    },
+    {
+      "strategy": "complaint_proximity",
+      "k": 50,
+      "capture_rate_mean_ci95": [
+        0.023,
+        0.022,
+        0.025
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        2.57,
+        2.364,
+        2.797
+      ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        4198.165,
+        3857.673,
+        4570.824
+      ],
+      "false_interventions_mean": 2525.3,
+      "missed_events_mean": 10463.1,
+      "time_to_intervention_median_h": 18.2
+    },
+    {
+      "strategy": "complaint_proximity",
+      "k": 100,
+      "capture_rate_mean_ci95": [
+        0.042,
+        0.041,
+        0.043
+      ],
+      "loss_prevented_pct_mean_ci95": [
+        4.515,
+        4.312,
+        4.679
+      ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        3688.357,
+        3526.288,
+        3820.11
+      ],
+      "false_interventions_mean": 5070.2,
+      "missed_events_mean": 10263.3,
+      "time_to_intervention_median_h": 18.4
     },
     {
       "strategy": "cashguard",
@@ -290,9 +461,13 @@
         2.348,
         2.486
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        39888.26,
+        38347.813,
+        40676.256
+      ],
       "false_interventions_mean": 146.4,
       "missed_events_mean": 10458.7,
-      "efficiency_inr_per_intervention_mean": 39888.26,
       "time_to_intervention_median_h": 14.2
     },
     {
@@ -308,9 +483,13 @@
         3.207,
         3.477
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        27139.372,
+        26168.554,
+        28433.911
+      ],
       "false_interventions_mean": 373.9,
       "missed_events_mean": 10363.5,
-      "efficiency_inr_per_intervention_mean": 27139.37,
       "time_to_intervention_median_h": 14.0
     },
     {
@@ -326,9 +505,13 @@
         4.147,
         4.48
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        17589.406,
+        16941.746,
+        18299.288
+      ],
       "false_interventions_mean": 855.3,
       "missed_events_mean": 10268.4,
-      "efficiency_inr_per_intervention_mean": 17589.41,
       "time_to_intervention_median_h": 14.8
     },
     {
@@ -344,9 +527,13 @@
         5.562,
         6.342
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        9635.042,
+        9086.41,
+        10360.444
+      ],
       "false_interventions_mean": 2348.4,
       "missed_events_mean": 10104.6,
-      "efficiency_inr_per_intervention_mean": 9635.04,
       "time_to_intervention_median_h": 15.8
     },
     {
@@ -362,9 +549,13 @@
         7.573,
         8.572
       ],
+      "efficiency_inr_per_intervention_mean_ci95": [
+        6612.198,
+        6186.974,
+        7002.612
+      ],
       "false_interventions_mean": 4860.1,
       "missed_events_mean": 9874.7,
-      "efficiency_inr_per_intervention_mean": 6612.2,
       "time_to_intervention_median_h": 16.9
     }
   ],
@@ -372,9 +563,35 @@
     "cashguard_capture": 0.033,
     "volume_capture": 0.008,
     "random_capture": 0.004,
+    "historical_capture": 0.02,
+    "complaint_proximity_capture": 0.006,
     "cashguard_vs_volume": 4.12,
     "cashguard_vs_random": 8.25,
-    "cashguard_vs_historical": 1.65
+    "cashguard_vs_historical": 1.65,
+    "cashguard_vs_complaint_proximity": 5.5
   },
-  "conclusion": "At every intervention budget, forecast-driven (CashGuard) intervention captures more fraud events and exposure per intervention than volume-, historical-, or random-based targeting; efficiency declines with K for all strategies. Real-world validation requires the pilot."
+  "efficiency_inr_per_intervention_at_k10": {
+    "cashguard": 27139.372,
+    "volume": 7223.332,
+    "random": 3380.048,
+    "historical": 19055.82,
+    "complaint_proximity": 4890.111
+  },
+  "cashguard_loss_prevented_pct_at_k": {
+    "5": 2.44,
+    "10": 3.323,
+    "20": 4.306,
+    "50": 5.897,
+    "100": 8.092
+  },
+  "current_metrics_pointer": "artifacts/current_metrics.json + CURRENT_METRICS.md",
+  "limitations": [
+    "Synthetic labels only; NEVER a real-world loss/ROI claim (REAL_DATA_GAP.md).",
+    "Totals are illustrative synthetic INR amounts; no real per-ATM loss benchmark exists.",
+    "Single-state/single-district demo world; proximity R tuned ad hoc (2.0 km) and may not transfer.",
+    "Operational value is concentration of finite reviewer attention (top-30-60 ATM-days at 67-75% precision), not national recall.",
+    "10-seed 95% CI reported, not hidden."
+  ],
+  "conclusion": "At every intervention budget, forecast-driven (CashGuard) captures more fraud events and exposure per intervention than random, volume, historical, AND complaint-proximity targeting. The complaint-proximity baseline beats random/volume (it uses real spatial signal) but still underperforms the model, demonstrating the model adds value beyond naive proximity dispatch.",
+  "runtime_sec": 595.3
 }

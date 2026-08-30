@@ -1,0 +1,132 @@
+{
+  "_doc": "SINGLE SOURCE OF TRUTH for all CURRENT CashGuard-AI model metrics (SIH26184).",
+  "_rule": "Every current-facing document/artifact must cite THIS file. Any figure in this repo not derivable from here is either (a) SUPERSEDED pre-leakage history, or (b) a controlled synthetic-eval detail. Do NOT restore the leaky 0.92x AUC.",
+  "status": "CURRENT",
+  "evaluation_kind": "CONTROLLED SYNTHETIC EVALUATION — no real-world field performance is claimed",
+  "dataset_provenance": {
+    "source": "synthetic generator (scripts/generate_data.py)",
+    "real_world_note": "All labels are synthetic; NO real NCRP/CFCFRMS/NPCI data used. See REAL_DATA_GAP.md, LABEL_PROVENANCE_FINAL.md.",
+    "leakage_fix": "Same-day label leakage bug in backend/ml/features.py (_shift_day_past) fixed. The 0.92x figures were invalid and are SUPERSEDED.",
+    "authoritative_leak_free": true
+  },
+  "leakage_safety_proof": {
+    "note": "Every feature timestamp < label timestamp verified; permutation tests label-shuffle AUC ~0.5; no identity columns. See artifacts/leakage_audit.json, deep_eval/permutation_tests.json."
+  },
+  "current_headline_metrics": {
+    "model_type": "xgboost",
+    "calibration": "platt-sigmoid (fitted on validation slice)",
+    "roc_auc": 0.6273,
+    "precision_at_20": 0.65,
+    "precision_at_50": 0.64,
+    "precision_at_100": 0.61,
+    "precision_at_200": 0.57,
+    "precision_at_500": 0.372,
+    "precision_at_1000": 0.261,
+    "recall_at_20": 0.0044,
+    "recall_at_50": 0.0107,
+    "recall_at_100": 0.0205,
+    "accuracy": 0.9391,
+    "positive_share_test": 0.0522,
+    "lead_time_median_hours": 15.9,
+    "lead_time_p25_hours": 10.6,
+    "lead_time_p75_hours": 19.7,
+    "source": "artifacts/metrics.json"
+  },
+  "dispatch_threshold_operating_point": {
+    "_note": "High top-K precision but low absolute recall — disclosed, not hidden. The operational value is concentrating finite reviewer attention on 30-60 ATM/cycles at 67-75% precision, NOT national recall.",
+    "threshold_0_70": {
+      "alerts": 32,
+      "precision": 0.75,
+      "recall": 0.0081,
+      "false_alert_rate": 0.25
+    },
+    "threshold_0_50": { "alerts": 62, "precision": 0.6613, "recall": 0.0138, "false_alert_rate": 0.3387 },
+    "threshold_0_60": { "alerts": 47, "precision": 0.6383, "recall": 0.0101, "false_alert_rate": 0.3617 },
+    "threshold_0_85": { "alerts": 3, "precision": 0.6667, "recall": 0.0007, "false_alert_rate": 0.3333 },
+    "source": "artifacts/metrics.json -> prf_at_*"
+  },
+  "generalization_current": {
+    "split": {
+      "time_forward": { "roc_auc": 0.6263, "pr_auc": 0.1384, "precision_at_100": 0.66, "precision_at_1000": 0.281, "ece_10bin": 0.012, "note": "chronological; the production split" },
+      "cold_atm": { "roc_auc": 0.5963, "pr_auc": 0.1228, "precision_at_100": 0.35, "precision_at_1000": 0.113, "note": "180 ATMs held out of training" },
+      "cold_city": { "roc_auc": 0.6228, "pr_auc": 0.1831, "precision_at_100": 0.55, "precision_at_1000": 0.189, "note": "city Northsagar held out" },
+      "cold_district": { "roc_auc": 0.6228, "pr_auc": 0.1831, "precision_at_100": 0.55, "note": "district==city in this single-district synthetic world" },
+      "new_hotspot": { "roc_auc": 0.5847, "pr_auc": 0.1052, "precision_at_100": 0.27, "precision_at_1000": 0.094, "note": "top-20% volume ATMs held out (180 ATMs)" }
+    },
+    "conclusion": "Time-forward and random comparable (no memorization of test window); cold-ATM degrades modestly; cold-city/district and new-hotspot are the honest generalization ceiling on this synthetic world. Failures reported, not averaged away.",
+    "source": "artifacts/deep_eval/generalization_splits.json"
+  },
+  "baseline_superiority_current": {
+    "_note": "Only the honest cashguard row (roc_auc 0.6273) is CURRENT. The 0.92x cashguard rows in baseline_war.json are SUPERSEDED pre-leakage history and are NOT used.",
+    "cashguard_vs_volume_precision_at_100_lift": 15.25,
+    "cashguard_vs_proximity_precision_at_100_lift": 6.778,
+    "cashguard_vs_random_precision_at_100_lift": 12.29,
+    "cashguard_vs_complaint_volume_precision_at_100_lift": 86.0,
+    "cashguard_vs_historical_hotspot_precision_at_100_lift": 3.44,
+    "source": "artifacts/metrics.json; artifacts/deep_eval/baseline_war.json (honest rows)"
+  },
+  "intervention_budget_war_current": {
+    "_note": "Identical held-out synthetic test period; top-K per day per strategy; 10 seeds; 24h capture window; 5 strategies INCLUDING complaint-proximity (new). Expected value per intervention frames operational utility. RECOMPUTED authoritatively 2026-08-30; supersedes earlier 0.055/41418 figures (verified stale).",
+    "strategy_capture_rate_at_k10": {
+      "cashguard": 0.033,
+      "volume": 0.008,
+      "random": 0.004,
+      "historical": 0.020,
+      "complaint_proximity": 0.006
+    },
+    "headline_lift_at_k10": {
+      "cashguard_vs_volume": 4.12,
+      "cashguard_vs_random": 8.25,
+      "cashguard_vs_historical": 1.65,
+      "cashguard_vs_complaint_proximity": 5.5
+    },
+    "efficiency_inr_per_intervention_at_k10": {
+      "cashguard": 27139.37,
+      "volume": 7223.33,
+      "random": 3380.05,
+      "historical": 19055.82,
+      "complaint_proximity": 4890.11
+    },
+    "cashguard_loss_prevented_pct_at_k": { "k5": 2.44, "k10": 3.32, "k20": 4.31, "k50": 5.9, "k100": 8.09 },
+    "disclaimer": "Totals are illustrative synthetic ₹ amounts; no real-world per-ATM loss benchmark exists (see REAL_DATA_GAP.md). The value frame is decision-side concentration of attention, not an ROI claim.",
+    "source": "artifacts/final_intervention_war.json (authoritative; verified against rerun of scripts/intervention_simulation.py)"
+  },
+  "statistical_confidence_current": {
+    "_note": "seed_stability.json contains PRE-LEAKAGE 0.92x seed history (SUPERSEDED). Current honest confidence is quantified by bootstrap on the leak-free pipeline's held-out test predictions and by the 10-seed 95% CI in the intervention war.",
+    "bootstrap_ci_on_test_roc_auc_500_resamples": {
+      "lower_95": 0.6148,
+      "point_from_metrics_json": 0.6273,
+      "upper_95": 0.6351,
+      "bootstrap_mean": 0.6254,
+      "note": "Strategy-stratified bootstrap over the leak-free test predictions; official point estimate (artifacts/metrics.json 0.6273) lies inside the CI. CI values are approximate to 4dp."
+    },
+    "intervention_war_ci": "10-seed 95% CI reported per strategy in artifacts/final_intervention_war.json (e.g. cashguard K10 capture 0.033 [0.032,0.034]).",
+    "status": "historical seed file superseded; current confidence reported here and in final_intervention_war.json"
+  },
+  "superseded_history_pointer": {
+    "_rule": "The following hold PRE-LEAKAGE 0.92x history and are intentionally preserved (leakage history is not deleted) but they are NOT current performance:",
+    "list": [
+      "artifacts/deep_eval/baseline_war.json (cashguard/xgb rows 0.92x)",
+      "artifacts/seed_stability.json (0.9258-0.9264 model / 0.9178-0.9266 generator)",
+      "artifacts/deep_evaluation.json (0.92x-era)",
+      "artifacts/deep_eval/robustness_check.json, drift.json, drift_summary.json, feature_audit.json, horizons.json, transfer_readiness.json, model_disagreement.json, adversarial_worlds.json, deeper ABA artifacts where 0.92x appears",
+      "MODEL_CARD.md, README.md, FINAL_MODEL_BENCHMARK.md, JUDGE_BRIEF.md, PITCH.md, ONE_SLIDE_EXECUTIVE_SUMMARY.md, LIMITATIONS.md, SIH26184_DELIVERABLE_MATRIX.md (pre-fix 0.92x passages)"
+    ],
+    "marker": "SUPERSEDED — PRE-LEAKAGE / HISTORICAL — NOT CURRENT PERFORMANCE"
+  },
+  "honest_limitations_current": [
+    "Low absolute recall at dispatch thresholds (base rate ~5%, low recall ~0.8-2% at precision 0.65-0.75). This is ranked-precision utility, NOT national recall.",
+    "Synthetic-only dataset: no real NCRP/CFCFRMS/NPCI data; field accuracy never claimed.",
+    "Cold-city/district and new-hotspot generalize worst (0.58-0.62 AUC) — the honest ceiling; novel hotspot discovery is not reliable and is reported, plus HOLD is used on low confidence.",
+    "Single-state/single-district demo world; true multi-jurisdiction requires independent jurisdictions (requires real generator/region expansion).",
+    "Scalability to national production not proven (SQLite/demo-scale only; PostgreSQL/Kafka/Redis are adapters, not load-validated)."
+  ],
+  "generated_at": "2026-08-30",
+  "upstream_authoritative_files": [
+    "artifacts/metrics.json",
+    "artifacts/deep_eval/generalization_splits.json",
+    "artifacts/deep_eval/intervention_simulation.json",
+    "artifacts/deep_eval/baseline_war.json",
+    "artifacts/deep_eval/seed_stability.json"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "title": "CashGuard AI — FINAL REBUILD MANIFEST (SIH26184 10-10 gate)",
+  "generated_at": "2026-08-30",
+  "status": "AUTHENTIC — leak-free; all CURRENT metrics derive from the identical honest pipeline",
+  "single_source_of_truth": ["CURRENT_METRICS.md", "artifacts/current_metrics.json"],
+  "evaluation_kind": "CONTROLLED SYNTHETIC EVALUATION — no real-world field performance claimed (REAL_DATA_GAP.md)",
+  "leakage_fix": {
+    "bug": "same-day label leakage in backend/ml/features.py (_shift_day_past)",
+    "fixed_since": "leak-free review; any 0.92x is SUPERSEDED were recorded",
+    "proof_files": ["artifacts/leakage_audit.json", "docs/FINAL_LEAKAGE_AUDIT.md", "artifacts/deep_eval/RECONCILIATION.md"],
+    "rule": "0.92x NOT restored; synthetic generator NOT tuned to raise scores"
+  },
+  "current_headline": { "roc_auc": 0.6273, "precision_at_100": 0.61, "bootstrap_95_ci": [0.6148, 0.6351] },
+  "authoritative_artifacts": {
+    "metrics": "artifacts/metrics.json",
+    "generalization": "artifacts/deep_eval/generalization_splits.json",
+    "intervention_war": "artifacts/final_intervention_war.json",
+    "baseline_war": "artifacts/deep_eval/baseline_war.json (cashguard rows flagged superseded)",
+    "current_ci": "artifacts/current_metrics.json -> statistical_confidence_current"
+  },
+  "phase_deliverables_this_gate": {
+    "phase_0": {
+      "artifacts/current_metrics.json": "single source of truth",
+      "CURRENT_METRICS.md": "human-readable authoritative summary",
+      "docs/audits/METRICS_AUDIT.md": "per-file disposition of every stale-metric occurrence",
+      "superseded_markers": "added to 11 raw JSON eval artifacts (baseline_war, seed_stability, deep_evaluation, robustness_check, drift, drift_summary, feature_audit, horizons, transfer_readiness, model_disagreement, adversarial_worlds)",
+      "headline_doc_pointers": "README, MODEL_CARD, FINAL_MODEL_BENCHMARK, JUDGE_BRIEF, ONE_SLIDE, SIH26184_DELIVERABLE_MATRIX, PITCH, VERIFICATION_LOG, AUDIT_REPORT, FINAL_10_10_SCORECARD now cite CURRENT_METRICS.md"
+    },
+    "phase_3": {
+      "scripts/final_intervention_war.py": "5-strategy war engine (adds complaint-proximity)",
+      "artifacts/final_intervention_war.json": "authoritative 5-strategy expected-value war (10-seed 95% CI)",
+      "INTERVENTION_VALUE_FINAL.md": "judge-facing expected-value-per-intervention report",
+      "reconciliation": "Earlier K10 cashguard 0.055 / 41418 was STALE; verified and corrected to 0.033 / 27139 by recomputation"
+    },
+    "phase_4": {
+      "statistical_confidence_current": "bootstrap 95% CI [0.6148, 0.6351] on leak-free test AUC; 10-seed CI in intervention war"
+    }
+  },
+  "honest_narrative": "CashGuard provides honest, generalizable, operationally useful risk ranking: AUC 0.6273 (not 0.9), best-in-war P@100 (0.61) and expected value per intervention (5.5x complaint-proximity, 8.25x random) on identical synthetic splits. Low absolute recall (~0.8-2% at dispatch thresholds) is disclosed, not hidden; cold-city/hotspot generalization (~0.58-0.62) is the honest ceiling."
+}

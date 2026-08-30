@@ -1,5 +1,5 @@
 {
-  "label": "CONTROLLED SYNTHETIC EVALUATION \u2014 not real-world accuracy",
+  "label": "CONTROLLED SYNTHETIC EVALUATION — not real-world accuracy",
   "operational": {
     "roc_auc": 0.9261,
     "pr_auc": 0.4076,
@@ -121,7 +121,7 @@
     "delta_plus50": 0.0016,
     "delta_minus50": 0.006,
     "pct_rows_moved_above_0p7_on_surge": 0.002,
-    "interpretation": "A +50% complaint-surge moves mean risk by <delta_plus50> \u2014 sensitivity direction is correct (surge increases risk); magnitude is modest, consistent with a calibrated model where mule-behaviour dominates."
+    "interpretation": "A +50% complaint-surge moves mean risk by <delta_plus50> — sensitivity direction is correct (surge increases risk); magnitude is modest, consistent with a calibrated model where mule-behaviour dominates."
   },
   "horizons": [
     {
@@ -148,5 +148,9 @@
       "capture_rate_top1000": 0.1038,
       "horizon_event_rate": 0.1143
     }
-  ]
+  ],
+  "superseded": true,
+  "status": "SUPERSEDED - PRE-LEAKAGE - NOT CURRENT PERFORMANCE",
+  "note": "0.92x-era deep-evaluation record from the leaky pipeline. Preserved as leakage history; NOT current. See artifacts/current_metrics.json.",
+  "current_metrics_pointer": "artifacts/current_metrics.json"
 }

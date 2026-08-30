@@ -1,6 +1,6 @@
 # VERIFICATION_LOG.md — Manual End-to-End Verification of Demo-Claimed Features
 
-> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** — Some ROC-AUC figures in this log (~0.92x, e.g. 0.9255–0.9302 robustness, 0.9272 baseline) were produced by a SAME-DAY LABEL-LEAKAGE bug now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 → corrected 0.6344 in the proof, see P1.5 below). Any 0.92x AUC reported as a PASS is **superseded** in absolute terms; the PASS/P1.5 integrity story is the honest baseline. See `artifacts/deep_eval/RECONCILIATION.md` and `MODEL_CARD.md`.
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** — Some ROC-AUC figures in this log (~0.92x, e.g. 0.9255–0.9302 robustness, 0.9272 baseline) were produced by a SAME-DAY LABEL-LEAKAGE bug now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 → corrected 0.6344 in the proof, see P1.5 below). Any 0.92x AUC reported as a PASS is **superseded** in absolute terms; the PASS/P1.5 integrity story is the honest baseline. See `artifacts/deep_eval/RECONCILIATION.md` and `MODEL_CARD.md`. Authoritative source of truth for current metrics: `CURRENT_METRICS.md` + `artifacts/current_metrics.json`.
 
 Every feature claimed in README.md / DEMO_SCRIPT.md was MANUALLY exercised
 against the live server (API-level, not just UI presence) on the iteration-4

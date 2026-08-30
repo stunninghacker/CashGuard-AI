@@ -1,6 +1,7 @@
 # ONE_SLIDE_EXECUTIVE_SUMMARY.md — 20 seconds
 
 **CashGuard AI — SIH26184 · MHA · I4C**
+> **Source of truth for current metrics:** `CURRENT_METRICS.md`. Honest leak-free ROC-AUC **0.6273**.
 
 **The gap:** ~8,000 cybercrime complaints/day; by the time police act, the
 cash is already out of the ATM. Recovery ≈ 0.

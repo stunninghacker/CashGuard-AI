@@ -8,6 +8,7 @@
 > Scenario"** button and is clearly SCRIPTED (not live model output). Text here that
 > cites 0.92x refers to the pre-correction, leaky estimate and is superseded. Full
 > detail: `MODEL_CARD.md`, `VERIFICATION_LOG.md` (P1.5).
+> **[SOURCE OF TRUTH for all current metrics: `CURRENT_METRICS.md` + `artifacts/current_metrics.json`]**
 
 ## Problem
 ~8,000 cybercrime complaints/day reach NCRP, but by the time police act on a

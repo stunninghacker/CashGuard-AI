@@ -13,8 +13,8 @@
       "capture_rate_top1000": 0.2667,
       "false_alert_rate_0p7_horizon": 0.9477,
       "horizon_event_rate": 0.0031,
-      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
-      "confidence": "INSUFFICIENT CONFIDENCE \u2014 HOLD ACTION for horizon-based recommendations"
+      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class — reported for completeness, interpreted alongside precision@K and event rate)",
+      "confidence": "INSUFFICIENT CONFIDENCE — HOLD ACTION for horizon-based recommendations"
     },
     {
       "horizon_hours": 6,
@@ -26,8 +26,8 @@
       "capture_rate_top1000": 0.2799,
       "false_alert_rate_0p7_horizon": 0.8893,
       "horizon_event_rate": 0.006,
-      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
-      "confidence": "INSUFFICIENT CONFIDENCE \u2014 HOLD ACTION for horizon-based recommendations"
+      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class — reported for completeness, interpreted alongside precision@K and event rate)",
+      "confidence": "INSUFFICIENT CONFIDENCE — HOLD ACTION for horizon-based recommendations"
     },
     {
       "horizon_hours": 12,
@@ -39,8 +39,8 @@
       "capture_rate_top1000": 0.2256,
       "false_alert_rate_0p7_horizon": 0.7646,
       "horizon_event_rate": 0.0164,
-      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
-      "confidence": "INSUFFICIENT CONFIDENCE \u2014 HOLD ACTION for horizon-based recommendations"
+      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class — reported for completeness, interpreted alongside precision@K and event rate)",
+      "confidence": "INSUFFICIENT CONFIDENCE — HOLD ACTION for horizon-based recommendations"
     },
     {
       "horizon_hours": 24,
@@ -52,7 +52,7 @@
       "capture_rate_top1000": 0.1758,
       "false_alert_rate_0p7_horizon": 0.3763,
       "horizon_event_rate": 0.0618,
-      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
+      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class — reported for completeness, interpreted alongside precision@K and event rate)",
       "confidence": "MEDIUM"
     },
     {
@@ -65,7 +65,7 @@
       "capture_rate_top1000": 0.1038,
       "false_alert_rate_0p7_horizon": 0.3421,
       "horizon_event_rate": 0.1143,
-      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
+      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class — reported for completeness, interpreted alongside precision@K and event rate)",
       "confidence": "MEDIUM"
     },
     {
@@ -78,8 +78,11 @@
       "capture_rate_top1000": 0.0775,
       "false_alert_rate_0p7_horizon": 0.3078,
       "horizon_event_rate": 0.1614,
-      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class \u2014 reported for completeness, interpreted alongside precision@K and event rate)",
+      "calibration_note": "score is the 24h-calibrated probability; per-horizon Brier is reported against the horizon event label (event rate is low at short horizons, so Brier is dominated by the majority class — reported for completeness, interpreted alongside precision@K and event rate)",
       "confidence": "MEDIUM"
     }
-  ]
+  ],
+  "_superseded": true,
+  "status": "SUPERSEDED - PRE-LEAKAGE 0.92x-ERA EVAL - NOT CURRENT PERFORMANCE",
+  "note": "Computed on the leaky pipeline. Preserved as leakage history; NOT current. Honest leak-free metrics: CURRENT_METRICS.md / artifacts/current_metrics.json."
 }

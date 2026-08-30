@@ -1,6 +1,7 @@
 # FINAL MODEL BENCHMARK — CashGuard AI (SIH26184 prototype)
 
-**Source of truth:** `artifacts/metrics.json` plus honest re-runs in `artifacts/deep_eval/`
+**Source of truth:** `CURRENT_METRICS.md` + `artifacts/current_metrics.json` (single source of
+truth), backed by `artifacts/metrics.json` plus honest re-runs in `artifacts/deep_eval/`
 (generalization_splits.json, ablation.json, cold_location.json, operational.json).
 All figures below are the **honest, leak-free, forecast-safe** numbers. The earlier 0.92x
 ROC-AUC was invalidated by a same-day label-leakage fix and is **not** valid — it appears only as

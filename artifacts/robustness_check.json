@@ -1,35 +1,40 @@
-[
-  {
-    "label": "Base calibration",
-    "precision_at_20": 0.9,
-    "precision_at_50": 0.88,
-    "precision_at_100": 0.86,
-    "precision_at_500": 0.65,
-    "precision_at_1000": 0.556,
-    "precision_at_threshold_0p7": 0.7045,
-    "roc_auc": 0.9255,
-    "positive_share": 0.0505
-  },
-  {
-    "label": "Perturbed -30%",
-    "precision_at_20": 1.0,
-    "precision_at_50": 0.9,
-    "precision_at_100": 0.85,
-    "precision_at_500": 0.614,
-    "precision_at_1000": 0.526,
-    "precision_at_threshold_0p7": 0.6323,
-    "roc_auc": 0.9251,
-    "positive_share": 0.0531
-  },
-  {
-    "label": "Perturbed +30%",
-    "precision_at_20": 1.0,
-    "precision_at_50": 0.98,
-    "precision_at_100": 0.91,
-    "precision_at_500": 0.658,
-    "precision_at_1000": 0.554,
-    "precision_at_threshold_0p7": 0.6556,
-    "roc_auc": 0.9302,
-    "positive_share": 0.0513
-  }
-]
+{
+  "_root_array": [
+    {
+      "label": "Base calibration",
+      "precision_at_20": 0.9,
+      "precision_at_50": 0.88,
+      "precision_at_100": 0.86,
+      "precision_at_500": 0.65,
+      "precision_at_1000": 0.556,
+      "precision_at_threshold_0p7": 0.7045,
+      "roc_auc": 0.9255,
+      "positive_share": 0.0505
+    },
+    {
+      "label": "Perturbed -30%",
+      "precision_at_20": 1.0,
+      "precision_at_50": 0.9,
+      "precision_at_100": 0.85,
+      "precision_at_500": 0.614,
+      "precision_at_1000": 0.526,
+      "precision_at_threshold_0p7": 0.6323,
+      "roc_auc": 0.9251,
+      "positive_share": 0.0531
+    },
+    {
+      "label": "Perturbed +30%",
+      "precision_at_20": 1.0,
+      "precision_at_50": 0.98,
+      "precision_at_100": 0.91,
+      "precision_at_500": 0.658,
+      "precision_at_1000": 0.554,
+      "precision_at_threshold_0p7": 0.6556,
+      "roc_auc": 0.9302,
+      "positive_share": 0.0513
+    }
+  ],
+  "_superseded": true,
+  "status": "SUPERSEDED - PRE-LEAKAGE 0.92x-ERA EVAL - NOT CURRENT PERFORMANCE",
+  "note": "Computed on the leaky pipeline. Preserved as leakage history; NOT current. Honest leak-free metrics: CURRENT_METRICS.md / artifacts/current_metrics.json."
+}

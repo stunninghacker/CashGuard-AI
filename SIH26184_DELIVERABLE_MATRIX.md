@@ -6,6 +6,7 @@ its honest status, and the honest headline value carried by that deliverable.
 **Integrity note:** The corrected, forecast-safe ROC-AUC is **0.6273**. Any earlier 0.92x figure
 was invalidated by a same-day label-leakage fix (see `artifacts/leakage_audit.json` and
 `docs/FINAL_LEAKAGE_AUDIT.md`) and may appear only as the explicitly-superseded leaky baseline.
+**Authoritative source of truth: `CURRENT_METRICS.md` + `artifacts/current_metrics.json`.**
 Every headline value below is the honest (post-fix) number. All figures are on **synthetic**
 single-region labels (`REAL_DATA_GAP.md`, `LABEL_VALIDITY.md`).
 

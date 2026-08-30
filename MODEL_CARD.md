@@ -12,6 +12,7 @@
 
 **An earlier reported ROC-AUC ≈ 0.927 was INVALID and is superseded.** The leak and
 the fix are documented in full below and in `VERIFICATION_LOG.md` (P1.5).
+**Authoritative source of truth for current metrics (`CURRENT_METRICS.md` + `artifacts/current_metrics.json`); repo-wide disposition: `docs/audits/METRICS_AUDIT.md`.**
 
 - **What was wrong (label leakage):** `backend/ml/features.py` built features and labels
   for the **same calendar day**. The rolling-window features

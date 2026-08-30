@@ -6,6 +6,9 @@
 > ATM withdrawal patterns to **predict where fraudsters will withdraw cash in the next 24 hours** â€”
 > and turns that forecast into **actionable intelligence** for police, banks, and I4C.
 
+> **SOURCE OF TRUTH for all current metrics:** `CURRENT_METRICS.md` + `artifacts/current_metrics.json`.
+> The honest, leak-free ROC-AUC is **0.6273** (the earlier 0.92x is SUPERSEDED pre-leakage history).
+
 ---
 
 > **Docs map**: [DOCS_INDEX.md](DOCS_INDEX.md) — 30-second index of every document in this repo.

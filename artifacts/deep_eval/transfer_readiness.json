@@ -42,5 +42,8 @@
       "auc_degradation_vs_reference": -0.0007
     }
   ],
-  "conclusion": "The pipeline retrains cleanly on structurally different distributions (city count, fraud rate, mule behaviour) with zero code changes; AUC degradation <=0.006 worst-case (T2 higher-fraud), and top-K precision varies with distribution shape (T1 more cities dilutes the top-K; T2 higher fraud raises it). This is the honest transfer-readiness evidence: real-data onboarding requires recalibration and threshold re-derivation (REAL_DATA_READINESS.md), not pipeline rewrites."
+  "conclusion": "The pipeline retrains cleanly on structurally different distributions (city count, fraud rate, mule behaviour) with zero code changes; AUC degradation <=0.006 worst-case (T2 higher-fraud), and top-K precision varies with distribution shape (T1 more cities dilutes the top-K; T2 higher fraud raises it). This is the honest transfer-readiness evidence: real-data onboarding requires recalibration and threshold re-derivation (REAL_DATA_READINESS.md), not pipeline rewrites.",
+  "_superseded": true,
+  "status": "SUPERSEDED - PRE-LEAKAGE 0.92x-ERA EVAL - NOT CURRENT PERFORMANCE",
+  "note": "Computed on the leaky pipeline. Preserved as leakage history; NOT current. Honest leak-free metrics: CURRENT_METRICS.md / artifacts/current_metrics.json."
 }

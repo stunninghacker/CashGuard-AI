@@ -1,5 +1,7 @@
 ﻿# CashGuard AI — 5-Minute Demo Pitch (Judges' Walkthrough)
 
+> **Source of truth for current metrics:** `CURRENT_METRICS.md` + `artifacts/current_metrics.json`.
+> Honest, leak-free ROC-AUC **0.6273**; any 0.92x is SUPERSEDED pre-leakage history.
 > Theme: Blockchain & Cybersecurity · Ministry of Home Affairs · I4C, CIS Division
 > Team positioning: "We turn 8,000 reactive complaints/day into proactive police deployments."
 

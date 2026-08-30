@@ -124,7 +124,10 @@
       "capture_rate_top1000": 0.1757,
       "false_interventions_top1000": 0.472,
       "exposure_captured_top1000_inr": 118838486.93,
-      "label": "CONTROLLED SYNTHETIC EVALUATION"
+      "label": "CONTROLLED SYNTHETIC EVALUATION",
+      "superseded": true,
+      "status": "SUPERSEDED - PRE-LEAKAGE - NOT CURRENT PERFORMANCE",
+      "note": "Pre-leakage 0.92x AUC; do not use. See artifacts/current_metrics.json (honest cashguard ROC-AUC 0.6273)."
     },
     {
       "baseline": "logistic",
@@ -166,7 +169,10 @@
       "exposure_captured_top1000_inr": 118543403.84,
       "label": "CONTROLLED SYNTHETIC EVALUATION",
       "lift_vs_cashguard_at_100": 1.02,
-      "lift_vs_cashguard_at_1000": 1.01
+      "lift_vs_cashguard_at_1000": 1.01,
+      "superseded": true,
+      "status": "SUPERSEDED - PRE-LEAKAGE - NOT CURRENT PERFORMANCE",
+      "note": "Pre-leakage 0.92x AUC; do not use. See artifacts/current_metrics.json (honest cashguard ROC-AUC 0.6273)."
     },
     {
       "baseline": "xgb_no_complaint",
@@ -187,7 +193,10 @@
       "exposure_captured_top1000_inr": 118061228.21,
       "label": "CONTROLLED SYNTHETIC EVALUATION",
       "lift_vs_cashguard_at_100": 1.05,
-      "lift_vs_cashguard_at_1000": 1.02
+      "lift_vs_cashguard_at_1000": 1.02,
+      "superseded": true,
+      "status": "SUPERSEDED - PRE-LEAKAGE - NOT CURRENT PERFORMANCE",
+      "note": "Pre-leakage 0.92x AUC; do not use. See artifacts/current_metrics.json (honest cashguard ROC-AUC 0.6273)."
     },
     {
       "baseline": "hawkes",
@@ -211,5 +220,12 @@
       "lift_vs_cashguard_at_1000": 10.35
     }
   ],
-  "conclusion": "CashGuard dominates all heuristic baselines; logistic regression and the ablations confirm the behavioural feature combination carries the value. Hawkes-only is weak alone (disclosed). New-hotspot generalization is the weakest split (see generalization_splits.json)."
+  "conclusion": "CashGuard dominates all heuristic baselines; logistic regression and the ablations confirm the behavioural feature combination carries the value. Hawkes-only is weak alone (disclosed). New-hotspot generalization is the weakest split (see generalization_splits.json).",
+  "superseded_note": "CURRENT-ONLY: baseline[0..4,6,9] honest; baseline rows with roc_auc 0.92x (indices 5,7,8 = cashguard/xgb_no_spatial/xgb_no_complaint) are SUPERSEDED pre-leakage and NOT current.",
+  "superseded_rows": [
+    "baselines[5] (cashguard roc_auc 0.9261)",
+    "baselines[7] (xgb_no_spatial roc_auc 0.9272)",
+    "baselines[8] (xgb_no_complaint roc_auc 0.9276)"
+  ],
+  "current_metrics_pointer": "artifacts/current_metrics.json"
 }

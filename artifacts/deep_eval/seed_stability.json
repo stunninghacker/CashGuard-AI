@@ -108,5 +108,9 @@
       }
     }
   },
-  "conclusion": "Small model-seed spread shows the pipeline is deterministic-stable; generator-seed spread quantifies how much metric variation comes from the data draw itself. Reported, not hidden."
+  "conclusion": "Small model-seed spread shows the pipeline is deterministic-stable; generator-seed spread quantifies how much metric variation comes from the data draw itself. Reported, not hidden.",
+  "superseded": true,
+  "status": "SUPERSEDED - PRE-LEAKAGE SEED HISTORY - NOT CURRENT PERFORMANCE",
+  "note": "Both model_seed_variation (0.9258-0.9264) and generator_seed_variation (0.9178-0.9266) ran on the LEAKY pipeline. Pre-leakage history preserved for honesty; NOT current. Honest leak-free metrics: artifacts/current_metrics.json.",
+  "current_metrics_pointer": "artifacts/current_metrics.json"
 }
