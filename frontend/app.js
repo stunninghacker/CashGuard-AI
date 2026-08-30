@@ -427,7 +427,11 @@ async function loadAll() {
     if (stale()) return;
     if (asOfEl) asOfEl.textContent = state.asOf
       ? `Forecast replay as of ${fmtTime(state.asOf)}`
-      : (state.stats ? `Forecast as of ${fmtTime(state.stats.generated_at)}` : `Forecast as of ${fmtTime(new Date().toISOString())}`);
+      : (state.stats
+        ? `Forecast as of ${fmtTime(state.stats.generated_at)}`
+        : (risk && risk[0]?.as_of
+          ? `Forecast as of ${fmtTime(risk[0].as_of)}`
+          : `Forecast as of ${fmtTime(new Date().toISOString())}`));
     setSimulationUI(false);
     render();
   } catch (err) { toast("Load failed: " + err.message); }
