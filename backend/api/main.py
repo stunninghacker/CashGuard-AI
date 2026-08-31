@@ -27,6 +27,7 @@ from .routes import (
     alerts,
     atms,
     auth,
+    blockchain,
     complaints,
     ledger,
     mule_graph,
@@ -158,6 +159,7 @@ app.include_router(recovery.router)
 app.include_router(simulated.router)
 app.include_router(realtime_routes.router)
 app.include_router(mule_graph.router)
+app.include_router(blockchain.router)
 
 
 @app.get("/health")

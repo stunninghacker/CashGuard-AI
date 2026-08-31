@@ -126,6 +126,16 @@ EMAIL_SMTP_HOST: str = os.getenv("EMAIL_SMTP_HOST", "mock.smtp.local")
 # against any external network — stated honestly.
 LEDGER_ANCHOR_RPC_URL: str = os.getenv("LEDGER_ANCHOR_RPC_URL", "")
 
+# --------------------------------------------------------------------------
+# True lightweight blockchain (backend/blockchain) — real PoW, hashed+linked
+# immutable records. Persists to its own SQLite file; every auditable event
+# (alert ack/freeze/evidence/report) is also mined into the chain.
+#   * BLOCKCHAIN_DIFFICULTY controls PoW hardness (2 = fast demo).
+#   * Keep hard (>= 4) for any production use; tamper requires re-mining.
+# --------------------------------------------------------------------------
+BLOCKCHAIN_DB_PATH: str = os.getenv("BLOCKCHAIN_DB_PATH", str(BASE_DIR / "data" / "blockchain.db"))
+BLOCKCHAIN_DIFFICULTY: int = int(os.getenv("BLOCKCHAIN_DIFFICULTY", "2"))
+
 # Hourly-resolution mode (sub-daily prediction). Gates scripts/hourly_eval.py;
 # the production forecast convention remains the daily 24h window.
 HOURLY_MODE: bool = os.getenv("HOURLY_MODE", "").lower() in ("1", "true", "yes")
