@@ -28,6 +28,21 @@ from pathlib import Path
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+# ── Windows console UTF-8 fix ────────────────────────────────────────────────
+# The Windows console defaults to code page cp1252 (or cp437), which cannot
+# encode the box-drawing characters (═ ─ ╔) used in the log banners, causing
+# spurious "Logging error ... UnicodeEncodeError" tracebacks on every startup.
+# Reconfigure stdio to UTF-8 so banners render cleanly without crashing the
+# handler. Only affects this process's console output, not file handlers.
+if sys.platform == "win32":
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        if stream is not None and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
 # ── Path setup ───────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent.resolve()
 sys.path.insert(0, str(ROOT))
