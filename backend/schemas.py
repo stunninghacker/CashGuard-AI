@@ -107,7 +107,7 @@ class AlertOut(BaseModel):
     last_reobserved_at: datetime | None = None
     risk_delta_vs_last: float | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "protected_namespaces": ()}
 
 
 class AlertCreateIn(BaseModel):
@@ -134,6 +134,8 @@ class OutcomeOut(BaseModel):
     is_false_negative: bool
     evaluated_at: datetime
     model_version: str
+
+    model_config = {"protected_namespaces": ()}
 
 
 class EvidenceOut(BaseModel):

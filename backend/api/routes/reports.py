@@ -80,6 +80,28 @@ def _report_in_scope(report, user) -> bool:
     return False
 
 
+# ------------------------------ retained: city brief -----------------------------
+# NOTE: registered BEFORE /{report_id} — otherwise "city" would be captured as a
+# report_id and this route would 404 forever.
+@router.get("/city")
+def city_report(
+    city: str,
+    format: str = Query(default="json", pattern="^(json|html)$"),
+    as_of: str | None = None,
+    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")),
+    db: Session = Depends(get_db),
+):
+    ref = services.resolve_as_of(db, as_of)
+    report = services.build_city_report(db, city, as_of=ref)
+    fingerprint = services.report_audit_ref(report)
+    repo.append_ledger(db, actor=f"{user.user_id} ({user.role})", event_type="report_generated",
+                       entity_id=report["report_id"], payload_hash=fingerprint)
+    if format == "html":
+        return HTMLResponse(content=_render_html(report, fingerprint))
+    report["audit_fingerprint"] = fingerprint
+    return report
+
+
 @router.get("/{report_id}")
 def get_report(report_id: str, user=Depends(require_auth()), db: Session = Depends(get_db)):
     report = repo.get_report(db, report_id)
@@ -101,26 +123,6 @@ def download_report(report_id: str, user=Depends(require_auth()), db: Session = 
     if not path.exists():
         raise HTTPException(status_code=404, detail="PDF file missing")
     return FileResponse(path, media_type="application/pdf", filename=path.name)
-
-
-# ------------------------------ retained: city brief -----------------------------
-@router.get("/city")
-def city_report(
-    city: str,
-    format: str = Query(default="json", pattern="^(json|html)$"),
-    as_of: str | None = None,
-    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")),
-    db: Session = Depends(get_db),
-):
-    ref = services.resolve_as_of(db, as_of)
-    report = services.build_city_report(db, city, as_of=ref)
-    fingerprint = services.report_audit_ref(report)
-    repo.append_ledger(db, actor=f"{user.user_id} ({user.role})", event_type="report_generated",
-                       entity_id=report["report_id"], payload_hash=fingerprint)
-    if format == "html":
-        return HTMLResponse(content=_render_html(report, fingerprint))
-    report["audit_fingerprint"] = fingerprint
-    return report
 
 
 def _render_html(report: dict, fingerprint: str) -> str:

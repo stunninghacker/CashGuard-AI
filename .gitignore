@@ -29,3 +29,6 @@ Thumbs.db
 
 # Presentations / docs are tracked; prompt archives are tracked for provenance/internal/
 # internal-only planning docs (never commit)
+
+# Runtime logs
+logs/
