@@ -84,6 +84,8 @@ the walkthrough continues seamlessly. Never set `DEMO_MODE=true` in production.
 | `http://localhost:8000` | Dashboard (role-based login) |
 | `http://localhost:8000/docs` | Full REST API (Swagger) |
 | `http://localhost:8000/ledger/verify` | Ledger integrity (JSON) |
+| `http://localhost:8000/ledger/verify-onchain` | On-chain anchor check (JSON; `configured:false` until a testnet wallet is wired) |
+| `http://localhost:8000/ledger/anchor` | POST: commit chain root to on-chain AuditLog (I4C only) |
 | `http://localhost:8000/recovery/funnel` | Recovery funnel (JSON) |
 | `http://localhost:8000/mock-i4c-inbox` | I4C inbox (webhook receiver) |
 | `ws://localhost:8000/ws/alerts` | Live alert push (WebSocket) |
@@ -123,10 +125,15 @@ CFCFRMS fund-block queue and recovery funnel. Everything is advisory — a human
 is required and every action lands on the tamper-evident ledger.
 
 **Q5 — "Why 'Blockchain & Cybersecurity' — is this a real blockchain?"**
-Honest label: it's an append-only SHA-256 hash chain giving tamper-evidence and
-chain-of-custody across agencies — the property a court-facing LEA system needs. We
-demo it live: run alert cycle → verify chain ✓ → flip one block → verify fails ✗.
-Anchoring to a permissioned ledger (Hyperledger Fabric) is the documented Tier-2 upgrade.
+Honest label: it's an append-only SHA-256 hash chain (the true PoW chain in
+`backend/blockchain/chain.py`) giving tamper-evidence and chain-of-custody across
+agencies — the property a court-facing LEA system needs. We demo it live: run
+alert cycle → verify chain ✅ → flip one block → verify fails ❌, then restore.
+Tier-2 is real on-chain anchoring: `get_chain()`'s root is committed to a
+permissioned `AuditLog` contract (`contracts/AuditLog.sol`) on Polygon Amoy via
+`backend/blockchain/onchain.py`. `GET /ledger/verify-onchain` compares the live
+root to the on-chain record; until we wire a funded testnet wallet it honestly
+returns `configured:false` rather than faking an anchor.
 
 ## 7. Team ownership (every member owns a slice)
 

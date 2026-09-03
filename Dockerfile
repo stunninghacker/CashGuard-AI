@@ -44,9 +44,12 @@ RUN mkdir -p /app/data
 
 EXPOSE 8000
 
-# Generate synthetic data + train on first boot, then serve (0.0.0.0:8000).
-# Override with CMD ["python","run.py","--serve"] to skip re-training on restart.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
+# Generate synthetic data + train on FIRST boot only (no --demo flag, so a
+# restart with an already-populated persistent disk skips regenerate/retrain and
+# starts fast). Data + model persist because render.yaml mounts the disk at
+# /app/data and sets ARTIFACT_DIR=/app/data/artifacts. Force a rebuild of the
+# world with: python run.py --demo
+HEALTHCHECK --interval=30s --timeout=5s --start-period=300s --retries=3 \
   CMD python -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4) or sys.exit(1)"
 
-CMD ["python", "run.py", "--demo"]
+CMD ["python", "run.py"]

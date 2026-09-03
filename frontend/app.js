@@ -107,6 +107,55 @@ function priorityBadge(h) {
   return `<span class="pill ${cls}" title="E=${h.priority_exposure} U=${h.priority_urgency} S=${h.priority_evidence} Q=${h.priority_confidence_weight}">⚡ ${(pr * 100).toFixed(0)}</span>`;
 }
 
+/* ------------------------------ i18n (Issue 9) ------------------------------ */
+/* Dashboard labels are translated client-side from /i18n/strings; DATA (names,
+   cities, scores) is never translated. Unknown keys fall back to English then
+   to the key itself, so missing translations can never break the UI. */
+const i18n = { locales: [], strings: {}, lang: "en" };
+
+async function initI18n() {
+  const sel = document.getElementById("i18n-select");
+  if (!sel) return;
+  try {
+    const meta = await api("/i18n/locales");
+    i18n.locales = meta.locales || [];
+    sel.innerHTML = i18n.locales.map(
+      (l) => `<option value="${esc(l.code)}">${esc(l.native)} — ${esc(l.name)}</option>`
+    ).join("");
+    const saved = localStorage.getItem("cashguard_lang") || "en";
+    if (i18n.locales.some((l) => l.code === saved)) { sel.value = saved; }
+    sel.addEventListener("change", () => setI18nLang(sel.value));
+    await setI18nLang(sel.value);
+  } catch { /* i18n is non-fatal: dashboard stays English if it fails */ }
+}
+
+async function setI18nLang(lang) {
+  try {
+    const res = await api(`/i18n/strings?lang=${encodeURIComponent(lang)}`);
+    i18n.lang = res.lang;
+    i18n.strings = res.strings || {};
+    localStorage.setItem("cashguard_lang", i18n.lang);
+  } catch { i18n.lang = "en"; i18n.strings = {}; }
+  applyI18n();
+}
+
+function T(key, fallback) {
+  const v = i18n.strings[key];
+  return (v !== undefined && v !== null && String(v) !== "") ? String(v) : (fallback || key);
+}
+
+/* Translates elements carrying data-i18n by replacing their text node with the
+   translated string (falling back to the existing content). Kept as a
+   best-effort swipe over labelled headings; dynamic rows keep English +
+   numbers deliberately. */
+function applyI18n() {
+  if (!document.querySelector("#dash-i4c") || i18n.lang === "en") return;
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    el.childNodes.forEach((n) => { if (n.nodeType === 3 && n.nodeValue && n.nodeValue.trim()) { n.nodeValue = T(key, n.nodeValue.trim()); } });
+  });
+}
+
 /* ------------------------------ map ------------------------------ */
 let map = null, atmLayer = null, complaintLayer = null;
 let tileMode = "loading";        // "online" | "offline" (canvas fallback)
@@ -508,6 +557,7 @@ function renderPolice() {
   ).join("");
   renderAlertTable("alert-table");
   loadThresholdCurve();
+  renderMobile(MOBILE_FIX.lat, MOBILE_FIX.lon);
 }
 
 let THR_CURVE = null;
@@ -775,6 +825,8 @@ async function renderI4C() {
   await renderHandoffs();
   await renderOutcomes();
   await renderMuleGraph();
+  await renderDrift();
+  await renderMuleNetwork();
 }
 
 async function renderHandoffs() {
@@ -1039,6 +1091,193 @@ async function renderMuleGraph() {
   }
 }
 
+/* ------------------------------ drift monitor (Issue 11) ------------------------------ */
+async function renderDrift() {
+  const panel = document.getElementById("drift-panel");
+  const badge = document.getElementById("drift-badge");
+  if (!panel) return;
+  try {
+    const d = await api("/drift/status");
+    if (!d || d.status === "PENDING_REFERENCE" || !d.summary) {
+      if (badge) badge.innerHTML = `<span class="drift-state drift-pending"><span class="dot"></span>Pending reference</span>`;
+      panel.innerHTML = `<p class="muted">${esc(d && d.note ? d.note : "No reference distribution captured yet — capture one at training time (POST /drift/capture-reference).")}</p>`;
+      return;
+    }
+    const verb = {
+      green: "No material feature drift",
+      yellow: "Moderate drift — reduced confidence, monitor closely",
+      red: "Retrain recommended — feature drift > 20%",
+    }[d.status] || d.summary.verdict;
+    const cls = { green: "drift-green", yellow: "drift-yellow", red: "drift-red" }[d.status] || "drift-pending";
+    const flagEls = Object.entries(d.flagged || {}).map(
+      ([f, v]) => `<span class="drift-f flag" title="PSI ${v}">${esc(f)} · ${v}</span>`
+    ).join("");
+    const warnEls = Object.entries(d.warned || {}).map(
+      ([f, v]) => `<span class="drift-f warn" title="PSI ${v}">${esc(f)} · ${v}</span>`
+    ).join("");
+    if (badge) badge.innerHTML = `<span class="drift-state ${cls}"><span class="dot"></span>${esc(d.status)}</span>`;
+    panel.innerHTML = `
+      <p class="muted">${esc(verb)}</p>
+      <div class="drift-summary">Features monitored: <b>${d.n_features}</b> · flagged &gt; ${d.threshold}: <b>${d.n_flagged}</b> · max PSI <b>${d.max_psi}</b>${d.summary.retrain_triggered ? " · ⚠ retrain request raised (ops-gated)" : ""}</div>
+      ${(flagEls || warnEls) ? `<div class="drift-features">${flagEls}${warnEls}</div>` : `<p class="muted">All monitored feature distributions within the PSI bands — healthy.</p>`}`;
+  } catch (err) {
+    panel.innerHTML = `<p class="muted err">Drift status unavailable: ${err.message}</p>`;
+    if (badge) badge.innerHTML = "";
+  }
+}
+
+/* ------------------------------ mule network (Issue 6) ------------------------------ */
+const MULE_TYPE = {
+  account:   { color: "#f472b6", label: "Account" },
+  complaint: { color: "#34d399", label: "Victim (complaint)" },
+  atm:       { color: "#60a5fa", label: "ATM" },
+  phone:     { color: "#fb923c", label: "Phone" },
+};
+
+async function renderMuleNetwork() {
+  const wrap = document.getElementById("mule-network-wrap");
+  if (!wrap) return;
+  try {
+    const g = await api("/graph/mule-network?depth=2&include_phone=true");
+    wrap.innerHTML = "";
+    const st = g.stats || {};
+    const statsEl = document.createElement("div");
+    statsEl.className = "mule-stats";
+    statsEl.innerHTML = [
+      ["Account", st.accounts], ["Victim", st.complaints], ["Phone", st.phones], ["ATM", st.atms],
+      ["Edges", st.edges],
+    ].map(([k, v]) => `<span class="pill info">${k}: ${v ?? 0}</span>`).join("");
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "mule-svg");
+    svg.setAttribute("viewBox", "0 0 900 440");
+
+    const nodes = g.nodes || [];
+    const edges = g.edges || [];
+    if (!nodes.length) {
+      wrap.appendChild(statsEl);
+      wrap.appendChild(document.createTextNode("No mule-network nodes in scope."));
+      return;
+    }
+
+    // Deterministic, layered layout so the graph is stable across refreshes:
+    // ATM nodes pinned to the right column, victims to the left, accounts/phones
+    // distributed in the middle by connection count. No random restart — honest
+    // and reproducible for a demo.
+    const byType = (t) => nodes.filter((n) => n.type === t);
+    const atmN = byType("atm"), victimN = byType("complaint"), phoneN = byType("phone"), accN = byType("account");
+    const pos = {};
+    function colX(col) { return 70 + col * 190; }        // 0=victim 1=account 2=phone 3=atm
+    function colY(i, n, span) { return 40 + (span > 1 ? (i + 1) * (360 / (span + 1)) : 220); }
+    victimN.forEach((n, i) => { pos[n.id] = [colX(0), colY(i, n, Math.max(1, victimN.length))]; });
+    accN.forEach((n, i) => { pos[n.id] = [colX(1), colY(i, n, Math.max(1, accN.length))]; });
+    phoneN.forEach((n, i) => { pos[n.id] = [colX(2), colY(i, n, Math.max(1, phoneN.length))]; });
+    atmN.forEach((n, i) => { pos[n.id] = [colX(3), colY(i, n, Math.max(1, atmN.length))]; });
+
+    // Draw edges first (under nodes)
+    edges.forEach((e) => {
+      const f = pos[e.from], t = pos[e.to];
+      if (!f || !t) return;
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", f[0]); line.setAttribute("y1", f[1]);
+      line.setAttribute("x2", t[0]); line.setAttribute("y2", t[1]);
+      line.setAttribute("stroke", "rgba(120,130,150,.30)");
+      line.setAttribute("stroke-width", "1");
+      svg.appendChild(line);
+    });
+
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const tip = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    defs.appendChild(tip);
+    svg.appendChild(defs);
+
+    nodes.forEach((n) => {
+      const p = pos[n.id];
+      if (!p) return;
+      const meta = MULE_TYPE[n.type] || { color: "#94a3b8", label: n.type };
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]);
+      c.setAttribute("r", Math.max(5, Math.min(16, (n.size || 8))));
+      c.setAttribute("fill", n.type === "account" && n.is_mule ? "#ef4444" : meta.color);
+      c.setAttribute("stroke", "#0b0d10"); c.setAttribute("stroke-width", "1.2");
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = `${meta.label} ${n.id}${n.type === "account" ? (n.is_mule ? " (FLAGGED MULE)" : "") : ""}`;
+      c.appendChild(title);
+      svg.appendChild(c);
+    });
+
+    wrap.appendChild(statsEl);
+    wrap.appendChild(svg);
+    const legend = document.createElement("div");
+    legend.className = "mule-legend";
+    legend.innerHTML = Object.entries(MULE_TYPE).map(([t, m]) => `<span><i style="background:${t === "account" ? "#f472b6" : m.color}"></i>${m.label}</span>`).join("")
+      + `<span><i style="background:#ef4444"></i>Flagged mule</span>`;
+
+    const comps = Object.entries(g.cluster_risk || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    if (comps.length) {
+      const maxC = Math.max(1, ...comps.map(([, v]) => v));
+      const compEl = document.createElement("div");
+      compEl.className = "mule-comps";
+      compEl.innerHTML = comps.map(([cid, risk]) => {
+        const flags = (g.flagged_mules_by_component || {})[cid] || 0;
+        const hot = flags > 0;
+        return `<div class="mule-comp${hot ? " mule-hot" : ""}">
+          <b>Component ${cid}</b>
+          <div class="bar" style="width:${(risk / maxC) * 100}%"></div>
+          <span class="muted">risk ${risk}${flags ? ` · ${flags} flagged` : ""}</span>
+        </div>`;
+      }).join("");
+      compEl.insertAdjacentHTML("afterbegin", `<div class="mule-stats"><span class="pill info">Top components by cumulative fraud exposure (${comps.length} shown)</span></div>`);
+      wrap.appendChild(compEl);
+    }
+    wrap.appendChild(legend);
+  } catch (err) {
+    wrap.innerHTML = `<p class="muted err">Mule network unavailable: ${err.message}</p>`;
+  }
+}
+
+/* ------------------------------ mobile / field geolocation (Issue 8) ------------------------------ */
+/* Demo fallback: Northsagar (the fictional district capital in the dataset).
+   A real GPS fix is used when the officer grants the browser the location. */
+const MOBILE_DEMO_FIX = { lat: 22.66, lon: 74.55 };
+let MOBILE_FIX = { ...MOBILE_DEMO_FIX };
+
+async function renderMobile(lat, lon) {
+  const el = document.getElementById("mobile-nearby");
+  if (!el) return;
+  try {
+    const res = await api(`/mobile/nearby?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&max_km=50&limit=5`);
+    const rows = res.atms || [];
+    if (!rows.length) {
+      el.innerHTML = `<p class="muted">No ATMs within ${res.max_km} km of that position (found ${res.found}).</p>`;
+      return;
+    }
+    el.innerHTML = `<p class="muted" style="margin-bottom:6px">Ranked by <code>mobile_score = 0.6·risk + 0.4·(1/(1+km))</code> — found ${res.found} in ${res.max_km} km of (${res.lat.toFixed(2)}, ${res.lon.toFixed(2)}).</p>
+      <div class="table-scroll"><table class="data-table">
+        <thead><tr><th>#</th><th>ATM</th><th>Bank / Branch</th><th>City</th><th>Dist (km)</th><th>Risk</th><th>Mobile score</th></tr></thead>
+        <tbody>${rows.map((r, i) => `<tr>
+          <td>${i + 1}</td><td><b>${esc(r.atm_id)}</b></td>
+          <td>${esc(r.branch_name)}<br/><span class="muted">${esc(r.bank_name)}</span></td>
+          <td>${esc(r.city)}</td><td>${r.distance_km.toFixed(1)}</td>
+          <td>${riskPill(r.risk_score)}</td>
+          <td class="mob-score">${r.mobile_score.toFixed(3)}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`;
+  } catch (err) {
+    el.innerHTML = `<p class="muted err">Mobile lookup failed: ${err.message}</p>`;
+  }
+}
+
+function setMobileFromGeolocation() {
+  const fix = () => { MOBILE_FIX = { ...MOBILE_DEMO_FIX }; renderMobile(MOBILE_FIX.lat, MOBILE_FIX.lon); };
+  if (!navigator.geolocation) { fix(); return; }
+  navigator.geolocation.getCurrentPosition(
+    (p) => { MOBILE_FIX = { lat: p.coords.latitude, lon: p.coords.longitude }; renderMobile(MOBILE_FIX.lat, MOBILE_FIX.lon); },
+    () => { toast("Location permission denied — using Northsagar demo coords."); fix(); },
+    { timeout: 8000 }
+  );
+}
+
 /* ------------------------------ actions ------------------------------ */
 async function setAlertStatus(alertId, status) {
   await setAlertStatusAction(alertId, status, "");
@@ -1207,6 +1446,7 @@ function bindEvents() {
       renderOutcomes();
     } catch (err) { toast("Outcome evaluation failed: " + err.message); }
   });
+  wire("btn-mobile-locate", setMobileFromGeolocation);
   const loginPass = document.getElementById("login-password");
   if (loginPass) loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
   const evModal = document.getElementById("evidence-modal");
@@ -1240,6 +1480,7 @@ function bindEvents() {
 /* ------------------------------ boot ------------------------------ */
 window.cashguardLogin = doLogin;  // inline onclick fallback (stale-cache-proof)
 bindEvents();
+initI18n();                       // Issue 9 — language dropdown (public endpoint, non-fatal)
 // clear stale keys from older dashboard versions (role-modal era)
 localStorage.removeItem("cashguard_role");
 window.__cashguardReady = true;   // head script banner shows if this never runs

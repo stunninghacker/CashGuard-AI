@@ -23,7 +23,12 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 from ..config import METRICS_PATH, MODEL_PATH, SEED
-from .features import FEATURE_COLUMNS, build_features, build_target, load_dataframes
+from .features import (
+    FEATURE_COLUMNS,
+    build_features,
+    build_target,
+    load_dataframes,
+)
 
 try:  # XGBoost preferred, sklearn fallback keeps the demo dependency-light
     from xgboost import XGBClassifier
@@ -32,6 +37,20 @@ except ImportError:  # pragma: no cover
     from sklearn.ensemble import HistGradientBoostingClassifier
 
     _HAS_XGB = False
+
+try:  # LightGBM second base learner for the stacked ensemble
+    from lightgbm import LGBMClassifier, early_stopping
+    _HAS_LGB = True
+except ImportError:  # pragma: no cover
+    _HAS_LGB = False
+
+try:  # SMOTE-Tomek (train-only resampling) — installed as imbalanced-learn
+    from imblearn.combine import SMOTETomek
+    _HAS_SMOTE = True
+except ImportError:  # pragma: no cover
+    _HAS_SMOTE = False
+
+from sklearn.linear_model import LogisticRegression
 
 
 def _precision_at_k(y_true: np.ndarray, probs: np.ndarray, k: int) -> float:
@@ -131,7 +150,57 @@ def train(
         horizon = (split_day - epoch).total_seconds() / 86400.0
         hawkes_params[city] = fit_location_params(t, horizon)
 
-    X, meta = build_features(engine, days, comp, wd, atms, hawkes_params=hawkes_params)
+    # ---- Issue-1 NEW lookups — computed on the TRAINING period ONLY so the
+    # latency / bank-rate features never observe a test-window label. ----
+    train_wd = wd[wd["day"] < split_day].merge(atms[["atm_id", "city", "bank_name"]], on="atm_id", how="left")
+    fraud_train = train_wd[train_wd["is_fraud_withdrawal"]].copy()
+
+    # fraud_latency_by_type: for each complaint (train), days until the NEXT
+    # fraud withdrawal in the SAME city; median per complaint type. City-level
+    # linkage is a deliberate, leak-free proxy (no complaint<->withdrawal FK).
+    fraud_latency_by_type: dict[str, float] = {}
+    if len(fraud_train) and "victim_city" in comp.columns:
+        fw = fraud_train[["city", "timestamp"]].rename(columns={"timestamp": "f_ts"}).dropna(subset=["city"])
+        comp_city = comp[comp["day"] < split_day][["victim_city", "complaint_type", "filing_timestamp"]].rename(
+            columns={"victim_city": "city"}
+        ).dropna(subset=["city"])
+        if len(comp_city) and len(fw):
+            # next fraud at/after each complaint within the same city (train only)
+            merged = pd.merge_asof(
+                comp_city.sort_values("filing_timestamp"),
+                fw.sort_values("f_ts"),
+                left_on="filing_timestamp",
+                right_on="f_ts",
+                by="city",
+                direction="forward",
+            )
+            merged["latency_days"] = (merged["f_ts"] - merged["filing_timestamp"]).dt.total_seconds() / 86400.0
+            merged = merged[merged["latency_days"] > 0]
+            if len(merged):
+                fraud_latency_by_type = {
+                    t: float(g.median())
+                    for t, g in merged.groupby("complaint_type")["latency_days"]
+                    if len(g) > 0
+                }
+
+    # bank_fraud_rate: historical fraud proportion per bank (train only).
+    bank_fraud_rate: dict[str, float] = {}
+    total_by_bank = train_wd.groupby("bank_name").size()
+    fraud_by_bank = train_wd[train_wd["is_fraud_withdrawal"]].groupby("bank_name").size()
+    for b in total_by_bank.index:
+        t = total_by_bank.get(b, 0)
+        bank_fraud_rate[b] = fraud_by_bank.get(b, 0) / t if t else 0.0
+
+    X, meta = build_features(
+        engine,
+        days,
+        comp,
+        wd,
+        atms,
+        hawkes_params=hawkes_params,
+        fraud_latency_by_type=fraud_latency_by_type,
+        bank_fraud_rate=bank_fraud_rate,
+    )
     y = build_target(wd, atms, days)
 
     # ---- chronological split (train | validation | test — no future leakage) ----
@@ -192,8 +261,6 @@ def train(
         model_type = "sklearn-histgradientboosting"
 
     # ---- Platt calibration (fitted on the VALIDATION slice, never test) ----
-    from sklearn.linear_model import LogisticRegression
-
     def _platt(raw_val: np.ndarray, yv: np.ndarray, raw_te: np.ndarray) -> tuple[np.ndarray, LogisticRegression]:
         cal = LogisticRegression()
         cal.fit(raw_val.reshape(-1, 1), yv)
@@ -201,6 +268,79 @@ def train(
 
     probs = model.predict_proba(Xte)[:, 1]
     probs_val = model.predict_proba(Xval)[:, 1]
+    probs_cal, calibrator = _platt(probs_val, yval, probs)
+    # BEFORE (baseline) AUC: the single XGBoost trained on the RAW train set —
+    # this is the honest reference point the Issue-1 changes must beat.
+    auc_before = float(roc_auc_score(yte, probs))
+
+    # ---- Issue-1: stacked ensemble (XGB + LightGBM) on a SMOTE-Tomek
+    # resampled TRAINING set, blended by a logistic meta-learner. ----
+    # SMOTE-Tomek is applied ONLY to the train slice (never val/test) so it
+    # cannot leak; the meta-learner is fit on the VALIDATION slice only.
+    stack_available = _HAS_LGB and _HAS_SMOTE
+    used_smote = False
+    Xtr_fit, ytr_fit = Xtr, ytr
+    if stack_available and _HAS_SMOTE:
+        smote = SMOTETomek(random_state=seed)
+        Xtr_fit, ytr_fit = smote.fit_resample(Xtr, ytr)
+        used_smote = True
+
+    stack_raw = av_before = None
+    if stack_available:
+        lgb = LGBMClassifier(
+            n_estimators=500,
+            max_depth=6,
+            learning_rate=0.05,
+            num_leaves=31,
+            subsample=0.85,
+            colsample_bytree=0.8,
+            scale_pos_weight=scale_pos_weight,
+            random_state=seed,
+            verbosity=-1,
+        )
+        # early stopping for LGB
+        lgb.fit(
+            Xtr_fit, ytr_fit,
+            eval_set=[(Xval, yval)],
+            eval_metric="auc",
+            callbacks=[__import__("lightgbm").early_stopping(30, verbose=False)],
+        )
+        lgb_val = lgb.predict_proba(Xval)[:, 1]
+        lgb_te = lgb.predict_proba(Xte)[:, 1]
+
+        # xgb_sm: XGBoost retrained on the resampled train (no separate object
+        # to keep weights; reuse scale_pos_weight behavior).
+        xgb_sm = XGBClassifier(
+            n_estimators=400,
+            max_depth=6,
+            learning_rate=0.07,
+            subsample=0.85,
+            colsample_bytree=0.8,
+            tree_method="hist",
+            scale_pos_weight=xgb_scale,
+            eval_metric="aucpr",
+            early_stopping_rounds=30,
+            random_state=seed,
+        )
+        xgb_sm.fit(Xtr_fit, ytr_fit, eval_set=[(Xval, yval)], verbose=False)
+        xgb_sm_val = xgb_sm.predict_proba(Xval)[:, 1]
+        xgb_sm_te = xgb_sm.predict_proba(Xte)[:, 1]
+
+        # meta-learner over [xgb_sm, lgb] — fit on VALIDATION only
+        stack_val_feats = np.column_stack([xgb_sm_val, lgb_val])
+        stack_te_feats = np.column_stack([xgb_sm_te, lgb_te])
+        meta = LogisticRegression()
+        meta.fit(stack_val_feats, yval)
+        stack_raw = meta.predict_proba(stack_te_feats)[:, 1]
+        stack_raw_val = meta.predict_proba(stack_val_feats)[:, 1]
+        stack_cal, stack_calibrator = _platt(stack_raw_val, yval, stack_raw)
+    else:
+        stack_cal = probs_cal
+        stack_calibrator = calibrator
+        stack_raw = probs
+
+    # AFTER (stacked) AUC: the honest target metric.
+    auc_after = float(roc_auc_score(yte, stack_raw))
 
     # ---- ensemble: rank-average of XGB probability + Hawkes intensity ----
     def _rank_pct(v: np.ndarray) -> np.ndarray:
@@ -211,7 +351,6 @@ def train(
     ens_raw = 0.5 * _rank_pct(probs) + 0.5 * _rank_pct(hawkes_te)
     ens_raw_val = 0.5 * _rank_pct(probs_val) + 0.5 * _rank_pct(hawkes_val)
 
-    probs_cal, calibrator = _platt(probs_val, yval, probs)
     ens_cal, ens_calibrator = _platt(ens_raw_val, yval, ens_raw)
 
     # ---- metric blocks: pure-XGBoost vs ensemble (honest comparison) ----
@@ -253,16 +392,24 @@ def train(
 
     blk_xgb = _metric_block(yte, probs_cal)
     blk_ens = _metric_block(yte, ens_cal)
+    blk_stack = _metric_block(yte, stack_cal if stack_available else stack_raw)
 
     # active model = the honestly-better one. SELECTED ON THE VALIDATION SLICE
     # (never the test set): rank-based AUC is calibration-invariant, so we score
-    # the raw train/val outputs. Ensemble trails decisively on both splits, so
-    # this cannot change the active model or any reported top-level metric.
+    # the raw train/val outputs. The stack (Issue 1) is a candidate; whichever
+    # wins on VALIDATION becomes the active model actually served in production.
     val_auc_xgb = float(roc_auc_score(yval, probs_val))
     val_auc_ens = float(roc_auc_score(yval, ens_raw_val))
-    active = "ensemble" if val_auc_ens >= val_auc_xgb else "xgboost"
-    active_score = ens_cal if active == "ensemble" else probs_cal
-    active_block = dict(blk_ens if active == "ensemble" else blk_xgb)
+    val_auc_stack = float(roc_auc_score(yval, stack_raw_val)) if stack_available else -1.0
+    candidates = {
+        "xgboost": (val_auc_xgb, probs_cal, blk_xgb),
+        "ensemble": (val_auc_ens, ens_cal, blk_ens),
+    }
+    if stack_available:
+        candidates["stacked"] = (val_auc_stack, stack_cal, blk_stack)
+    active = max(candidates, key=lambda k: candidates[k][0])
+    active_score = candidates[active][1]
+    active_block = dict(candidates[active][2])
     active_preds = (active_score >= 0.5).astype(int)
 
     # ---- instance-percentile reference (evidence panel) ----
@@ -342,12 +489,23 @@ def train(
         "n_test_samples": int(len(Xte)),
         "positive_share": round(pos_ratio, 4),
         "pos_weight_multiplier": pos_weight_multiplier,
+        # Issue-1 honest before/after comparison (both on the held-out TEST set):
+        #   auc_before_xgb  = single XGBoost, raw train (the pre-Issue-1 baseline)
+        #   auc_after_stack = XGB+LightGBM stacked, SMOTE-Tomek resampled train
+        "auc_before_xgb": round(auc_before, 4),
+        "auc_after_stack_raw": round(auc_after, 4),
+        "stack_available": bool(stack_available),
+        "stack_used_smote_tomek": bool(used_smote),
+        "val_auc_xgb": round(val_auc_xgb, 4),
+        "val_auc_ensemble": round(val_auc_ens, 4),
+        "val_auc_stacked": round(val_auc_stack, 4) if stack_available else None,
         "scale_pos_weight": None if pos_weight_multiplier == 1.0 else round(scale_pos_weight, 3),
         **{k: v for k, v in active_block.items()},
         "per_feature_auc": per_feature_auc,
         "new_feature_single_auc_hawkes": per_feature_auc.get("hawkes_intensity_24h"),
         "metrics_xgboost_only": blk_xgb,
         "metrics_ensemble": blk_ens,
+        "metrics_stacked_smote": blk_stack,
         "baseline_volume_precision_at_20": round(baseline_vol[20], 4),
         "baseline_volume_precision_at_50": round(baseline_vol[50], 4),
         "baseline_volume_precision_at_100": round(baseline_vol[100], 4),
@@ -388,6 +546,21 @@ def train(
         "split_day": str(split_day.date()),
         "seed": seed,
         "pos_weight_multiplier": pos_weight_multiplier,
+        # Issue-1 stacked-ensemble components (only present when LightGBM +
+        # SMOTE-Tomek are available). Used by inference when active_model is
+        # the stack, so served scores match the reported metrics.
+        "stack_available": bool(stack_available),
+        "stack_used_smote_tomek": bool(used_smote),
+        "stack_xgb": xgb_sm if (stack_available and not isinstance(xgb_sm, str)) else None,
+        "stack_lgb": lgb if (stack_available and not isinstance(lgb, str)) else None,
+        "stack_meta": meta if (stack_available and not isinstance(meta, str)) else None,
+        "stack_calibrator": stack_calibrator if stack_available else None,
+        "stack_feature_order": list(FEATURE_COLUMNS),
+        # Train-set lookups used to build the Issue-1 latency / bank-rate
+        # features. Persisted so INFERENCE reproduces the same values the model
+        # was trained on (no train/serve skew for these two features).
+        "fraud_latency_by_type": fraud_latency_by_type,
+        "bank_fraud_rate": bank_fraud_rate,
     }
     joblib.dump(artifact, MODEL_PATH)
     (out_dir / "metrics.json").write_text(json.dumps(_json_safe(metrics), indent=2))

@@ -23,6 +23,25 @@ services:
         value: "false"
       - key: DATA_DIR
         value: /app/data
+      # Keep the trained model + metrics on the persistent disk too, so a
+      # container restart does NOT retrain from scratch (ARTIFACT_DIR defaults
+      # to the ephemeral image path and would be lost each restart).
+      - key: ARTIFACT_DIR
+        value: /app/data/artifacts
+      # SECURITY: the API refuses to boot with the public default JWT secret
+      # (red-team finding 1: HS256 token forgery => full I4C_ADMIN). This demo
+      # deployment explicitly opts into the INSECURE default because it only
+      # serves SYNTHETIC data behind DEMO_MODE=true. For any non-demo deploy,
+      # DELETE this var and instead inject a strong random secret:
+      #   - key: JWT_SECRET        sync: false
+      - key: ALLOW_INSECURE_DEFAULT_JWT
+        value: "true"
+      # On-chain anchoring starts as NOT configured (honest). When a funded
+      # Polygon Amoy wallet is provided, uncomment so /ledger/verify-onchain
+      # reports against a real chain root:
+      #   - key: LEDGER_ANCHOR_RPC_URL      sync: false
+      #   - key: LEDGER_ANCHOR_PRIVATE_KEY  sync: false
+      #   - key: LEDGER_ANCHOR_CONTRACT_ADDRESS  sync: false
       # In production you would inject real secrets ONLY here (never in code):
       #   - key: JWT_SECRET        sync: false
       #   - key: WEBHOOK_URL       sync: false

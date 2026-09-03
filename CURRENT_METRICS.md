@@ -40,6 +40,47 @@ The leakage history is preserved for honesty but is never presented as valid
 
 ---
 
+## 1b. Issue-1 model upgrade (honest, same 60-day controlled split; 2026-08-31)
+
+**Objective was `AUC ≥ 0.82`. Honest result: NOT reachable without label leakage.**
+We improved the leak-free baseline meaningfully, but 0.82 is out of reach on the
+detuned synthetic world (`synthetic_data.py` is explicitly detuned so volume/mule
+features do **not** trivially equal fraud; the 0.92x was only possible via the
+same-day label-leak — see §1).
+
+**Apples-to-apples controlled comparison — identical chronological 60-day split,
+held-out test (n=16200, positive share ~5.1%):**
+
+| Configuration | Test ROC-AUC | Note |
+|---|---|---|
+| Baseline (24 features) | **0.6548** | pre-Issue-1 |
+| + 12 architectural features | 0.6657 | surge velocity, decay, latency, etc. |
+| + amount behavioural (rolling) | 0.6717 | mean/max/round/large/heavy |
+| **+ fraud recency-decay ← FINAL** | **0.6801** | `fraud_decay_7d` (best single lever) |
+| Stacked XGB+LGB+SMOTE-Tomek | 0.6212 | **rejected** (worse than plain XGB) |
+| 6-hour-window model | 0.6463 | no gain over daily |
+
+- **Final active model: plain XGBoost, 44 features**, `roc_auc = 0.6801`
+  (seed-42 point estimate; seed spread 0.664–0.680). Precision@20 = 0.80,
+  P@50 = 0.62, P@100 = 0.61.
+- **Best new lever:** `fraud_decay_7d` (exponentially decayed past-fraud-withdrawal
+  count at the ATM, ~2-day half-life) — single-variable AUC **0.615**, directly
+  models the generator's hot-ATM rotation.
+- **Verified dead-ends (do NOT re-chase):** per-ATM spatial complaint proximity
+  (~0.50 AUC — generator does not spatially co-locate complaints & fraud ATMs);
+  6h windows; stacking/SMOTE.
+- **Leak-safety re-verified:** every new feature is trailing-window only and
+  `_shift_day_past`-shifted; permutation label-shuffle would still give AUC ≈ 0.5.
+- Artifact: `artifacts/model.joblib` (active_model=xgboost, stack_available=True
+  but deprioritised), metrics in `artifacts/metrics.json` (`metrics_stacked_smote`,
+  `auc_before_xgb`, `auc_after_stack_raw`, `val_auc_*`).
+
+**Honest bottom line:** 0.82 is the leakage-era (invalid) number; the genuine
+ceiling for this detuned synthetic task is **~0.68**. Higher AUC here would require
+real field data (see `REAL_DATA_GAP.md`) or would be dishonest.
+
+---
+
 ## 2. Generalization (leak-free)
 
 | Split | ROC-AUC | PR-AUC | P@100 | P@1000 | ECE | Note |

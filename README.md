@@ -258,6 +258,29 @@ source-tagged `verified_pattern` / `assumption_general_literature` in the alert 
 | POST | `/ingest/stream/start` `/stop` | StreamSimulatorAdapter (live ingestion demo) |
 | POST | `/train` GET `/train/status` | Retrain (I4C_ADMIN) / metrics |
 | GET | `/stats/summary` | I4C national aggregate + category drill-down |
+| GET | `/graph/mule-network?depth=&include_phone=` | Mule-network graph (node-link, components, risk) |
+| GET | `/analytics/time-granularity?hours=` | Hour / 6-hour / daily aggregation (honest note below) |
+| GET | `/mobile/nearby?lat=&lon=&max_km=&limit=` | Nearest-ATM ranking for field/police + mobile-score |
+| GET | `/i18n/locales` `/i18n/strings?lang=` | 6 Indian-locale translations (client-side switch) |
+| POST | `/routing/handoff` | Cross-state jurisdiction handoff (State-A -> State-B) |
+| GET | `/drift/status` POST `/drift/capture-reference` POST `/drift/check` | Live feature-drift monitor (PSI) + retrain trigger |
+| POST | `/recovery/simulate-freeze` | Simulated fund-freeze for the mock CFCFRMS adapter |
+
+### 12.1 SIH 2026 Hardening (Issues 6–12)
+
+Added during the CashGuard AI hardening pass. All are wired into the FastAPI app
+and covered by `scripts/test_issue6_12_integration.py` (7/7 PASS) and the
+frontend panels (mule-network visual, drift status, mobile view, i18n dropdown,
+cross-state badge; served from `frontend/` mounted at `/`).
+
+**Honest Issue-7 note (time granularity):** the `hour` and `6h` time-granularity
+views on `/analytics/time-granularity` are **consistently weaker** than the daily
+view on this detuned synthetic data — 6h AUC **0.6463** vs daily **0.6801**
+(hourly worse still). This is a real finding of the hardening pass, not a tuned
+result: no fine-grained time-bucket is claimed to beat the daily baseline. The
+endpoint ships the honest daily figure as the reference and exposes
+`model_note` documenting the comparison rather than fabricating a fine-grained
+advantage. See `MODEL_DRIFT.md` / `REAL_DATA_GAP.md` for the deeper context.
 
 ## 13. Project Layout
 

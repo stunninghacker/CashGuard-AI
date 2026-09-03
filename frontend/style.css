@@ -337,3 +337,40 @@ body.sim-active #login-modal, body.sim-active .modal:not(.hidden) { z-index: 210
 .inbox-kv .muted { width: 70px; flex: none; }
 .inbox-raw { margin-top: 4px; padding: 6px 8px; background: rgba(0,0,0,.28); border-radius: 6px; font-size: 11px; word-break: break-all; font-family: var(--font-num); }
 .inbox-rawbtn { margin-top: 4px; }
+
+/* Issue 9 — language dropdown (header) */
+.i18n-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.i18n-lang-icon { font-size: 14px; }
+#i18n-select {
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 6px; font: 500 11.5px 'IBM Plex Sans', sans-serif; cursor: pointer;
+}
+
+/* Issue 11 — drift status panel */
+.drift-state { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; font-size: 11px; padding: 3px 9px; border-radius: 5px; }
+.drift-state .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.drift-green  { color: #22c55e; background: rgba(34,197,94,.12); }
+.drift-yellow { color: #eab308; background: rgba(234,179,8,.12); }
+.drift-red    { color: #ef4444; background: rgba(239,68,68,.14); }
+.drift-pending{ color: #94a3b8; background: rgba(148,163,184,.12); }
+.drift-summary { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.drift-features { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.drift-f { font-family: var(--font-num); font-size: 10.5px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); }
+.drift-f.flag { border-color: #ef4444; color: #f87171; }
+.drift-f.warn { border-color: #eab308; color: #fde047; }
+
+/* Issue 6 — mule network visual */
+.mule-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.mule-stats .pill { font-size: 10.5px; }
+.mule-svg { width: 100%; height: 460px; background: rgba(0,0,0,.18); border: 1px solid var(--border); border-radius: 8px; }
+.mule-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 10.5px; color: var(--muted); }
+.mule-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.mule-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.mule-comps { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.mule-comp { display: flex; align-items: center; gap: 8px; font-size: 11.5px; padding: 5px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--border); }
+.mule-comp .bar { height: 8px; border-radius: 4px; background: var(--tier-monitor); }
+.mule-comp.mule-hot .bar { background: var(--crit); }
+
+/* Issue 8 — mobile nearby */
+#mobile-nearby table { width: 100%; }
+.mob-score { font-family: var(--font-num); font-weight: 600; }

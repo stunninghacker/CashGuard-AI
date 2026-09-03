@@ -125,6 +125,14 @@ EMAIL_SMTP_HOST: str = os.getenv("EMAIL_SMTP_HOST", "mock.smtp.local")
 # EMPTY by default: anchoring is demo-grade replication only, NOT exercised
 # against any external network — stated honestly.
 LEDGER_ANCHOR_RPC_URL: str = os.getenv("LEDGER_ANCHOR_RPC_URL", "")
+# On-chain anchoring (backend/blockchain/onchain.py) uses AuditLog.sol.
+#   * LEDGER_ANCHOR_PRIVATE_KEY : deploying/owner EOA's private key (expected
+#     to hold testnet MATIC + a funded account; NEVER commit this value).
+#   * LEDGER_ANCHOR_CONTRACT_ADDRESS : deployed AuditLog contract address.
+# Both empty by default -> /ledger/verify-onchain reports "not configured"
+# honestly instead of pretending data reached Polygon.
+LEDGER_ANCHOR_PRIVATE_KEY: str = os.getenv("LEDGER_ANCHOR_PRIVATE_KEY", "")
+LEDGER_ANCHOR_CONTRACT_ADDRESS: str = os.getenv("LEDGER_ANCHOR_CONTRACT_ADDRESS", "")
 
 # --------------------------------------------------------------------------
 # True lightweight blockchain (backend/blockchain) — real PoW, hashed+linked

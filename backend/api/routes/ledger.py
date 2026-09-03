@@ -5,10 +5,17 @@ GET /ledger              -> list blocks (chain-of-custody record)
 GET /ledger/verify       -> recompute the SHA-256 chain; reports integrity
 POST /ledger/tamper-demo -> DEMO ONLY (ALLOW_TAMPER_DEMO=true): flip one block
                             so /ledger/verify detects the tampering.
+GET /ledger/verify-onchain -> Tier-2: prove the true PoW blockchain root matches
+                            the on-chain AuditLog record (Polygon Amoy).
+POST /ledger/anchor      -> Tier-2: submit the blockchain root to the on-chain
+                            AuditLog contract (needs env RPC/key/contract).
 
 HONEST LABEL: append-only SHA-256 hash chain (tamper-evidence, chain-of-custody)
 — NOT a cryptocurrency/public blockchain. Tier 2 = anchor the chain root to a
-permissioned ledger (Hyperledger Fabric) for multi-org consensus.
+permissioned on-chain AuditLog contract for an immutable, public, timestamped
+proof-of-existence; the write path /ledger/anchor and the verifier
+/ledger/verify-onchain both report "not configured" honestly until the
+LEDGER_ANCHOR_* env vars are set (see backend/blockchain/onchain.py).
 """
 from __future__ import annotations
 
@@ -75,3 +82,34 @@ def ledger_restore(user=Depends(require_auth("I4C_ADMIN")), db: Session = Depend
     """Reverse the tamper-demo: restore the flipped block from its backup so the
     chain verifies intact again. Completes the 'tamper -> detect -> restore' story."""
     return services.restore_ledger_record(db)
+
+
+# ---------------------------------------------------------------------------
+# Tier-2 on-chain anchoring (Blockchain theme). The authoritative audit trail
+# is the true PoW blockchain (backend/blockchain/chain.py); we anchor ITS
+# consensus root to a permissioned AuditLog contract on Polygon Amoy.
+# Both endpoints are honest: with no RPC/key/contract configured they report
+# "not configured" instead of faking an anchor (see onchain.py).
+# ---------------------------------------------------------------------------
+@router.get("/verify-onchain")
+def ledger_verify_onchain(
+    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")),
+):
+    """Prove whether the live cashguard blockchain root matches the on-chain
+    audit record. Honest pre-production default: not anchored."""
+    from ...blockchain import get_chain
+    from ...blockchain.onchain import verify_onchain
+
+    return verify_onchain(get_chain())
+
+
+@router.post("/anchor")
+def ledger_anchor(
+    user=Depends(require_auth("I4C_ADMIN")),
+):
+    """Submit the current cashguard blockchain root to the on-chain AuditLog
+    contract (needs LEDGER_ANCHOR_RPC_URL/PRIVATE_KEY/CONTRACT_ADDRESS)."""
+    from ...blockchain import get_chain
+    from ...blockchain.onchain import anchor_latest
+
+    return anchor_latest(get_chain())

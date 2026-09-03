@@ -17,6 +17,9 @@ numpy==1.26.4
 pandas==2.2.2
 joblib==1.4.2
 shap==0.44.1
+# Issue-1 stacked-ensemble (optional; train.py falls back if absent)
+lightgbm==4.7.0
+imbalanced-learn==0.14.2
 
 # Scheduling
 apscheduler==3.10.4
@@ -35,6 +38,8 @@ fpdf2==2.7.9
 
 # Data & Calibration
 scipy==1.13.0
+# Issue-6 mule-network graph (centrality / connected components)
+networkx==3.6.1
 matplotlib==3.9.0
 seaborn==0.13.2
 

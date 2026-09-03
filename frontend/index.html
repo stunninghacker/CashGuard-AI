@@ -67,6 +67,10 @@
       </div>
     </div>
     <div class="header-meta">
+      <label class="i18n-wrap" title="Dashboard language — labels only, data stays English">
+        <span class="i18n-lang-icon" aria-hidden="true">🌐</span>
+        <select id="i18n-select" aria-label="Language"></select>
+      </label>
       <span id="as-of" class="pill info">Forecast as of —</span>
       <span id="role-badge" class="pill">—</span>
       <button id="btn-sim-load" class="btn warn" title="Load a clearly-labelled SCRIPTED scenario so the alert workflow can be demonstrated. Not live model output.">🧪 Load Simulated Scenario</button>
@@ -144,6 +148,11 @@
         </div>
       </section>
     </div>
+    <section class="panel">
+      <div class="panel-head"><h2>Field / Mobile — Nearby Actionable ATMs <span class="ev-notice">(0.6·risk + 0.4·(1/(1+km)) · Item 8)</span></h2>
+        <button id="btn-mobile-locate" class="btn small" title="Use your GPS position, else Northsagar demo coords">📱 Use my location</button></div>
+      <div id="mobile-nearby" class="muted">No fix yet — click “Use my location” (or it will demo Northsagar).</div>
+    </section>
   </main>
 
   <!-- Bank dashboard -->
@@ -200,6 +209,15 @@
         <div id="model-metrics"></div>
       </section>
     </div>
+    <section class="panel" id="drift-panel-wrap">
+      <div class="panel-head"><h2>Model Feature Drift <span class="ev-notice">(PSI vs training reference · Item 11)</span></h2>
+        <span id="drift-badge"></span></div>
+      <div id="drift-panel" class="muted">loading…</div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Mule Network — Victim → Account → ATM <span class="ev-notice">(bipartite centrality + cluster risk · Item 6)</span></h2></div>
+      <div id="mule-network-wrap" class="muted">loading…</div>
+    </section>
     <div class="two-col">
 <section class="panel">
       <div class="panel-head"><h2>Ledger (tamper-evident hash chain)</h2><span id="ledger-badge"></span></div>

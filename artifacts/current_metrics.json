@@ -121,7 +121,32 @@
     "Single-state/single-district demo world; true multi-jurisdiction requires independent jurisdictions (requires real generator/region expansion).",
     "Scalability to national production not proven (SQLite/demo-scale only; PostgreSQL/Kafka/Redis are adapters, not load-validated)."
   ],
-  "generated_at": "2026-08-30",
+  "issue1_model_upgrade_2026_08_31": {
+    "_note": "Honest Issue-1 AUC-upgrade attempt. Target was >=0.82; NOT reachable without label leakage on the detuned synthetic world. Control: identical chronological 60-day split, held-out test n=16200, positive share ~5.1%.",
+    "controlled_before_after_same_60day_split": {
+      "baseline_24_feature_auc": 0.6548,
+      "plus_12_architectural_auc": 0.6657,
+      "plus_amount_behavioural_auc": 0.6717,
+      "final_fraud_recency_decay_auc": 0.6801,
+      "stacked_xgb_lgb_smote_auc": 0.6212,
+      "six_hour_window_auc": 0.6463
+    },
+    "final_active_model": "xgboost",
+    "final_feature_count": 44,
+    "final_roc_auc_seed42": 0.6801,
+    "seed_spread": {"seed_42": 0.6801, "seed_7": 0.6784, "seed_123": 0.6637},
+    "final_precision": {"at_20": 0.8, "at_50": 0.62, "at_100": 0.61},
+    "best_new_lever": "fraud_decay_7d (exponential past-fraud-count decay, ~2d half-life; single-var AUC 0.615)",
+    "verified_dead_ends": [
+      "per-ATM spatial complaint proximity (~0.50 AUC; generator does not co-locate complaints and fraud ATMs)",
+      "6-hour-window model (0.6463, no gain)",
+      "stacked ensemble + SMOTE-Tomek (0.6212, worse than plain XGB)"
+    ],
+    "leak_safety": "All new features trailing-window only and _shift_day_past-shifted; permutation label-shuffle AUC ~0.5",
+    "artifact": "artifacts/model.joblib (active_model=xgboost, stack_available=true/deprioritised)",
+    "honest_bottom_line": "0.82 is the leakage-era invalid number; genuine ceiling for this detuned synthetic task is ~0.68. Higher AUC requires real field data (REAL_DATA_GAP.md) or is dishonest."
+  },
+  "generated_at": "2026-08-31",
   "upstream_authoritative_files": [
     "artifacts/metrics.json",
     "artifacts/deep_eval/generalization_splits.json",

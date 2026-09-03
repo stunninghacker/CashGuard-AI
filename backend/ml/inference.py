@@ -48,9 +48,25 @@ def score_all(as_of: datetime) -> tuple:
     hawkes_params = pipe.get("hawkes_params")
 
     feature_day = as_of.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-    X, meta = build_features(engine, [feature_day], hawkes_params=hawkes_params)
+    # Pass persisted train-set lookups so Issue-1 features (latency / bank rate)
+    # are identical to what the model saw during training (no train/serve skew).
+    X, meta = build_features(
+        engine,
+        [feature_day],
+        hawkes_params=hawkes_params,
+        fraud_latency_by_type=pipe.get("fraud_latency_by_type") or {},
+        bank_fraud_rate=pipe.get("bank_fraud_rate") or {},
+    )
     raw = model.predict_proba(X)[:, 1]
-    if active_model == "ensemble" and ens_calibrator is not None and "hawkes_intensity_24h" in X.columns:
+    if active_model == "stacked" and pipe.get("stack_available"):
+        # Issue-1 stacked model: XGB+LightGBM blended by the logistic meta-learner.
+        xgb_sm, lgb, meta_lr = pipe["stack_xgb"], pipe["stack_lgb"], pipe["stack_meta"]
+        xgb_v = xgb_sm.predict_proba(X)[:, 1]
+        lgb_v = lgb.predict_proba(X)[:, 1]
+        stack_v = meta_lr.predict_proba(np.column_stack([xgb_v, lgb_v]))[:, 1]
+        sc = pipe.get("stack_calibrator")
+        probs = sc.predict_proba(stack_v.reshape(-1, 1))[:, 1] if sc is not None else stack_v
+    elif active_model == "ensemble" and ens_calibrator is not None and "hawkes_intensity_24h" in X.columns:
         # rank-average ensemble: 0.5·rank(XGB prob) + 0.5·rank(Hawkes intensity)
         def _rank_pct(v):
             import pandas as pd

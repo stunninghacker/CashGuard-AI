@@ -25,16 +25,22 @@ from ..database import SessionLocal, init_db
 from ..realtime import bind_loop
 from .routes import (
     alerts,
+    analytics,
     atms,
     auth,
     blockchain,
     complaints,
+    drift,
+    graph,
+    i18n,
     ledger,
+    mobile,
     mule_graph,
     realtime_routes,
     recovery,
     reports,
     risk,
+    routing,
     simulated,
     stats,
     train,
@@ -147,7 +153,11 @@ rate_limit._buckets = {}
 # ---------------------------------- REST API ----------------------------------
 app.include_router(auth.router)
 app.include_router(complaints.router)
+app.include_router(drift.router)
+app.include_router(graph.router)
+app.include_router(i18n.router)
 app.include_router(atms.router)
+app.include_router(analytics.router)
 app.include_router(withdrawals.router)
 app.include_router(risk.router)
 app.include_router(alerts.router)
@@ -155,7 +165,9 @@ app.include_router(train.router)
 app.include_router(stats.router)
 app.include_router(reports.router)
 app.include_router(ledger.router)
+app.include_router(mobile.router)
 app.include_router(recovery.router)
+app.include_router(routing.router)
 app.include_router(simulated.router)
 app.include_router(realtime_routes.router)
 app.include_router(mule_graph.router)
