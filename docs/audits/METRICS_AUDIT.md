@@ -24,7 +24,7 @@ Legend: **CURRENT** = derives from the post-leakage pipeline (see `artifacts/met
 |---|---|---|
 | `artifacts/current_metrics.json` | HEADLINE + generalization + intervention + baselines | SELF (authoritative) |
 | `CURRENT_METRICS.md` | human-readable summary of the above | SELF |
-| `artifacts/metrics.json` | ROC-AUC 0.6273, P@K, PRF, threshold ops | `current_metrics.json` |
+| `artifacts/metrics.json` | ROC-AUC 0.6456, P@K, PRF, threshold ops | `current_metrics.json` |
 | `artifacts/deep_eval/generalization_splits.json` | time/cold/at new-hotspot (0.58–0.63) | ✓ |
 | `artifacts/deep_eval/intervention_simulation.json` | K-war (cashguard 11× volume @K10) | ✓ |
 | `artifacts/metrics.json` baselines (volume/proximity lift) | ✓ | ✓ |

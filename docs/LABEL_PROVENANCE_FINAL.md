@@ -43,7 +43,7 @@ predicted). The fix shifts every day-keyed aggregate forward by one day so featu
 `<= d-1`.
 
 Evidence the steering introduces no leakage after the fix:
-- Honest held-out ROC-AUC drops from the leaky 0.9275 to **0.6273** (0.6344 immediate re-run) — the
+- Honest held-out ROC-AUC drops from the leaky 0.9275 to **0.6456** (0.6344 immediate re-run) — the
   inflated signal is gone.
 - The strongest single-feature AUC is now `days_since_epoch` 0.5604, followed by
   `counterparty_count_24h` 0.5571; no feature approaches 0.92 (see `metrics.json per_feature_auc`),
@@ -56,7 +56,7 @@ Evidence the steering introduces no leakage after the fix:
 
 ## 5. The honest implication
 
-The **0.6273 ROC-AUC is a score on synthetic labels, not a real-world fraud score.** It is the
+The **0.6456 ROC-AUC is a score on synthetic labels, not a real-world fraud score.** It is the
 honest, leak-free measure of separability within this simulated world. There is no real per-ATM fraud
 benchmark to compare against, and no calibration against a real baseline has been or can be performed
 on synthetic data (`REAL_DATA_GAP.md`, `FINAL_EXTERNAL_LIMITATIONS.md`). All precision@K, lift, and

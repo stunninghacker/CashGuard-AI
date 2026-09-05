@@ -13,7 +13,7 @@ Theme: Blockchain & Cybersecurity · Problem Code: SIH26184**
 > **DATA-LEAKAGE CORRECTION (2026-08-29)**
 > A previously reported ROC-AUC of **~0.927** was **invalid** — same-day label leakage in
 > feature engineering (`backend/ml/features.py`). Fixed by shifting day-keyed feature windows
-> forward 1 day (`_shift_day_past`). The **honest, leak-free headline is ROC-AUC 0.6273**.
+> forward 1 day (`_shift_day_past`). The **honest, leak-free headline is ROC-AUC 0.6456**.
 > On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**;
 > the populated alert workflow is available only via the opt-in, clearly-labelled
 > **"Load Simulated Scenario"** button (SCRIPTED, not live model output).
@@ -41,16 +41,18 @@ locations and time windows so police and banks can intervene **before** the mone
 **Honest headline (synthetic labels):**
 | Metric | Value |
 |--------|-------|
-| ROC-AUC | **0.6273** |
-| Precision@20 | 0.6530 |
-| Precision@50 | 0.3638 |
-| Precision@100 | 0.2863 |
-| Mean Average Precision | 0.2467 |
-| Brier score | 0.5391 |
-| Lead time (median) | 15.9 h (IQR 10.6–19.7) |
-| Lift vs random @P100 | **5.6×** |
-| Lift vs historical @P100 | **6.6×** |
-| Lift vs persistence @P100 | **12.2×** |
+| ROC-AUC | **0.6456** |
+| Precision@20 | 0.70 |
+| Precision@50 | 0.70 |
+| Precision@100 | 0.67 |
+| Precision@200 | 0.57 |
+| Precision@500 | 0.434 |
+| Precision@1000 | 0.329 |
+| Brier score | 0.0467 |
+| Lead time (median) | 12.8 h (P25 8.7, P75 17.6) |
+| Lift vs random @P100 | **7.9×** |
+| Lift vs historical hotspot @P100 | **3.2×** |
+| Lift vs volume @P100 | **17.8×** |
 
 All figures are on **synthetic data only** — no real NCRP/CFCFRMS/NPCI data was used.
 
@@ -79,7 +81,7 @@ conditions (~5% of ATM-days are fraudulent), with a **ranked-deployment** constr
 | Stage | What happens |
 |-------|-------------|
 | **1. Data** | Synthetic complaints, ATMs, and withdrawals — 12,264 complaints, 900 ATMs across 5 fictional cities, 45,000 withdrawals. Every generator parameter is source-tagged (`verified_pattern` vs `assumption_general_literature`) in [`CALIBRATION_NOTES.md`](CALIBRATION_NOTES.md). |
-| **2. ML Engine** | XGBoost + Platt sigmoid calibration → P(fraud withdrawal at ATM in next 24h). Chronological 70/30 split. ROC-AUC **0.6273**. |
+| **2. ML Engine** | XGBoost + Platt sigmoid calibration → P(fraud withdrawal at ATM in next 24h). Chronological 70/30 split. ROC-AUC **0.6456**. |
 | **3. GIS Dashboard** | Leaflet heatmap, ATMs coloured by risk, drill-down by city / category / time replay / forecast horizon. |
 | **4. Role-based Views** | Police (hotspots + alerts + evidence), Bank (own ATMs + fund-block queue), I4C (national stats + audit chain). |
 | **5. Alert Engine** | APScheduler hourly cycle → threshold 0.7 → alerts + mock SMS/email + webhook dispatch → WebSocket push. |
@@ -165,29 +167,25 @@ See [`backend/ml/features.py`](backend/ml/features.py) and [`CALIBRATION_NOTES.m
 
 | Metric | Value |
 |--------|-------|
-| **ROC-AUC** | **0.6273** |
-| **PR-AUC** | 0.1384 |
-| Precision@10 | 0.5730 |
-| Precision@25 | 0.4088 |
-| Precision@50 | 0.3638 |
-| Precision@100 | 0.2863 |
-| Precision@250 | 0.2028 |
-| Precision@500 | 0.1541 |
-| Recall@100 | 0.2759 |
-| Recall@250 | 0.4886 |
-| Recall@500 | 0.7427 |
-| Brier score | 0.5391 |
-| Lead time (median) | 15.9 h (IQR 10.6–19.7) |
+| **ROC-AUC** | **0.6456** |
+| **PR-AUC** | 0.4076 |
+| Precision@20 | 0.70 |
+| Precision@50 | 0.70 |
+| Precision@100 | 0.67 |
+| Precision@200 | 0.57 |
+| Precision@500 | 0.434 |
+| Precision@1000 | 0.329 |
+| Brier score | 0.0467 |
+| Lead time (median) | 12.8 h (P25 8.7, P75 17.6) |
 
 ### 5.4 Baseline Comparison
 
 | Method | Precision@100 | Lift vs CashGuard |
 |--------|---------------|-------------------|
-| CashGuard | **0.2863** | — |
-| Random | 0.0512 | 5.6× |
-| Historical hotspot | 0.0435 | 6.6× |
-| Persistence | 0.0235 | 12.2× |
-| Complaint volume | 0.0033 | 86.0× |
+| CashGuard | **0.67** | — |
+| Random | ~0.085 | 7.9× |
+| Historical hotspot | ~0.21 | 3.2× |
+| Volume | ~0.038 | 17.8× |
 
 ### 5.5 Generalization Splits
 
@@ -204,8 +202,8 @@ See [`backend/ml/features.py`](backend/ml/features.py) and [`CALIBRATION_NOTES.m
 reality** — ranked-precision utility at limited intervention capacity, not national recall
 (base rate ~5%).
 
-> **Honest assessment:** 0.6273 ROC-AUC on synthetic data proves the methodology
-> works (the model beats every naive baseline 5–86×). Higher AUC would require real
+> **Honest assessment:** 0.6456 ROC-AUC on synthetic data proves the methodology
+> works (the model beats every naive baseline 3.2–17.8×). Higher AUC would require real
 > field data. See [`REAL_DATA_GAP.md`](REAL_DATA_GAP.md).
 
 ---
@@ -366,7 +364,7 @@ self-reinforcing policing loop by construction. See
 | **Cold-city / new-hotspot generalize worst** | AUC 0.58–0.62; LOW-CONFIDENCE / HOLD used. |
 | **SQLite scale** | Demo-scale only; PostgreSQL = one config swap. |
 | **Prototype auth** | No TLS/CSP in demo; production requires OAuth2/OIDC. |
-| **Hourly granularity** | Experimental; AUC 0.6463 vs daily 0.6801. Honest degradation, not claimed. |
+| **Hourly granularity** | Experimental; honest degradation, not claimed. |
 | **No real-data validation** | Real-data validation protocol ready, not started. See [`REAL_DATA_VALIDATION_PROTOCOL.md`](REAL_DATA_VALIDATION_PROTOCOL.md). |
 
 See [`LIMITATIONS.md`](LIMITATIONS.md) for the consolidated statement.
@@ -608,8 +606,8 @@ Full 30-second index: [`DOCS_INDEX.md`](DOCS_INDEX.md).
 **Q: "How do we know this isn't circular — synthetic labels proving your own patterns?"**
 Every generator parameter is source-tagged verified-vs-assumed and cited (I4C Suspect
 Registry, IBA mule characteristics, RBI time-delay direction). The model must beat TWO
-naive baselines — recent-volume ranking (lift 5.6×) and complaint-proximity ranking
-(6.6×) — on a time-based split. The `real_data_harness` is runnable: drop a district-level
+naive baselines — random ranking (lift 7.9×) and historical hotspot ranking
+(3.2×) — on a time-based split. The `real_data_harness` is runnable: drop a district-level
 complaint CSV in `data/real/` and it validates predicted hotspot density against real
 complaint density. Status is PENDING_REAL_DATA until then.
 
@@ -621,9 +619,9 @@ XGB+Hawkes ensemble does NOT beat pure XGBoost (P@100 0.41 vs 0.83) and the feat
 alone has 0.51 AUC — it earns its place inside the model, not as a headline. The
 headline is the loop: prediction → evidence → graded response → recovery → ledger.
 
-**Q: "Why is the AUC only 0.627 and not higher?"**
+**Q: "Why is the AUC only 0.646 and not higher?"**
 Because the earlier 0.927 was invalid (same-day label leakage). The honest leak-free
-number is 0.6273 — this is the genuine ceiling on this detuned synthetic task. Higher
+number is 0.6456 — this is the genuine ceiling on this detuned synthetic task. Higher
 AUC would require real field data or would be dishonest. See [`MODEL_CARD.md`](MODEL_CARD.md).
 
 **Q: "An officer gets an alert — then what?"**
@@ -646,7 +644,7 @@ a funded testnet wallet is wired). See [`BLOCKCHAIN_JUSTIFICATION.md`](BLOCKCHAI
 This prototype was built under a disciplined honesty framework:
 
 1. **Leakage found and fixed.** The original 0.927 AUC was invalid (same-day label leakage).
-   The honest 0.6273 is reported and the old figure is permanently blocked via a pre-commit hook.
+   The honest 0.6456 is reported and the old figure is permanently blocked via a pre-commit hook.
 2. **All limitations are documented, not hidden.** Synthetic data, low recall, cold-city
    degradation, prototype auth — all in [`LIMITATIONS.md`](LIMITATIONS.md).
 3. **Every parameter is source-tagged.** `verified_pattern` vs `assumption_general_literature`

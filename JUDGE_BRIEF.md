@@ -54,8 +54,8 @@ deterministic fallback that survives a missing model.
   groups; the model can never learn from its own interventions.
 
 ## Measured results (CONTROLLED SYNTHETIC EVALUATION) — CORRECTED
-⚠ post-leak-fix honest numbers. AUC **0.6273** · P@20/50/100/200/500/1000 =
-0.65/0.64/0.61/0.57/0.372/0.261 · prf@0.7 = 32 alerts / P 0.75 / R 0.008 / FAR 0.25 ·
+⚠ post-leak-fix honest numbers. AUC **0.6456** · P@20/50/100/200/500/1000 =
+0.70/0.70/0.67/0.57/0.434/0.329 · prf@0.7 = 32 alerts / P 0.75 / R 0.008 / FAR 0.25 ·
 on calm demo days the model produces **no alerts** (opt-in SCRIPTED scenario shows the
 workflow). Every number traces to `artifacts/metrics.json` + `artifacts/deep_eval/threshold_curve.json`.
 Any earlier 0.927 here is superseded.

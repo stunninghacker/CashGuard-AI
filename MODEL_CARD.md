@@ -41,7 +41,7 @@ Any "0.92x" figure in this repo is historical and must not be cited as current.
 ## Evaluation methodology (CONTROLLED SYNTHETIC EVALUATION — not real-world accuracy)
 - ⚠ All headline figures below are the **post-correction (forecast-safe)** numbers. See
   the data-leakage banner at the top — the prior ≈0.927 is superseded.
-- ROC-AUC 0.6273 · Precision@20/50/100/200/500/1000 = 0.65/0.64/0.61/0.57/0.372/0.261 · threshold(≥0.7) precision 0.75
+- ROC-AUC 0.6456 · Precision@20/50/100/200/500/1000 = 0.70/0.70/0.67/0.57/0.434/0.329 · threshold(≥0.7) precision 0.75
 - Alert volume at 0.7: 32 ATM-days · false-alert rate 0.25 (surfaced honestly)
 - Calibration: Brier 0.0467 · PR-AUC 0.4076
 - Intervention simulation: top-10/day captures ~5.1% of simulated exposure (CI 5.0–5.1),

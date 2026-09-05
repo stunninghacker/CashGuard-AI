@@ -4,7 +4,7 @@
 > Q&A (Q76–Q100). Every 0.92x ROC-AUC figure published before 2026-08-29 came from a
 > SAME-DAY LABEL-LEAKAGE bug in feature engineering (`backend/ml/features.py`,
 > `_shift_day_past`), now fixed. Those figures are **invalidated**. The honest,
-> forecast-safe ROC-AUC is **0.6273**. Where this doc references a superseded
+> forecast-safe ROC-AUC is **0.6456**. Where this doc references a superseded
 > leaky-era artifact, it is tagged **"superseded (pre-leakage-fix); see
 > RECONCILIATION.md"** and replaced with the honest value or marked **not re-run**.
 > All numbers below are the honest register per `metrics.json` + honest re-runs.
@@ -35,7 +35,7 @@ presented as stronger than the honest evidence.
 
 ## 78. **So is the whole model just "watch the busy mule ATM"?**
    No single feature dominates (best is `days_since_epoch` 0.5604;
-   `counterparty_count_24h` 0.5571 — both weak), and the full model (0.6273) beats
+   `counterparty_count_24h` 0.5571 — both weak), and the full model (0.6456) beats
    the volume baseline (P@100 0.04) and proximity baseline (P@100 0.09) with
    honest lift of 13–32× and 6.5–8× at K=20/50. But the honest verdict stands:
    the margin over baselines is **modest**, and the reactive critique from Q77 is
@@ -63,19 +63,19 @@ presented as stronger than the honest evidence.
 ## 82. **What is your generator-seed variance?**
    The leaky era reported AUC 0.918–0.927; that is **superseded (pre-leakage-fix)**.
    In the honest register seeds land in the **~0.626 range** (consistent with the
-   headline 0.6273), with P@100 at **0.61** — modest and noisy, and we report the
+   headline 0.6456), with P@100 at **0.67** — modest and noisy, and we report the
    range rather than a fixed-seed peak. NOT claimed: seed-stable strong performance.
 
 ## 83. **What happens at 2h / 6h / 12h lead?**
    The `horizons.json` curves are **superseded (pre-leakage-fix); see
    RECONCILIATION.md** and were **not re-run** in the honest register. The honest,
-   confirmed operational facts are: median lead time **15.9h** (p25 10.6h, p75
-   19.7h) and the 24h band (time-forward AUC 0.6263) as the operating horizon.
+   confirmed operational facts are: median lead time **12.8h** (p25 8.7h, p75
+   17.6h) and the 24h band (time-forward AUC 0.6263) as the operating horizon.
    Sub-daily horizons are experimental and not carried as operational claims. NOT
    claimed: minutes-to-hours early warning.
 
 ## 84. **Why is 24h your only real horizon?**
-   Confirmed from the honest data: median lead time 15.9h (p25 10.6, p75 19.7) and
+   Confirmed from the honest data: median lead time 12.8h (p25 8.7, p75 17.6) and
    the strongest honest split is time-forward at **0.6263 (P@100 0.66)**. The
    full short/long-horizon curve is superseded/not re-run; we make no accuracy
    claim beyond the 24h operational band.
@@ -138,8 +138,8 @@ presented as stronger than the honest evidence.
    dishonest.
 
 ## 95. **What is precision@1000 vs precision@100? Does top-100 overstate?**
-   Honest: **P@100 = 0.61, P@1000 = 0.261**. The full curve is
-   P@20/50/100/200/500/1000 = 0.65/0.64/0.61/0.57/0.372/0.261, with
+   Honest: **P@100 = 0.67, P@1000 = 0.329**. The full curve is
+   P@20/50/100/200/500/1000 = 0.70/0.70/0.67/0.57/0.434/0.329, with
    Recall@20/50/100 = 0.0044/0.0107/0.0205. Top-100 is the dispatch band; rank
    quality falls as K grows. No cherry-picking a single K.
 
@@ -150,7 +150,7 @@ presented as stronger than the honest evidence.
    one headline number.
 
 ## 97. **How much of your advantage is the Platt calibration vs the model?**
-   Honest model selection: **XGBoost AUC 0.6273 vs ensemble AUC 0.5902** — the
+   Honest model selection: **XGBoost AUC 0.6456 vs ensemble AUC 0.5902** — the
    ensemble is *worse*, so the **active model is XGBoost**. Calibration (Platt)
    adds well-formed probabilities and supports the threshold/HOLD policy; it does
    not inflate ranking, and in the honest register the ranking edge itself is
@@ -173,7 +173,7 @@ presented as stronger than the honest evidence.
 ## 100. **Final: is this a working system or a demo?**
    A working full-stack prototype on 100% synthetic data: every feature is
    exercised end-to-end (auth/RBAC, alerts, recovery, ledger, PDF, mule-trail),
-   and every number in this file is honest (ROC-AUC 0.6273). It is **not** a
+   and every number in this file is honest (ROC-AUC 0.6456). It is **not** a
    production deployment, it claims **no** real-world performance, and its
    discrimination is modest. "Working demo with an honest, reproducible
    scientific base" is the accurate claim.

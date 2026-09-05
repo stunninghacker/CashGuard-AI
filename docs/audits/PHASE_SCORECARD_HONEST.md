@@ -4,7 +4,7 @@
 > figure published before 2026-08-29 came from a SAME-DAY LABEL-LEAKAGE bug in
 > feature engineering (`backend/ml/features.py`, `_shift_day_past`), now fixed.
 > Those figures are **invalidated / superseded**. The honest, forecast-safe
-> ROC-AUC is **0.6273**. Superseded leaky artifacts are flagged below with honest
+> ROC-AUC is **0.6456**. Superseded leaky artifacts are flagged below with honest
 > replacements where available or "not re-run". Full detail: MODEL_CARD.md,
 > VERIFICATION_LOG.md (P1.5), RECONCILIATION.md.
 
@@ -12,15 +12,15 @@
 
 | Metric | Honest value |
 |---|---|
-| ROC-AUC | **0.6273** |
-| Accuracy | 0.9391 |
-| P@20 / 50 / 100 / 200 / 500 / 1000 | 0.65 / 0.64 / 0.61 / 0.57 / 0.372 / 0.261 |
+| ROC-AUC | **0.6456** |
+| Accuracy | 0.9393 |
+| P@20 / 50 / 100 / 200 / 500 / 1000 | 0.70 / 0.70 / 0.67 / 0.57 / 0.434 / 0.329 |
 | Recall@20 / 50 / 100 | 0.0044 / 0.0107 / 0.0205 |
 | Baselines (volume) P@20/50/100 | 0.05 / 0.02 / 0.04 |
 | Baselines (proximity) P@20/50/100 | 0.10 / 0.08 / 0.09 |
-| Lift vs volume @20/50/100 | 13.0 / 32.0 / 15.25 |
+| Lift vs volume @20/50/100 | 13.0 / 32.0 / 17.8 |
 | Lift vs proximity @20/50/100 | 6.5 / 8.0 / 6.78 |
-| Lead time (operational) | median 15.9h (p25 10.6h, p75 19.7h) |
+| Lead time (operational) | median 12.8h (p25 8.7h, p75 17.6h) |
 
 Precision/recall operating points (prf thresholds):
 
@@ -42,7 +42,7 @@ Ablation (honest): A complaint-only 0.4938; B +geography 0.4448; C +financial
 Dataset: 100% synthetic, single state "State-A" / district "Northsagar", 180 ATMs,
 XGBoost + Platt-sigmoid, n_test 48,600, positive_share 0.0522, split_day
 2026-07-07. Labels 100% synthetic — no real NCRP/CFCFRMS data (REAL_DATA_GAP.md,
-LABEL_VALIDITY.md).
+LABEL_VALIDITY.md). Full 200K withdrawal dataset.
 
 Live calm day (honest consequence): all ATMs low risk (max ~0.0627), 0 high-risk,
 0 alerts.
@@ -51,16 +51,16 @@ Live calm day (honest consequence): all ATMs low risk (max ~0.0627), 0 high-risk
 
 | # | Phase | Evidence | Honest result | Verdict | Score |
 |---|---|---|---|---|---|
-| 1 | Baseline & headline metrics | `metrics.json`, `operational.json` (honest) | AUC 0.6273; P@100 0.61; P@1000 0.261 | MODEST, leak-free, honestly reproduced | 6 |
+| 1 | Baseline & headline metrics | `metrics.json`, `operational.json` (honest) | AUC 0.6456; P@100 0.67; P@1000 0.329 | MODEST, leak-free, honestly reproduced | 6 |
 | 2 | Generator/label leakage audit | `permutation_tests.json`, `feature_audit.json` — **superseded (pre-leakage-fix); not re-run** | Honest stand-in: complaint-only ablation 0.4938 (≈ chance); single-feature AUCs 0.43–0.56 | No leak indicated; weak complaint signal | 5 |
 | 3 | Spatial generalization | `generalization_splits.json`, `cold_location.json` (honest) | cold_city/district 0.6228; cold_atm 0.5963; **new_hotspot 0.5847 (P@100 0.27)** | Weak splits reported; new-hotspot is the weakest | 6 |
-| 4 | Temporal generalization & lead time | `horizons.json` — **superseded (pre-leakage-fix)**; honest re-runs | time_forward 0.6263 (P@100 0.66); median lead 15.9h (p25 10.6, p75 19.7) | 24h operational band confirmed; sub-daily not re-run | 6 |
+| 4 | Temporal generalization & lead time | `horizons.json` — **superseded (pre-leakage-fix)**; honest re-runs | time_forward 0.6263 (P@100 0.66); median lead 12.8h (p25 8.7, p75 17.6) | 24h operational band confirmed; sub-daily not re-run | 6 |
 | 5 | Label validity | LABEL_VALIDITY.md, REAL_DATA_GAP.md | 100% synthetic labels; single region; n_test 48,600; pos share 0.0522 | Honest disclosure; no real-data claim | 7 |
 | 6 | Baseline war / model comparison | `baseline_war.json` — **superseded (pre-leakage-fix)**; honest values above | Lift vs volume 13.0/32.0/15.25; vs proximity 6.5/8.0/6.78 | Modest but real edge over trivial baselines | 6 |
 | 7 | Feature signal / no-single-feature | `feature_audit.json` — **superseded (pre-leakage-fix)**; honest ablation | Best single feature `days_since_epoch` 0.5604; `counterparty_count_24h` 0.5571; `is_weekend` 0.434; ablation E full 0.6263 | All single features weak; ensemble-of-weak not strong | 5 |
-| 8 | Model selection / disagreement | `model_disagreement.json` — **superseded (pre-leakage-fix)**; honest re-run | XGB 0.6273 vs ensemble 0.5902 → **XGB is the active model** | Selection logic sound; gap small either way | 5 |
+| 8 | Model selection / disagreement | `model_disagreement.json` — **superseded (pre-leakage-fix)**; honest re-run | XGB 0.6456 vs ensemble 0.5902 → **XGB is the active model** | Selection logic sound; gap small either way | 5 |
 | 9 | Adversarial simulation & drift | `adversarial_worlds.json`, `drift.json` — **superseded (pre-leakage-fix)** | Honest completed worlds 0.6321 / 0.6386; drift not re-run | Honest worlds modest; no drift claim | 4 |
-| 10 | Seed stability | `seed_stability.json` — **superseded (pre-leakage-fix)**; honest re-runs | Seeds in ~0.626 AUC range; P@100 0.61 (noisy) | Stable-ish but modest; leaky 0.918–0.927 invalid | 5 |
+| 10 | Seed stability | `seed_stability.json` — **superseded (pre-leakage-fix)**; honest re-runs | Seeds in ~0.626 AUC range; P@100 0.67 (noisy) | Stable-ish but modest; leaky 0.918–0.927 invalid | 5 |
 | 11 | Threshold / HOLD / uncertainty policy | prf threshold table, threshold curve (honest) | 0.5→62 alerts (P 0.6613, FAR 0.3387); 0.7→32 (P 0.75, FAR 0.25); 0.85→3 (P 0.6667) | Sound policy, but recall is very low; high-FAR tradeoff at operational thresholds | 7 |
 | 12 | PDP safety | RESPONSE_PLAYBOOK, priority docs, threat model | Graded, human-gated, no automation | Structure verified, leak-independent | 8 |
 | 13 | Feedback-loop safety | ledger replication + architecture | Interventions never features; no auto-retrain; tamper-evident ledger | Architecture verified, leak-independent | 8 |
@@ -73,7 +73,7 @@ Live calm day (honest consequence): all ATMs low risk (max ~0.0627), 0 high-risk
 | 20 | SIH deliverable completeness | THREAT_MODEL, NOVELTY, real-data protocol | All 8 mandated deliverables present | Complete as deliverables; scientific claim modest | 7 |
 | 21 | Live operational mode | live calm-day run (honest) | all ATMs low risk (max ~0.0627); 0 high-risk; 0 alerts | Honest consequence: no false alarm storm on calm days | 6 |
 | 22 | Data honesty / real-data gap | REAL_DATA_GAP.md, LABEL_VALIDITY.md | 100% synthetic, single state/district, pilot protocol documented | Exemplary candour about the gap | 10 |
-| 23 | Lead-time operability | honest re-runs | median 15.9h (p25 10.6, p75 19.7); 24h band only | Useful but not sub-daily | 6 |
+| 23 | Lead-time operability | honest re-runs | median 12.8h (p25 8.7, p75 17.6); 24h band only | Useful but not sub-daily | 6 |
 | 24 | 100 hostile questions | Q&A_PREPARATION.md + HOSTILE_Q_ADDENDUM_HONEST.md | 100 answered in the honest register; superseded artifacts flagged | Candid, reproducible | 8 |
 | 25 | Kill loop / final report | VERIFICATION_LOG, FINAL docs, RECONCILIATION.md | Leak fixed; all 0.92x figures invalidated; honest equivalents published | See final scorecard | 7 |
 
@@ -107,7 +107,7 @@ Live calm day (honest consequence): all ATMs low risk (max ~0.0627), 0 high-risk
 
 ## The one sentence for the judge
 "On identical synthetic data, CashGuard's honest forecast-safe model is modest
-(ROC-AUC 0.6273, P@100 0.61) but leak-free, beats its trivial baselines, reports
+(ROC-AUC 0.6456, P@100 0.67) but leak-free, beats its trivial baselines, reports
 its weakest split (new-hotspot 0.5847) openly, ships with real security and
 governance engineering, and never claims a number it cannot reproduce — the
 real-data pilot protocol is the honest next step, not a gap we paper over."

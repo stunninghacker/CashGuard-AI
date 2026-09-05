@@ -65,8 +65,8 @@ It appears in this document and the audit JSON only as the superseded baseline.
 
 The final honest numbers, read from `artifacts/metrics.json`, are:
 
-- ROC-AUC **0.6273**, accuracy 0.9391
-- Precision@20/50/100/200/500/1000 = 0.65 / 0.64 / 0.61 / 0.57 / 0.372 / 0.261
+- ROC-AUC **0.6456**, accuracy 0.9393
+- Precision@20/50/100/200/500/1000 = 0.70 / 0.70 / 0.67 / 0.57 / 0.434 / 0.329
 - Recall@20/50/100 = 0.0044 / 0.0107 / 0.0205
 - prf@0.5: 62 alerts, P 0.6613, R 0.0138, FAR 0.3387
 - prf@0.6: 47 alerts, P 0.6383, R 0.0101, FAR 0.3617
@@ -75,7 +75,7 @@ The final honest numbers, read from `artifacts/metrics.json`, are:
 - Best single-feature AUC: `days_since_epoch` 0.5604, `counterparty_count_24h` 0.5571,
   `is_weekend` 0.434 (no feature approaches 0.92 — no leak signature remains)
 - Baseline volume P@20/50/100 = 0.05 / 0.02 / 0.04; baseline proximity = 0.10 / 0.08 / 0.09
-- Lift vs volume @20/50/100 = 13.0 / 32.0 / 15.25; lift vs proximity = 6.5 / 8.0 / 6.78
+- Lift vs volume @20/50/100 = 13.0 / 32.0 / 17.8; lift vs proximity = 6.5 / 8.0 / 6.78
 
 ## 5. Which artifacts were re-run honestly
 

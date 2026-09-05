@@ -82,5 +82,5 @@ authorized real-data pilot path (`REAL_DATA_GAP.md`).
 
 ---
 
-*Operate and present this prototype honestly: synthetic labels, honest 0.6273 ROC-AUC, human-in-the-loop,
+*Operate and present this prototype honestly: synthetic labels, honest 0.6456 ROC-AUC, human-in-the-loop,
 and simulated-content labelling.*

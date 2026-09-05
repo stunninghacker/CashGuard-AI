@@ -13,13 +13,13 @@ Companion docs: `REAL_DATA_GAP.md`, `THREAT_MODEL.md`, `LIMITATIONS.md`, `LABEL_
 
 **What it is:** Every metric is measured on synthetic labels generated from
 public-pattern-calibrated data (complaint volumes, fraud-share direction, mule behaviour) in a
-single state (`State-A`) and single district (`Northsagar`), 180 ATMs, chronological split from
-`2026-07-07`, n_test 48,600, positive share 0.0522.
+single state (`State-A`) and single district (`Northsagar`), 900 ATMs, chronological split from
+a 200K-withdrawal, 180-day span dataset.
 
 **Why it matters:** There is **no real-world per-ATM fraud benchmark in this repository.** This
 must be stated plainly: **calibration against a real baseline is not possible** — there is no real
-ground truth here to calibrate to. The honest ROC-AUC of **0.6273** (and P@20..1000 of
-0.65/0.64/0.61/0.57/0.372/0.261) is a score on synthetic labels. It demonstrates methodology
+ground truth here to calibrate to. The honest ROC-AUC of **0.6456** (and P@20..1000 of
+0.70/0.70/0.67/0.57/0.434/0.329) is a score on synthetic labels. It demonstrates methodology
 (time-based splits, precision@K, baseline lifts, lead-time) but is not a field-validated trueness
 or precision claim.
 
@@ -30,9 +30,8 @@ lead-time. Only that replaces synthetic labels with real ones.
 
 ## 2. Low base-rate recall trade-off
 
-**What it is:** Positive share is 0.0522 (5.22%). The model concentrates precision at the top of
-the ranking (P@20 0.65, prf@0.7 P 0.75) but absolute recall is low (0.0044 / 0.0107 / 0.0205 at
-K=20/50/100; 0.0081 at prf@0.7).
+**What it is:** Positive share is ~5%. The model concentrates precision at the top of
+the ranking (P@20 0.70, prf@0.7 P 0.75) but absolute recall is low at dispatch thresholds.
 
 **Why it matters:** At these thresholds the system flags few true positives as a fraction of all
 fraudulent ATM-days. Operators should read "67-75% of what we flag is real (in this synthetic
@@ -72,8 +71,8 @@ load test with replicated model serving — all documented as production require
 
 **What it is:** The model is Platt-sigmoid calibrated on a synthetic validation slice.
 
-**Why it matters:** Real-world probabilities will differ; the honest lead-time (median 15.9h, p25
-10.6, p75 19.7) and calibration are valid for the synthetic world only, and are horizon-dependent
+**Why it matters:** Real-world probabilities will differ; the honest lead-time (median 12.8h, P25
+8.7, P75 17.6) and calibration are valid for the synthetic world only, and are horizon-dependent
 (`metrics.json lead_time_is_horizon_dependent: true`).
 
 **What it takes to close:** Platt recalibration on real confirmed outcomes during the pilot

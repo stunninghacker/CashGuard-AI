@@ -1,7 +1,7 @@
 # Q&A_PREPARATION.md — 40 Hostile Questions, Answered (Team Prep)
 
 
-> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6456** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
 Format per question: **Answer** / Evidence / Limitation / What NOT to claim.
 All numbers are artifact-backed (synthetic evaluation unless stated).
 
@@ -30,7 +30,7 @@ All numbers are artifact-backed (synthetic evaluation unless stated).
    the leak feature was removed and grep-verified; per-feature AUC audit; early
    stopping/calibration on validation only.
 9. **How do you validate temporal generalization?** — Chronological 70/30 split,
-   strict; horizon evaluation (2/6/12/24/48h); lead time 14.9h median.
+   strict; horizon evaluation (2/6/12/24/48h); lead time 12.8h median.
 10. **How do you validate new locations?** — Cold-location eval: held-out city AUC
     0.9244; features are behavioural, not memorization.
 11. **What happens at 2h?** — P@1000 0.04 → INSUFFICIENT CONFIDENCE, HOLD ACTION,
@@ -114,7 +114,7 @@ All numbers are artifact-backed (synthetic evaluation unless stated).
 ## RED-TEAM ADDITIONS (41–50)
 
 41. **How do you know you beat a simple 'busiest ATM' rule?** — Measured on the
-    identical split (baseline_war.json): AUC 0.926 vs 0.56; P@100 0.86 vs 0.03;
+    identical split (baseline_war.json): AUC 0.6456 vs 0.56; P@100 0.67 vs 0.03;
     intervention capture at K=10 is 5.5% vs 0.5% (11×). NOT claimed: beat every
     conceivable heuristic.
 42. **What is the intervention cost?** — False interventions are counted and

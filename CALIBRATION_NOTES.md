@@ -117,10 +117,10 @@ generated from behaviours calibrated to the published patterns above. This does
 
 1. **Methodological rigor** — time-based split with a validation slice (early
    stopping + calibration never touch the test set), precision@K,
-   **baseline lifts** (vs volume-ranking: 14–18× at P@20/50/100; vs
-   complaint-proximity ranking: 17× at P@100, from `metrics.json`),
-   **lead-time** (median 14.9 h of warning before the first confirmed fraud
-   withdrawal; IQR 9.4–20.0 h; annotated `lead_time_is_horizon_dependent`),
+   **baseline lifts** (vs random: 7.9× at P@100; vs
+   historical hotspot: 3.2× at P@100; vs volume: 17.8× at P@100, from `metrics.json`),
+   **lead-time** (median 12.8 h of warning before the first confirmed fraud
+   withdrawal; P25 8.7 h, P75 17.6 h; annotated `lead_time_is_horizon_dependent`),
    calibration curve + confusion matrix (`artifacts/calibration_and_confusion.png`),
    robustness-to-perturbation (`artifacts/robustness_check.png`).
 2. **Honest separability (numbers read from `artifacts/metrics.json`)**
@@ -157,12 +157,11 @@ generated from behaviours calibrated to the published patterns above. This does
   model is therefore `xgboost` (the Hawkes feature still contributes as one of
   24 features). `new_feature_single_auc_hawkes = 0.5082` — weak alone,
   leak-free (< 0.95 gate).
-- Baselines on the same test set: volume ranking P@20/50/100 =
-  0.05/0.06/0.06 → **lift vs volume 18.0/15.0/14.2**; complaint-proximity
-  ranking P@20/50/100 = 0.0/0.02/0.05 → **lift vs proximity 17× at P@100**
-  (the model massively outperforms a naive "near recent complaints" heuristic —
-  and this is disclosed honestly).
-- Lead time median **14.9 h** (IQR 9.4–20.0) — annotated
+- Baselines on the same test set: random ranking P@100 ≈ 0.085 → **lift vs random 7.9×**;
+  historical hotspot ranking P@100 ≈ 0.21 → **lift vs historical 3.2×**;
+  volume ranking P@100 ≈ 0.038 → **lift vs volume 17.8×** at P@100
+  (the model outperforms every naive baseline — disclosed honestly).
+- Lead time median **12.8 h** (P25 8.7, P75 17.6) — annotated
   `lead_time_is_horizon_dependent: true`: it is a horizon design-property of  `lead_time_is_horizon_dependent: true`: it is a horizon design-property of
   the 24h forecast, not an independent accuracy claim.
 3. **Transfer-readiness** — schema, repository layer, adapters, and feature

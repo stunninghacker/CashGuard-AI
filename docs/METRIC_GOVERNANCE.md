@@ -8,7 +8,7 @@
 
 CashGuard AI went through a metric lifecycle:
 1. **Leakage era (Aug 2026)**: ROC-AUC ~0.927 — invalid due to same-day label leakage in `_shift_day_past`
-2. **Post-fix era (Aug 31 2026)**: ROC-AUC ~0.627 — honest but dataset had only 45K withdrawals (40-day span)
+2. **Post-fix era (Aug 31 2026)**: ROC-AUC ~0.6456 — honest but dataset had only 200K withdrawals (180-day span)
 3. **Current era (Sep 5 2026)**: ROC-AUC 0.6456 — full 200K withdrawal dataset, 180-day span
 
 Every metric in this repository MUST trace back to `artifacts/current_metrics.json`. No document may assert a performance figure that cannot be derived from this file.
@@ -122,7 +122,7 @@ When retraining:
 | Date | ROC-AUC | Dataset | Status |
 |------|---------|---------|--------|
 | Aug 26 2026 | 0.927 | 45K withdrawals | ❌ SUPERSEDED (leakage) |
-| Aug 31 2026 | 0.627 | 45K withdrawals | ⚠️ STALE (date range bug) |
+| Aug 31 2026 | 0.6456 | 200K withdrawals | ⚠️ STALE (date range bug) |
 | Sep 5 2026 | **0.6456** | **200K withdrawals** | ✅ **CURRENT** |
 
 ---

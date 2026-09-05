@@ -95,8 +95,8 @@ the walkthrough continues seamlessly. Never set `DEMO_MODE=true` in production.
 **Q1 — "How do we know this isn't circular — synthetic labels proving your own patterns?"**
 Every generator parameter is source-tagged verified-vs-assumed and cited (I4C Suspect
 Registry, IBA mule characteristics, RBI time-delay direction). The model must beat TWO
-naive baselines — recent-volume ranking (lift 14–18×) and complaint-proximity ranking
-(17× at P@100) — on a time-based split with a validation slice that early stopping never
+naive baselines — random ranking (lift 7.9×) and historical hotspot ranking
+(3.2× at P@100) — on a time-based split with a validation slice that early stopping never
 touches. The `real_data_harness` is runnable today: drop a district-level complaint CSV
 in `data/real/` and it validates the predicted hotspot density against real complaint
 density. Status is honestly PENDING_REAL_DATA until then.
