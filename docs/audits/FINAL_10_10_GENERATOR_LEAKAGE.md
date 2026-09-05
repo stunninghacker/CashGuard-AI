@@ -1,7 +1,7 @@
 # FINAL_10_10_GENERATOR_LEAKAGE.md — Leakage war, verified fresh
 
 
-> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6456** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
 Red-team question: does CashGuard's performance merely echo the generator's
 construction rules (a "leak") rather than a transferable signal?
 
@@ -15,8 +15,8 @@ artifacts. Findings below are from live output, not taken on trust.
   signal.
 - **Identity memorisation**: NO ATM/city/district identity columns exist in
   `FEATURES` (identity lives in meta only); row-order shuffle → AUC unchanged
-  (0.926 <sup>⚠ superseded → honest 0.6273</sup> vs 0.926 <sup>⚠ superseded → honest 0.6273</sup>). No order/identity memorisation.
-- **City-feature permutation**: AUC 0.925 <sup>⚠ superseded → honest 0.6273</sup> vs 0.926 <sup>⚠ superseded → honest 0.6273</sup> baseline → **<0.001 drop**.
+  (0.926 <sup>⚠ superseded → honest 0.6456</sup> vs 0.926 <sup>⚠ superseded → honest 0.6456</sup>). No order/identity memorisation.
+- **City-feature permutation**: AUC 0.925 <sup>⚠ superseded → honest 0.6456</sup> vs 0.926 <sup>⚠ superseded → honest 0.6456</sup> baseline → **<0.001 drop**.
   Shuffling the complaint/geo features changes almost nothing.
 
 ## 2. The honest finding the leakage war exposes
@@ -26,7 +26,7 @@ mule-account behavioural features, NOT by complaints or geography.**
   complaint/spatial feature ≤ 0.55 (`n_complaints_city_24h` 0.516,
   `dist_to_complaint_centroid_km` 0.504, `hawkes_intensity_24h` 0.509).
 - Ablation (stored `adversarial_worlds.json`): complaints-only 0.50 →
-  +geography 0.55 → +financial **0.93 <sup>⚠ superseded → honest 0.6273</sup>**.
+  +geography 0.55 → +financial **0.93 <sup>⚠ superseded → honest 0.6456</sup>**.
 
 Two very different readings, both must be stated:
 - **Good (no leak):** `counterparty_count_24h` is legitimate — it counts
@@ -47,7 +47,7 @@ the weakest claim and depends on real-data validation**, not on more
 synthetic tuning. This is documented, not averaged away.
 
 ## 3. Seed fragility (live)
-- Model seeds (same data): AUC 0.9258 <sup>⚠ superseded → honest 0.6273</sup>–0.9264 <sup>⚠ superseded → honest 0.6273</sup>, P@100 0.84–0.86 — deterministic.
+- Model seeds (same data): AUC 0.9258 <sup>⚠ superseded → honest 0.6456</sup>–0.9264 <sup>⚠ superseded → honest 0.6456</sup>, P@100 0.84–0.86 — deterministic.
 - **Generator seeds (fresh draws): P@100 0.50–0.67, P@1000 0.321–0.382.**
   ROC-AUC is stable, but top-of-ranking precision is draw-sensitive. Reported
   honestly; headline numbers should cite the range, not the fixed-seed peak.

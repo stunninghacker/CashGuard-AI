@@ -1,16 +1,16 @@
 # FINAL_10_10_BASELINE_WAR.md — Does CashGuard beat operational heuristics?
 
 
-> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6456** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
 Question: is the ML ranking better than simple operational baselines at the
 same intervention budget? Source: stored `baseline_war.json`, cross-checked
-against the live retrain (CashGuard's live numbers: AUC 0.9272 <sup>⚠ superseded → honest 0.6273</sup>, P@100 0.84,
+against the live retrain (CashGuard's live numbers: AUC 0.9272 <sup>⚠ superseded → honest 0.6456</sup>, P@100 0.84,
 P@1000 0.563 — consistent).
 
 ## Headline comparison (held-out test period)
 | Baseline | ROC-AUC | P@50 | P@100 | P@1000 | Verdict |
 |---|---|---|---|---|---|
-| **CashGuard (XGBoost+Platt)** | **0.926 <sup>⚠ superseded → honest 0.6273</sup>** | **0.90** | 0.84–0.86 | **0.53–0.56** | — |
+| **CashGuard (XGBoost+Platt)** | **0.926 <sup>⚠ superseded → honest 0.6456</sup>** | **0.90** | 0.84–0.86 | **0.53–0.56** | — |
 | Random | 0.497 | 0.10 | ~0.05 | ~0.05 | beaten decisively |
 | Complaint-volume | ~0.50 | low | low | low | beaten (complaints alone ≈ random) |
 | Withdrawal-volume ("busy ATMs") | ~0.50 | low | low | low | beaten |

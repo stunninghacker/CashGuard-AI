@@ -1,7 +1,7 @@
 # FINAL_KILL_TEST_AUDIT.md — Fresh Audit of the Final Kill-Test Pass
 
 
-> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6456** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5).
 Performed 2026-08-27. Previous scores were ignored; the repository, the
 running system, every artifact, and every doc-vs-implementation claim were
 re-checked. This pass added five new evaluation scripts and four new security
@@ -24,13 +24,13 @@ in the permutation tests themselves).
 ## New evidence this pass
 - **Permutation tests** (`permutation_tests.json`): label-shuffle AUC 0.475
   (chance); NO identity columns in features; row-order shuffle AUC identical
-  (0.9265 <sup>⚠ superseded → honest 0.6273</sup> vs 0.9274 <sup>⚠ superseded → honest 0.6273</sup>) — the model cannot memorize labels or identities.
-- **Generalization splits** (`generalization_splits.json`): random 0.931 <sup>⚠ superseded → honest 0.6273</sup> ·
-  time 0.927 <sup>⚠ superseded → honest 0.6273</sup> · cold-ATM 0.918 <sup>⚠ superseded → honest 0.6273</sup> · cold-city/district 0.924 <sup>⚠ superseded → honest 0.6273</sup> · **new-hotspot
+  (0.9265 <sup>⚠ superseded → honest 0.6456</sup> vs 0.9274 <sup>⚠ superseded → honest 0.6456</sup>) — the model cannot memorize labels or identities.
+- **Generalization splits** (`generalization_splits.json`): random 0.931 <sup>⚠ superseded → honest 0.6456</sup> ·
+  time 0.927 <sup>⚠ superseded → honest 0.6456</sup> · cold-ATM 0.918 <sup>⚠ superseded → honest 0.6456</sup> · cold-city/district 0.924 <sup>⚠ superseded → honest 0.6456</sup> · **new-hotspot
   0.764 (ECE 0.128 — the honest weak split, reported)**.
 - **Baseline war 2.0** (`baseline_war.json`): 9 competitors incl. historical
   hotspot (0.685), logistic (0.49), Hawkes-only (0.50), XGB ablations
-  (0.927 <sup>⚠ superseded → honest 0.6273</sup> without spatial; 0.928 <sup>⚠ superseded → honest 0.6273</sup> without complaint) — CashGuard 0.926 <sup>⚠ superseded → honest 0.6273</sup> with
+  (0.927 <sup>⚠ superseded → honest 0.6456</sup> without spatial; 0.928 <sup>⚠ superseded → honest 0.6456</sup> without complaint) — CashGuard 0.926 <sup>⚠ superseded → honest 0.6456</sup> with
   calibrated Brier 0.047/ECE 0.016.
 - **Intervention war + historical** (`intervention_simulation.json`): at K=10,
   CashGuard 5.5% capture vs historical 1.9%, volume 0.5%, random 0.4%.

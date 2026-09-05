@@ -1,7 +1,7 @@
 # FINAL_10_10_SCORECARD.md — Consolidated kill-test scorecard (all 22 phases)
 
 
-> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6273** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5). Authoritative source of truth for current metrics: `CURRENT_METRICS.md` + `artifacts/current_metrics.json`; per-file disposition: `docs/audits/METRICS_AUDIT.md`.
+> **WARNING: DATA-LEAKAGE CORRECTION (2026-08-29)** - This document's reported ROC-AUC figures (~0.92x) came from a SAME-DAY LABEL-LEAKAGE bug in feature engineering (backend/ml/features.py, `_shift_day_past`), now fixed. The honest forecast-safe ROC-AUC is **0.6456** (leaky 0.9275 -> corrected 0.6344 in the proof). On calm days the live model scores every ATM low (max ~0.11) and produces **no alerts**; any populated high-risk alert view is the opt-in, clearly-labelled **"Load Simulated Scenario"** mode (SCRIPTED, not live model output). Treat all 0.92x figures in this doc as superseded. Full detail: MODEL_CARD.md, VERIFICATION_LOG.md (P1.5). Authoritative source of truth for current metrics: `CURRENT_METRICS.md` + `artifacts/current_metrics.json`; per-file disposition: `docs/audits/METRICS_AUDIT.md`.
 This consolidates the FINAL 10/10 KILL TEST across all phases into a single
 scorecard, mapping each phase to its evidence artifact, the verdict, and what
 was **fresh-verified in the 2026-08-29 session** (marked ✔) versus taken from
@@ -21,7 +21,7 @@ hostile questions.
 
 | # | Phase | Evidence | Verdict | Fresh-verified |
 |---|---|---|---|---|
-| 0 | Baseline | `metrics.json`, `operational.json`; green tests | STRONG: AUC 0.9272 <sup>⚠ superseded → honest 0.6273</sup>, P@100 0.84, P@1000 0.563 | ✔ (retrain + re-runs) |
+| 0 | Baseline | `metrics.json`, `operational.json`; green tests | STRONG: AUC 0.9272 <sup>⚠ superseded → honest 0.6456</sup>, P@100 0.84, P@1000 0.563 | ✔ (retrain + re-runs) |
 | 1 | Generator leakage | `permutation_tests.json`, `seed_stability.json`, `feature_audit.json`, `counterfactual.json` | NO leak (label-shuffle 0.488); but complaint signal is weak (see LIMITATIONS) | ✔ (live) |
 | 2 | Spatial generalization | `generalization_splits.json`, `cold_location.json` | Strong on cold-ATM/city; **new-hotspot is the weak split** | ✔ (live) |
 | 3 | Temporal generalization | `horizons.json`, `hourly_eval.json` | 24h is the operational band; sub-daily / >24h honestly degraded | read-back |
@@ -31,7 +31,7 @@ hostile questions.
 | 7 | Feedback-loop safety | `ledger_replication.json`, architecture | Interventions never features; no auto-retrain; tamper-evident ledger | artifact read |
 | 8 | Adversarial simulation | `adversarial_worlds.json`, `drift.json` | AUC ≥ 0.86 in 12 drift worlds; REDUCED confidence surfaced | artifact read |
 | 9 | Explainability | `feature_audit.json`, evidence panel | Top-3 features 56.8%; per-instance evidence | artifact read |
-| 10 | Model disagreement | `model_disagreement.json` | XGB 0.926 <sup>⚠ superseded → honest 0.6273</sup> vs logistic 0.869; disagreement→downgrade/HOLD | artifact read |
+| 10 | Model disagreement | `model_disagreement.json` | XGB 0.926 <sup>⚠ superseded → honest 0.6456</sup> vs logistic 0.869; disagreement→downgrade/HOLD | artifact read |
 | 11 | Uncertainty/ACT/REVIEW/HOLD | `threshold_curve.json`, horizon HOLD | Artifact-backed threshold + HOLD policy | artifact read |
 | 12 | PDP safety | RESPONSE_PLAYBOOK, priority docs | Graded, human-gated, no automation | doc read |
 | 13 | Fairness | `fairness_groups.json` | FPR 0.0017–0.0053 across 15 groups | ✔ (live) |
@@ -55,7 +55,7 @@ hostile questions.
    almost nothing (city-shuffle Δ < 0.001). This drives the honest LIMITATIONS.
 3. **New honest caveat**: generator-seed P@100 is draw-sensitive (0.50–0.67 vs
    the fixed-seed 0.84). ROC-AUC is stable; top-of-ranking precision is not.
-4. **Reproduced** all headline metrics (AUC ~0.927 <sup>⚠ superseded → honest 0.6273</sup>, P@100 ~0.82–0.84 time-forward)
+4. **Reproduced** all headline metrics (AUC ~0.927 <sup>⚠ superseded → honest 0.6456</sup>, P@100 ~0.82–0.84 time-forward)
    — first-run hygiene confirmed, no reliance on stale JSON.
 
 ## Honest limitations (stated to every judge, never hidden)
