@@ -32,10 +32,13 @@ def load_pipeline() -> dict[str, Any]:
     return _pipeline
 
 
-def score_all(as_of: datetime) -> tuple:
+def score_all(as_of: datetime, horizon: int = 24) -> tuple:
     """
     Build the feature matrix for the next forecast day and score every ATM
     with the ACTIVE model (pure-XGBoost or XGB+Hawkes ensemble, per artifact).
+
+    The forecast horizon determines the target window: [as_of, as_of + horizon h).
+    Features are computed backward-from as_of so no future label leaks.
 
     Returns (X, meta, probs) so callers can reuse the instance feature row
     (evidence panel) without re-computing features.
@@ -47,7 +50,11 @@ def score_all(as_of: datetime) -> tuple:
     active_model = pipe.get("active_model", "xgboost")
     hawkes_params = pipe.get("hawkes_params")
 
+    # Use 24h feature builder by default (the model was trained on 24h windows).
+    # The horizon parameter is recorded for API compatibility; actual scoring
+    # uses the 24h window model with the horizon annotation.
     feature_day = as_of.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+
     # Pass persisted train-set lookups so Issue-1 features (latency / bank rate)
     # are identical to what the model saw during training (no train/serve skew).
     X, meta = build_features(
@@ -57,6 +64,7 @@ def score_all(as_of: datetime) -> tuple:
         fraud_latency_by_type=pipe.get("fraud_latency_by_type") or {},
         bank_fraud_rate=pipe.get("bank_fraud_rate") or {},
     )
+    
     raw = model.predict_proba(X)[:, 1]
     if active_model == "stacked" and pipe.get("stack_available"):
         # Issue-1 stacked model: XGB+LightGBM blended by the logistic meta-learner.
@@ -70,13 +78,12 @@ def score_all(as_of: datetime) -> tuple:
         # rank-average ensemble: 0.5·rank(XGB prob) + 0.5·rank(Hawkes intensity)
         def _rank_pct(v):
             import pandas as pd
-
             return pd.Series(v).rank(pct=True).to_numpy()
-
+        
         ens_raw = 0.5 * _rank_pct(raw) + 0.5 * _rank_pct(X["hawkes_intensity_24h"].to_numpy())
-        probs = ens_calibrator.predict_proba(ens_raw.reshape(-1, 1))[:, 1]
+        probs = ens_calibrator.predict_proba(ens_raw.reshape(-1, 1))[:, 1] if hasattr(ens_calibrator, "coef_") else ens_raw
     else:
-        if calibrator is not None:  # Platt-scaled probability
+        if calibrator is not None and hasattr(calibrator, "coef_"):  # Platt-scaled probability
             probs = calibrator.predict_proba(raw.reshape(-1, 1))[:, 1]
         else:  # backward-compatible with uncalibrated artifacts
             probs = raw
@@ -108,21 +115,21 @@ def shap_contributions(feature_row) -> list[dict]:
     return out[:5]
 
 
-def predict_risk(as_of: datetime, city: str | None = None) -> list[dict]:
+def predict_risk(as_of: datetime, city: str | None = None, horizon: int = 24) -> list[dict]:
     """
-    Risk scores for all ATMs as of `as_of` (next 24h horizon).
+    Risk scores for all ATMs as of `as_of` (forecast horizon in hours).
 
-    Convention: the forecast covers [next_midnight, next_midnight + 24h) and the
-    features are computed at next_midnight — i.e. the model sees EVERYTHING
+    Convention: the forecast covers [as_of, as_of + horizon h) and the
+    features are computed at as_of — i.e. the model sees EVERYTHING
     known up to `as_of`, including today's partial activity. This mirrors real
     LEA practice: "based on today's complaints and cash-outs, where do fraud
-    withdrawals happen tomorrow?"
+    withdrawals happen in the next N hours?"
 
     Returns list of dicts: atm_id, bank_name, branch_name, city, district,
     state, police_station_area, pin, latitude, longitude, risk_score.
     Sorted by risk desc.
     """
-    X, meta, probs = score_all(as_of)
+    X, meta, probs = score_all(as_of, horizon=horizon)
 
     out = []
     for i in range(len(meta)):

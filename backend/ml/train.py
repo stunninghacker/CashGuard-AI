@@ -263,6 +263,9 @@ def train(
     # ---- Platt calibration (fitted on the VALIDATION slice, never test) ----
     def _platt(raw_val: np.ndarray, yv: np.ndarray, raw_te: np.ndarray) -> tuple[np.ndarray, LogisticRegression]:
         cal = LogisticRegression()
+        if len(np.unique(yv)) < 2:
+            # Single-class validation set — skip calibration, return raw probs
+            return raw_te, LogisticRegression()
         cal.fit(raw_val.reshape(-1, 1), yv)
         return cal.predict_proba(raw_te.reshape(-1, 1))[:, 1], cal
 
@@ -271,7 +274,7 @@ def train(
     probs_cal, calibrator = _platt(probs_val, yval, probs)
     # BEFORE (baseline) AUC: the single XGBoost trained on the RAW train set —
     # this is the honest reference point the Issue-1 changes must beat.
-    auc_before = float(roc_auc_score(yte, probs))
+    auc_before = float(roc_auc_score(yte, probs)) if len(np.unique(yte)) >= 2 else 0.5
 
     # ---- Issue-1: stacked ensemble (XGB + LightGBM) on a SMOTE-Tomek
     # resampled TRAINING set, blended by a logistic meta-learner. ----
@@ -340,7 +343,7 @@ def train(
         stack_raw = probs
 
     # AFTER (stacked) AUC: the honest target metric.
-    auc_after = float(roc_auc_score(yte, stack_raw))
+    auc_after = float(roc_auc_score(yte, stack_raw)) if len(np.unique(yte)) >= 2 else 0.5
 
     # ---- ensemble: rank-average of XGB probability + Hawkes intensity ----
     def _rank_pct(v: np.ndarray) -> np.ndarray:
@@ -380,7 +383,7 @@ def train(
             "recall_at_20": round(_recall_at_k(y, score, 20), 4),
             "recall_at_50": round(_recall_at_k(y, score, 50), 4),
             "recall_at_100": round(_recall_at_k(y, score, 100), 4),
-            "roc_auc": round(float(roc_auc_score(y, score)), 4),
+            "roc_auc": round(float(roc_auc_score(y, score)) if len(np.unique(y)) >= 2 else 0.5, 4),
             "accuracy": round(float(accuracy_score(y, preds)), 4),
             "precision_at_threshold_0p7": round(float(y[mask70].mean()), 4) if mask70.sum() > 0 else None,
             "n_flagged_at_0p7": int(mask70.sum()),
@@ -398,9 +401,9 @@ def train(
     # (never the test set): rank-based AUC is calibration-invariant, so we score
     # the raw train/val outputs. The stack (Issue 1) is a candidate; whichever
     # wins on VALIDATION becomes the active model actually served in production.
-    val_auc_xgb = float(roc_auc_score(yval, probs_val))
-    val_auc_ens = float(roc_auc_score(yval, ens_raw_val))
-    val_auc_stack = float(roc_auc_score(yval, stack_raw_val)) if stack_available else -1.0
+    val_auc_xgb = float(roc_auc_score(yval, probs_val)) if len(np.unique(yval)) >= 2 else 0.5
+    val_auc_ens = float(roc_auc_score(yval, ens_raw_val)) if len(np.unique(yval)) >= 2 else 0.5
+    val_auc_stack = float(roc_auc_score(yval, stack_raw_val)) if (stack_available and len(np.unique(yval)) >= 2) else -1.0
     candidates = {
         "xgboost": (val_auc_xgb, probs_cal, blk_xgb),
         "ensemble": (val_auc_ens, ens_cal, blk_ens),

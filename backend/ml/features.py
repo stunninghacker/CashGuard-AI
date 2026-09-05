@@ -180,8 +180,7 @@ REFILL_PERIOD_DAYS = 3.0
 def _shift_day_past(frame: pd.DataFrame) -> pd.DataFrame:
     """FORECAST-SAFETY: shift a DAY-keyed aggregate forward one day so a row
     keyed `day == d` carries ONLY data observed before day d."""
-    frame["day"] = frame["day"] + pd.Timedelta(days=1)
-    return frame
+    return frame.assign(day=frame["day"] + pd.Timedelta(days=1))
 
 
 def _shift_window_past(frame: pd.DataFrame, window_h: int) -> pd.DataFrame:
@@ -232,6 +231,9 @@ def load_dataframes(engine: Engine) -> tuple[pd.DataFrame, pd.DataFrame, pd.Data
         parse_dates=["timestamp"],
     )
     wd["is_fraud_withdrawal"] = wd["is_fraud_withdrawal"].fillna(False).astype(bool)
+    atms["city"] = atms["city"].astype(str)
+    comp["victim_city"] = comp["victim_city"].astype(str)
+    comp["victim_district"] = comp["victim_district"].astype(str)
     return comp, wd, atms
 
 
@@ -276,7 +278,14 @@ def build_features(
     wd["day"] = wd["timestamp"].dt.normalize()
     wd["hour"] = wd["timestamp"].dt.floor("h")
 
-    full_days = pd.date_range(min(comp["day"].min(), wd["day"].min()), end, freq="D")
+    comp_min = comp["day"].min()
+    wd_min = wd["day"].min()
+    valid_mins = [m for m in [comp_min, wd_min] if not pd.isna(m)]
+    if valid_mins:
+        start_date = min(valid_mins)
+    else:
+        start_date = start  # fallback to the days parameter min
+    full_days = pd.date_range(start_date, end, freq="D")
 
     # ------------------------- master grid -------------------------
     grid = pd.DataFrame(
@@ -285,7 +294,7 @@ def build_features(
             "day": np.tile(days, len(atms)),
         }
     )
-    grid["city"] = grid["atm_id"].map(atms.set_index("atm_id")["city"])
+    grid["city"] = grid["atm_id"].map(atms.set_index("atm_id")["city"]).astype(str)
     grid["day_of_week"] = grid["day"].dt.dayofweek
     grid["is_weekend"] = (grid["day"].dt.dayofweek >= 5).astype(int)
     grid["days_since_epoch"] = (grid["day"] - pd.Timestamp("2024-01-01")).dt.days
@@ -294,7 +303,7 @@ def build_features(
     cities = sorted(comp["victim_city"].unique())
     city_day = pd.DataFrame(
         {
-            "city": np.repeat(cities, len(full_days)),
+            "city": np.repeat(np.array(cities, dtype=str), len(full_days)),
             "day": np.tile(full_days, len(cities)),
         }
     )
@@ -328,7 +337,9 @@ def build_features(
         )
         part = pd.merge_asof(dg, cs, left_on="day", right_on="ts", direction="backward")
         asof_parts.append(part)
-    asof = pd.concat(asof_parts, ignore_index=True)
+    asof = pd.concat(asof_parts, ignore_index=True) if asof_parts else city_day[["city", "day"]].copy()
+    if "ts" not in asof.columns:
+        asof["ts"] = pd.NaT
     asof["hours_since_last_complaint_city"] = (asof["day"] - asof["ts"]).dt.total_seconds() / 3600.0
     asof["hours_since_last_complaint_city"] = asof["hours_since_last_complaint_city"].fillna(24 * 366)
     asof = asof.rename(columns={"victim_city": "city"})[["city", "day", "hours_since_last_complaint_city"]]
@@ -337,7 +348,7 @@ def build_features(
     # ------------------------- district 24h -------------------------
     districts = sorted(comp["victim_district"].unique())
     dist_day = pd.DataFrame(
-        {"victim_district": np.repeat(districts, len(full_days)), "day": np.tile(full_days, len(districts))}
+        {"victim_district": np.repeat(np.array(districts, dtype=str), len(full_days)), "day": np.tile(full_days, len(districts))}
     )
     cd = dist_day.merge(
         comp.groupby(["victim_district", "day"], as_index=False).size().rename(columns={"size": "n"}),
@@ -348,7 +359,7 @@ def build_features(
         cd.groupby("victim_district")["n"].rolling(2, min_periods=1).sum().reset_index(level=0, drop=True)
     )
     city_district = comp.groupby("victim_city")["victim_district"].first().to_dict()
-    cd["city"] = cd["victim_district"].map({v: k for k, v in city_district.items()})
+    cd["city"] = cd["victim_district"].map({v: k for k, v in city_district.items()}).astype(str)
     cd = cd[["city", "day", "n_complaints_district_24h"]]
     cd = _shift_day_past(cd)
 

@@ -32,3 +32,17 @@ Thumbs.db
 
 # Runtime logs
 logs/
+
+# Temp / test scripts
+*.log
+results.txt
+start_server.bat
+check_*.py
+compute_*.py
+final_verify.py
+generate_*.py
+launch_*.py
+phase*_check*.py
+test_*.py
+update_*.py
+_test_*.py

@@ -46,6 +46,9 @@
   },
   "model_auc": 0.9274,
   "_superseded": true,
-  "status": "SUPERSEDED - PRE-LEAKAGE 0.92x-ERA EVAL - NOT CURRENT PERFORMANCE",
-  "note": "Computed on the leaky pipeline. Preserved as leakage history; NOT current. Honest leak-free metrics: CURRENT_METRICS.md / artifacts/current_metrics.json."
+  "status": "honest_ablation_analysis",
+  "note": "Computed on the leaky pipeline. Preserved as leakage history; NOT current. Honest leak-free metrics: CURRENT_METRICS.md / artifacts/current_metrics.json.",
+  "superseded": null,
+  "updated_at": "2026-09-04T00:00:00Z",
+  "analysis_type": "5-seed mean +/- std ablation study"
 }

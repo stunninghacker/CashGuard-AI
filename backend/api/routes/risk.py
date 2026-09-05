@@ -41,6 +41,7 @@ def horizons(
 def risk_scores(
     city: str | None = None,
     as_of: str | None = Query(default=None, description="ISO datetime; defaults to simulated now"),
+    horizon: int = Query(default=24, ge=2, le=72, description="Forecast horizon in hours: 2, 6, 12, 24, 48, 72"),
     user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "BANK", "I4C_ADMIN")),
     db: Session = Depends(get_db),
 ):
@@ -49,7 +50,9 @@ def risk_scores(
         rows = cached if not city else [r for r in cached if r["city"] == city]
         return rows
     ref = services.resolve_as_of(db, as_of)
-    return services.get_risk_scores(db, as_of=ref, city=city, user=user)
+    # Select model appropriate for the requested horizon
+    scores = services.get_risk_scores(db, as_of=ref, city=city, user=user, horizon=horizon)
+    return scores
 
 
 @router.get("/threshold-explorer")

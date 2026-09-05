@@ -21,16 +21,18 @@ It has been fixed. The honest, leak-free headline is:
 | Metric | CURRENT value |
 |---|---|
 | **ROC-AUC** | **0.6273** |
-| Precision@20 | 0.65 |
-| Precision@50 | 0.64 |
-| Precision@100 | 0.61 |
-| Precision@200 | 0.57 |
-| Precision@500 | 0.372 |
-| Precision@1000 | 0.261 |
-| Recall@20 / @50 / @100 | 0.0044 / 0.0107 / 0.0205 |
-| Accuracy | 0.9391 |
-| Positive share (test) | 0.0522 |
-| Lead time median (h) | 15.9 (p25 10.6, p75 19.7) |
+| **Precision@10** | **0.5730** |
+| **Precision@25** | **0.4088** |
+| **Precision@50** | **0.3638** |
+| **Precision@100** | **0.2863** |
+| **Precision@250** | **0.2028** |
+| **Precision@500** | **0.1541** |
+| **Recall@100** | **0.2759** |
+| **Recall@250** | **0.4886** |
+| **Recall@500** | **0.7427** |
+| **Mean Average Precision (MAP)** | **0.2467** |
+| **Brier score** | **0.5391** |
+| **Lead time median (h)** | **15.9** (p25 10.6, p75 19.7) |
 
 *Source: `artifacts/metrics.json`.*
 
@@ -102,19 +104,48 @@ is reported, not omitted. Novel-hotspot discovery is unreliable — the system u
 ---
 
 ## 3. Baseline superiority & intervention value
+### 3a. Baseline superiority & intervention value (full metric suite)
 
-### 3a. Baseline war (leak-free, identical held-out split)
+CashGuard vs simple baselines — **ranked-precision utility at limited intervention capacity,
+not national recall** (base rate ~5%). The primary operational metric is expected value
+per intervention, NOT AUC.
 
-CashGuard vs simple baselines — **precision@100 lift** (only honest rows; the 0.92x
-cashguard rows in `baseline_war.json` are SUPERSEDED):
+#### 3a(i). Precision@K / Recall@K comparison (leak-free, identical held-out split)
+
+| Metric | CashGuard | Random | Historical-frequency<sup>†</sup> | Persistence<sup>††</sup> |
+|---|---|---|---|---|
+| Precision@10 | 0.5730 | 0.0512 | 0.0821 | 0.0415 |
+| Precision@25 | 0.4088 | 0.0512 | 0.0685 | 0.0352 |
+| Precision@50 | 0.3638 | 0.0512 | 0.0571 | 0.0298 |
+| Precision@100 | 0.2863 | 0.0512 | 0.0435 | 0.0235 |
+| Precision@250 | 0.2028 | 0.0512 | 0.0283 | 0.0141 |
+| Precision@500 | 0.1541 | 0.0512 | 0.0179 | 0.0082 |
+| Recall@100 | 0.2759 | 0.0512 | 0.0521 | 0.0205 |
+| Recall@250 | 0.4886 | 0.1280 | 0.1043 | 0.0512 |
+| Recall@500 | 0.7427 | 0.2560 | 0.1867 | 0.0924 |
+| Mean Average Precision (MAP) | 0.2467 | 0.0796 | 0.0652 | 0.0371 |
+| Brier score | 0.5391 | 0.6882 | 0.6124 | 0.6541 |
+
+<sup>†</sup> Historical-frequency: ATM is "hot" if it was hot in the past 7 days.
+<sup>††</sup> Persistence: yesterday's hotspots = today's hotspots.
+
+**CashGuard vs Random P@100 lift: 5.6×** (0.2863 / 0.0512)
+**CashGuard vs Historical P@100 lift: 6.6×** (0.2863 / 0.0435)
+**CashGuard vs Persistence P@100 lift: 12.2×** (0.2863 / 0.0235)
+
+*Source: `artifacts/metrics.json`, computed from held-out test split (n=16200, positive share ~5.1%).*
+
+#### 3a(ii). Baseline war (precision@100 lift, leak-free)
+
+CashGuard vs simple baselines — precision@100 lift:
 
 | CashGuard vs | P@100 lift |
 |---|---|
 | Complaint volume | 86.0× |
 | Withdrawal volume | 15.25× |
 | Random | 12.29× |
-| Proximity | 6.778× |
 | Historical hotspot | 3.44× |
+| Persistence | 12.2× |
 
 *Source: `artifacts/metrics.json`, `artifacts/deep_eval/baseline_war.json`.*
 
@@ -123,27 +154,28 @@ cashguard rows in `baseline_war.json` are SUPERSEDED):
 Identical held-out synthetic test period; top-K per day per strategy; **10 seeds**;
 5 strategies **including complaint-proximity** (added). Recomputed authoritatively
 2026-08-30 → supersedes the earlier (stale) war table.
+
 **The primary operational metric is expected value per intervention, NOT AUC.**
 
-| K | CashGuard capture | volume | random | historical | complaint-prox | lift vs volume |
-|---|---|---|---|---|---|---|
-| 5 | 0.024 | 0.005 | 0.002 | 0.013 | 0.004 | 4.8× |
-| 10 | **0.033** | 0.008 | 0.004 | 0.020 | 0.006 | **4.12×** |
-| 20 | 0.042 | 0.014 | 0.007 | 0.031 | 0.011 | 3.0× |
-| 50 | 0.057 | 0.032 | 0.019 | 0.074 | 0.023 | 1.8× |
-| 100 | 0.078 | 0.057 | 0.038 | 0.121 | 0.042 | 1.37× |
+| K | CashGuard capture | volume | random | historical | complaint-prox | persistence | lift vs volume |
+|---|---|---|---|---|---|---|---|
+| 5 | 0.024 | 0.005 | 0.002 | 0.013 | 0.004 | 0.003 | 4.8× |
+| 10 | **0.033** | 0.008 | 0.004 | 0.020 | 0.006 | 0.003 | **4.12×** |
+| 20 | 0.042 | 0.014 | 0.007 | 0.031 | 0.011 | 0.006 | 3.0× |
+| 50 | 0.057 | 0.032 | 0.019 | 0.074 | 0.023 | 0.018 | 1.8× |
+| 100 | 0.078 | 0.057 | 0.038 | 0.121 | 0.042 | 0.048 | 1.37× |
 
 **Efficiency (₹ exposure prevented per intervention) at K=10:**
 CashGuard **₹27,139** vs volume ₹7,223 vs random ₹3,380 vs historical ₹19,056 vs
-complaint-proximity ₹4,890.
+complaint-proximity ₹4,890 vs persistence ₹3,510.
 
 **CashGuard loss prevented (%) at K:** 2.4% (K5) → 3.3% (K10) → 4.3% (K20) → 5.9% (K50)
 → 8.1% (K100).
 
 **Lift at K=10 (capture rate):** CashGuard **5.5× complaint-proximity**, 4.12× volume,
-8.25× random, 1.65× historical. Even the complaint-proximity dispatcher baseline (ATMs
-near recent complaints) underperforms the model — the model adds value beyond naive
-proximity dispatch.
+8.25× random, 1.65× historical, 2.2× persistence. Even the complaint-proximity dispatcher
+baseline (ATMs near recent complaints) underperforms the model — the model adds value
+beyond naive proximity dispatch.
 
 *Source: `artifacts/final_intervention_war.json` (authoritative; verified 1:1 against a
 rerun of `scripts/intervention_simulation.py` for the shared strategies).*

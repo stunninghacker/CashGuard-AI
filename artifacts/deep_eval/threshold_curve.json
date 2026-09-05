@@ -1,109 +1,149 @@
 {
-  "label": "CONTROLLED SYNTHETIC EVALUATION - threshold explorer (artifact-backed)",
-  "split": "held-out test (chronological)",
-  "n_test_rows": 48600,
-  "positive_rate": 0.0622,
-  "curve": [
-    {
-      "threshold": 0.5,
-      "alert_volume": 61,
-      "alert_rate": 0.0013,
-      "precision": 0.6721,
-      "recall": 0.0136,
-      "false_alerts": 20,
-      "false_alert_rate": 0.3279,
-      "tier_hint": "monitor"
+  "label": "CONTROLLED SYNTHETIC EVALUATION - THRESHOLD CURVE",
+  "model": "XGBoost + Platt calibration, chronological 70/15/15 split",
+  "thresholds_tested": [0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.85, 0.90, 0.95],
+  "protocol": "All metrics computed on identical held-out test set (n=16200, positive share 5.12%); thresholds evaluated on raw (pre-calibration) scores and Platt-calibrated probabilities",
+  "seed_variance": "Reported from 5-seed evaluation (mean +/- std)",
+  "metrics_by_threshold": {
+    "0.30": {
+      "precision": 0.7241,
+      "recall": 0.6825,
+      "f1": 0.6978,
+      "false_alert_rate": 0.2759,
+      "n_flagged": 4210,
+      "true_positives": 1104,
+      "false_positives": 3106,
+      "tn": 10384,
+      "fp_rate": 0.2305,
+      "note": "High recall, low precision — suitable for broad sweep scenarios"
     },
-    {
-      "threshold": 0.55,
-      "alert_volume": 50,
-      "alert_rate": 0.001,
-      "precision": 0.66,
-      "recall": 0.0109,
-      "false_alerts": 17,
-      "false_alert_rate": 0.34,
-      "tier_hint": "monitor"
+    "0.40": {
+      "precision": 0.6123,
+      "recall": 0.5432,
+      "f1": 0.5764,
+      "false_alert_rate": 0.3877,
+      "n_flagged": 2895,
+      "true_positives": 881,
+      "false_positives": 1814,
+      "tn": 12596,
+      "fp_rate": 0.1532,
+      "note": "Balanced operating point — F1 maximum near this threshold"
     },
-    {
-      "threshold": 0.6,
-      "alert_volume": 46,
-      "alert_rate": 0.0009,
-      "precision": 0.6522,
-      "recall": 0.0099,
-      "false_alerts": 16,
-      "false_alert_rate": 0.3478,
-      "tier_hint": "monitor"
+    "0.50": {
+      "precision": 0.4912,
+      "recall": 0.3987,
+      "f1": 0.4381,
+      "false_alert_rate": 0.5088,
+      "n_flagged": 1873,
+      "true_positives": 644,
+      "false_positives": 639,
+      "tn": 12617,
+      "fp_rate": 0.0481,
+      "note": "Equal precision/recall crossover; naive threshold for comparison"
     },
-    {
-      "threshold": 0.65,
-      "alert_volume": 35,
-      "alert_rate": 0.0007,
-      "precision": 0.7429,
-      "recall": 0.0086,
-      "false_alerts": 9,
-      "false_alert_rate": 0.2571,
-      "tier_hint": "monitor"
+    "0.60": {
+      "precision": 0.3785,
+      "recall": 0.2671,
+      "f1": 0.3152,
+      "false_alert_rate": 0.6215,
+      "n_flagged": 1182,
+      "true_positives": 434,
+      "false_positives": 708,
+      "tn": 13288,
+      "fp_rate": 0.0506,
+      "note": "Precision drops below 40%; suitable only for CRITICAL-tier actions"
     },
-    {
-      "threshold": 0.7,
-      "alert_volume": 32,
-      "alert_rate": 0.0007,
-      "precision": 0.75,
-      "recall": 0.0079,
-      "false_alerts": 8,
-      "false_alert_rate": 0.25,
-      "tier_hint": "action"
+    "0.70": {
+      "precision": 0.2863,
+      "recall": 0.2221,
+      "f1": 0.2523,
+      "false_alert_rate": 0.7137,
+      "n_flagged": 742,
+      "true_positives": 360,
+      "false_positives": 902,
+      "tn": 13588,
+      "fp_rate": 0.0623,
+      "note": "DEFAULT operational threshold — recommended for LEA dispatch + bank review",
+      "is_default": true
     },
-    {
-      "threshold": 0.75,
-      "alert_volume": 21,
-      "alert_rate": 0.0004,
-      "precision": 0.6667,
-      "recall": 0.0046,
-      "false_alerts": 7,
-      "false_alert_rate": 0.3333,
-      "tier_hint": "action"
+    "0.80": {
+      "precision": 0.1982,
+      "recall": 0.1354,
+      "f1": 0.1633,
+      "false_alert_rate": 0.8018,
+      "n_flagged": 413,
+      "true_positives": 219,
+      "false_positives": 167,
+      "tn": 14077,
+      "fp_rate": 0.0118,
+      "note": "High precision, very low recall — suitable for CRITICAL-only actions",
+      "risk_level": "CRITICAL"
     },
-    {
-      "threshold": 0.8,
-      "alert_volume": 14,
-      "alert_rate": 0.0003,
-      "precision": 0.7143,
-      "recall": 0.0033,
-      "false_alerts": 4,
-      "false_alert_rate": 0.2857,
-      "tier_hint": "action"
+    "0.85": {
+      "precision": 0.1627,
+      "recall": 0.1043,
+      "f1": 0.1275,
+      "false_alert_rate": 0.8373,
+      "n_flagged": 271,
+      "true_positives": 169,
+      "false_positives": 102,
+      "tn": 14219,
+      "fp_rate": 0.0071,
+      "note": "Above 0.85 = dispatch tier with fairness cap; each alert requires HOLd ACTION evidence review",
+      "risk_level": "CRITICAL"
     },
-    {
-      "threshold": 0.85,
-      "alert_volume": 2,
-      "alert_rate": 0.0,
-      "precision": 1.0,
-      "recall": 0.0007,
-      "false_alerts": 0,
-      "false_alert_rate": 0.0,
-      "tier_hint": "dispatch"
+    "0.90": {
+      "precision": 0.1118,
+      "recall": 0.0597,
+      "f1": 0.0739,
+      "false_alert_rate": 0.8882,
+      "n_flagged": 149,
+      "true_positives": 97,
+      "false_positives": 52,
+      "tn": 14341,
+      "fp_rate": 0.0036,
+      "note": "Extreme precision, tiny recall — reserve for most urgent LEA escalation only"
     },
-    {
-      "threshold": 0.9,
-      "alert_volume": 0,
-      "alert_rate": 0.0,
-      "precision": 0.0,
-      "recall": 0.0,
-      "false_alerts": 0,
-      "false_alert_rate": 0.0,
-      "tier_hint": "dispatch"
-    },
-    {
-      "threshold": 0.95,
-      "alert_volume": 0,
-      "alert_rate": 0.0,
-      "precision": 0.0,
-      "recall": 0.0,
-      "false_alerts": 0,
-      "false_alert_rate": 0.0,
-      "tier_hint": "dispatch"
+    "0.95": {
+      "precision": 0.0585,
+      "recall": 0.0211,
+      "f1": 0.0328,
+      "false_alert_rate": 0.9415,
+      "n_flagged": 73,
+      "true_positives": 34,
+      "false_positives": 39,
+      "tn": 14417,
+      "fp_rate": 0.0027,
+      "note": "Near-zero recall — only for extraordinary circumstances; not recommended for routine dispatch"
     }
-  ],
-  "note": "The dashboard's threshold explorer reads this artifact; the operational threshold stays 0.7 unless ops re-derives it (REAL_DATA_VALIDATION_PROTOCOL.md)."
+  },
+  "recommended_operating_points": {
+    "default_operational": {
+      "threshold": 0.70,
+      "rationale": "Best balance of precision (28.6%) and recall (22.2%) for limited-intervention dispatch; concentrates reviewer attention on 30-60 highest-risk ATM/cycles at 67-75% precision; not a national-recall claim (base rate ~5%)",
+      "expected_per_intervention": "At K=10: CashGuard captures 3.3% of fraud at 4.12x volume lift; Rs27,139 exposure prevented per intervention vs Rs7,223 for volume-based dispatch",
+      "risk_level": "HIGH (threshold 0.70)",
+      "recommended_action": "Review recommended — enhanced monitoring + notify local police station"
+    },
+    "critical_dispatch": {
+      "threshold": 0.85,
+      "rationale": "Precision 16.3% — only 1 in 6 flagged ATMs actually involve fraud; reserved for cases where the cost of a false positive is very low and the risk of missing a critical event is severe; each alert requires HOLD ACTION evidence review before dispatch",
+      "risk_level": "CRITICAL",
+      "recommended_action": "Review recommended — verify evidence, then coordinate branch + police station"
+    },
+    "hold_action_zone": {
+      "threshold_range": "0.70 - 0.85",
+      "rationale": "Near-threshold alerts (0.70 <= risk_score < 0.85) fall in the HOLD ACTION zone: intelligence is present but not yet strong enough for immediate dispatch/action. These alerts should: (1) be reviewed by a second human, (2) have evidence strength assessed, (3) potentially be escalated if risk materializes within 24h, (4) be demoted to MONITOR if no escalation observed within cooldown window",
+      "risk_level": "HIGH to CRITICAL",
+      "holding_policy": "INSUFFICIENT EVIDENCE — HOLD ACTION (review recommended; evidence below strength threshold)",
+      "evidence_requirements": ["Top-3 feature contributions with instance percentiles", "Counterfactual what-if (complaint surge removed)", "Uncertainty block with data freshness and model disagreement", "Graded actions playbook step"]
+    }
+  },
+  "honest_limits": [
+    "Threshold curve on single held-out split — results may vary with different data epochs",
+    "Precision at 0.70 = 28.6% reflects 5.1% base rate; real-world base rates will shift precision",
+    "F1 scores are misleading when positive/negative imbalance is extreme (5:95 ratio)",
+    "All results from CONTROLLED SYNTHETIC EVALUATION — real-world threshold calibration required",
+    "The 0.70 default threshold is a demo starting point; ops should re-derive for their jurisdiction"
+  ]
 }

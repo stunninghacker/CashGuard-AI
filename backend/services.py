@@ -59,22 +59,23 @@ def _invalidate_score_cache() -> None:
     _score_cache["expires_at"] = None
 
 
-def get_risk_scores(db: Session, as_of: datetime | None = None, city: str | None = None, user=None) -> list[dict]:
-    """Compute P(fraud withdrawal in next 24h) for every ATM, as of `as_of`.
+def get_risk_scores(db: Session, as_of: datetime | None = None, city: str | None = None, user=None, horizon: int = 24) -> list[dict]:
+    """Compute P(fraud withdrawal in next N hours) for every ATM, as of `as_of`.
     RBAC: scores are row-scoped to the caller's jurisdiction (repo layer).
     The full score set is cached (TTL SCORE_CACHE_SECONDS, single-flight) and
-    invalidated on any data change (drip ingest / alert cycle)."""
+    invalidated on any data change (drip ingest / alert cycle).
+    horizon: forecast horizon in hours (2, 6, 12, 24, 48, 72). Default 24."""
     from .config import SCORE_CACHE_SECONDS
 
     ref = as_of or resolve_as_of(db)
-    key = f"{city or '*'}|{ref.isoformat()}"
+    key = f"{city or '*'}|{ref.isoformat()}|{horizon}"
     now = datetime.utcnow()
     if _score_cache["key"] == key and _score_cache["expires_at"] is not None and now < _score_cache["expires_at"]:
         cached = _score_cache["payload"]
     else:
         with _score_cache_lock:
             if _score_cache["key"] != key or _score_cache["expires_at"] is None or now >= _score_cache["expires_at"]:
-                cached = inference.predict_risk(ref)
+                cached = inference.predict_risk(ref, horizon=horizon)
                 _score_cache["key"] = key
                 _score_cache["payload"] = cached
                 _score_cache["expires_at"] = now + timedelta(seconds=SCORE_CACHE_SECONDS)
@@ -90,6 +91,7 @@ def get_risk_scores(db: Session, as_of: datetime | None = None, city: str | None
     for s in scores:
         s["risk_level"] = _risk_level(s["risk_score"])
         s["as_of"] = ref
+        s["prediction_horizon_hours"] = horizon
     return scores
 
 
