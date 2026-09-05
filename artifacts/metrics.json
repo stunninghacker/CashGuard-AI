@@ -2,7 +2,7 @@
   "model_type": "xgboost",
   "calibration": "platt-sigmoid (fitted on validation slice)",
   "active_model": "xgboost",
-  "trained_at": "2026-09-05T14:55:54.280417",
+  "trained_at": "2026-09-05T17:51:52.872450",
   "split_day": "2026-07-14",
   "n_train_samples": 96300,
   "n_val_samples": 16200,
@@ -309,5 +309,5 @@
       "beta": 1.5
     }
   },
-  "training_seconds": 28.6
+  "training_seconds": 20.5
 }
