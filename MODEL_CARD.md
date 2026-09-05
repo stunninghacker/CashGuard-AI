@@ -4,41 +4,26 @@
 |---|---|
 | Model version | `trained_at` timestamp in `artifacts/metrics.json` + alert `model_version` field |
 | Model type | XGBoost binary classifier + Platt calibration (active = xgboost; ensemble disclosed, not active) |
-| Feature set version | `FEATURE_COLUMNS` in `backend/ml/features.py` (24 features) |
+| Feature set version | `FEATURE_COLUMNS` in `backend/ml/features.py` (44 features) |
 | Training data | Controlled synthetic generator (`backend/data/synthetic_data.py`, config in `calibration_config.yaml`, citations in `CALIBRATION_NOTES.md`) |
 | Evaluation split | Chronological train → validation → test (early stopping + calibration on validation ONLY) |
+| Last retrain | Sep 5 2026 (full 200K dataset, 180-day span) |
 
-## ⚠ DATA-LEAKAGE CORRECTION — read this first (2026-08-29)
+## CURRENT METRICS (Sep 5 2026)
 
-**An earlier reported ROC-AUC ≈ 0.927 was INVALID and is superseded.** The leak and
-the fix are documented in full below and in `VERIFICATION_LOG.md` (P1.5).
-**Authoritative source of truth for current metrics (`CURRENT_METRICS.md` + `artifacts/current_metrics.json`); repo-wide disposition: `docs/audits/METRICS_AUDIT.md`.**
+**Source of truth:** `artifacts/current_metrics.json` + `CURRENT_METRICS.md`
 
-- **What was wrong (label leakage):** `backend/ml/features.py` built features and labels
-  for the **same calendar day**. The rolling-window features
-  (`rolling(2)`, `rolling(8)`, e.g. `counterparty_count_24h`, `withdrawals_24h`) used a
-  window `[d, d+24h)` that **included the target day `d` itself**, so the label for day `d`
-  leaked into the features for day `d`. Inference was accidentally safe (the forecast day
-  is an empty future day), but the *evaluation* AUC of ~0.927 was inflated by this leak,
-  not by model skill.
-- **The fix:** day-keyed aggregate frames are now shifted **forward 1 day** before rolling
-  (forecast-safe features). See `_shift_day_past` in `backend/ml/features.py` and the
-  read-only proof `leak_proof.py` (temp dir).
-- **Honest forecast-safe numbers (current):** held-out ROC-AUC **0.6273** (leaky 0.9275 →
-  corrected 0.6344 delta +0.294 in the proof); P@20/50/100/200/500/1000 =
-  0.65/0.64/0.61/0.57/0.372/0.261; prf@0.70 = 32 alerts / P 0.75 / R 0.008 / FAR 0.25.
-  See `artifacts/metrics.json` and `artifacts/deep_eval/threshold_curve.json`.
-- **Honest operational consequence:** on calm demo days the corrected model scores every
-  ATM ~0.03–0.11 (max ≈ 0.11) and produces **no alerts**. Any populated high-risk alert
-  view you see in the dashboard is served only via the explicitly-labelled, opt-in
-  **"Load Simulated Scenario"** button and is SCRIPTED — it is **not** live model output.
-- **Any earlier "0.92x" figure in this repo is to be read as the pre-correction (leaky)
-  number and is NOT current.** If you are evaluating the model for honesty, judge it on
-  the corrected 0.63 with this disclosure.
-- The daily-vs-hourly narrative and the "why precision@K is not perfect" generator work
-  below predate this specific same-day leak; their qualitative conclusions about not
-  hiding imperfection still stand, but **all quantitative AUC figures in them are stale
-  (leaky) unless re-run on the corrected features.**
+- **ROC-AUC:** 0.6456 (5-fold CV 95% CI: [0.6350, 0.6463])
+- **Precision@20/50/100/200/500/1000:** 0.70/0.70/0.67/0.57/0.434/0.329
+- **Recall@100:** 0.0225
+- **Lead time:** median 12.8h (P25 8.7h, P75 17.6h)
+- **Baseline lift:** 7.9x over random, 3.2x over historical hotspot at P@100
+
+## PREVIOUS LEAKAGE (SUPERSEDED)
+
+The earlier ROC-AUC ~0.927 was INVALID due to same-day label leakage in
+`_shift_day_past`. Fixed. The pre-commit hook blocks 0.927 AUC re-emission.
+Any "0.92x" figure in this repo is historical and must not be cited as current.
 
 ## Intended use
 - District/state-level **advisory** forecasting of ATMs at elevated risk of

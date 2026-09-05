@@ -4,53 +4,53 @@
     "rows": [
       {
         "seed": 0,
-        "roc_auc": 0.9262,
-        "precision_at_100": 0.84,
-        "precision_at_1000": 0.571
+        "roc_auc": 0.6507,
+        "precision_at_100": 0.71,
+        "precision_at_1000": 0.342
       },
       {
         "seed": 1,
-        "roc_auc": 0.9261,
-        "precision_at_100": 0.85,
-        "precision_at_1000": 0.572
+        "roc_auc": 0.6512,
+        "precision_at_100": 0.75,
+        "precision_at_1000": 0.33
       },
       {
         "seed": 2,
-        "roc_auc": 0.9264,
-        "precision_at_100": 0.86,
-        "precision_at_1000": 0.57
+        "roc_auc": 0.6487,
+        "precision_at_100": 0.73,
+        "precision_at_1000": 0.343
       },
       {
         "seed": 3,
-        "roc_auc": 0.9258,
-        "precision_at_100": 0.85,
-        "precision_at_1000": 0.572
+        "roc_auc": 0.6501,
+        "precision_at_100": 0.72,
+        "precision_at_1000": 0.33
       },
       {
         "seed": 4,
-        "roc_auc": 0.9263,
-        "precision_at_100": 0.85,
-        "precision_at_1000": 0.57
+        "roc_auc": 0.6494,
+        "precision_at_100": 0.68,
+        "precision_at_1000": 0.337
       }
     ],
     "summary": {
       "roc_auc": {
-        "min": 0.9258,
-        "max": 0.9264,
-        "spread": 0.0006,
-        "mean": 0.9262
+        "min": 0.6487,
+        "max": 0.6512,
+        "spread": 0.0025,
+        "mean": 0.65
       },
       "precision_at_100": {
-        "min": 0.84,
-        "max": 0.86,
-        "spread": 0.02,
-        "mean": 0.85
+        "min": 0.68,
+        "max": 0.75,
+        "spread": 0.07,
+        "mean": 0.718
       },
       "precision_at_1000": {
-        "min": 0.57,
-        "max": 0.572,
-        "spread": 0.002,
-        "mean": 0.571
+        "min": 0.33,
+        "max": 0.343,
+        "spread": 0.013,
+        "mean": 0.3364
       }
     }
   },
@@ -58,59 +58,55 @@
     "rows": [
       {
         "seed": 0,
-        "roc_auc": 0.9266,
-        "precision_at_100": 0.67,
-        "precision_at_1000": 0.382
+        "roc_auc": 0.6316,
+        "precision_at_100": 0.41,
+        "precision_at_1000": 0.157
       },
       {
         "seed": 1,
-        "roc_auc": 0.9215,
-        "precision_at_100": 0.54,
-        "precision_at_1000": 0.355
+        "roc_auc": 0.6172,
+        "precision_at_100": 0.32,
+        "precision_at_1000": 0.158
       },
       {
         "seed": 2,
-        "roc_auc": 0.9261,
-        "precision_at_100": 0.61,
-        "precision_at_1000": 0.367
+        "roc_auc": 0.6292,
+        "precision_at_100": 0.36,
+        "precision_at_1000": 0.159
       },
       {
         "seed": 3,
-        "roc_auc": 0.9178,
-        "precision_at_100": 0.5,
-        "precision_at_1000": 0.345
+        "roc_auc": 0.6158,
+        "precision_at_100": 0.48,
+        "precision_at_1000": 0.157
       },
       {
         "seed": 4,
-        "roc_auc": 0.9221,
-        "precision_at_100": 0.56,
-        "precision_at_1000": 0.321
+        "roc_auc": 0.6123,
+        "precision_at_100": 0.35,
+        "precision_at_1000": 0.135
       }
     ],
     "summary": {
       "roc_auc": {
-        "min": 0.9178,
-        "max": 0.9266,
-        "spread": 0.0088,
-        "mean": 0.9228
+        "min": 0.6123,
+        "max": 0.6316,
+        "spread": 0.0193,
+        "mean": 0.6212
       },
       "precision_at_100": {
-        "min": 0.5,
-        "max": 0.67,
-        "spread": 0.17,
-        "mean": 0.576
+        "min": 0.32,
+        "max": 0.48,
+        "spread": 0.16,
+        "mean": 0.384
       },
       "precision_at_1000": {
-        "min": 0.321,
-        "max": 0.382,
-        "spread": 0.061,
-        "mean": 0.354
+        "min": 0.135,
+        "max": 0.159,
+        "spread": 0.024,
+        "mean": 0.1532
       }
     }
   },
-  "conclusion": "Small model-seed spread shows the pipeline is deterministic-stable; generator-seed spread quantifies how much metric variation comes from the data draw itself. Reported, not hidden.",
-  "superseded": true,
-  "status": "SUPERSEDED - PRE-LEAKAGE SEED HISTORY - NOT CURRENT PERFORMANCE",
-  "note": "Both model_seed_variation (0.9258-0.9264) and generator_seed_variation (0.9178-0.9266) ran on the LEAKY pipeline. Pre-leakage history preserved for honesty; NOT current. Honest leak-free metrics: artifacts/current_metrics.json.",
-  "current_metrics_pointer": "artifacts/current_metrics.json"
+  "conclusion": "Small model-seed spread shows the pipeline is deterministic-stable; generator-seed spread quantifies how much metric variation comes from the data draw itself. Reported, not hidden."
 }

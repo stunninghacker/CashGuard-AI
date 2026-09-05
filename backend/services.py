@@ -895,9 +895,13 @@ def build_alert_evidence(db: Session, alert) -> dict:
 # ------------------------------ Demo-mode cache --------------------------------
 def read_demo_cache(name: str):
     """Serve pre-computed 'golden path' data when DEMO_MODE=true (fallback plan)."""
+    import re as _re
     if not DEMO_MODE:
         return None
-    path = DEMO_CACHE_DIR / f"{name}.json"
+    safe = _re.sub(r"[^a-zA-Z0-9_\-]", "", str(name))
+    if not safe:
+        return None
+    path = DEMO_CACHE_DIR / f"{safe}.json"
     if not path.exists():
         return None
     with open(path, "r", encoding="utf-8") as fh:

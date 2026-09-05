@@ -175,7 +175,7 @@ def main():
         }
         rows.append(row)
         print(f"  {name:<22} AUC {row['roc_auc']}  PR {row['pr_auc']}  P@100 {row['precision_at_k'][100]:.3f}  "
-              f"P@1000 {row['precision_at_k'][1000]:.3f}  Brier {row['brier']}  ECE {row['ece_10bin']}  exposure \u20b9{exposure:,.0f}")
+              f"P@1000 {row['precision_at_k'][1000]:.3f}  Brier {row['brier']}  ECE {row['ece_10bin']}  exposure INR{exposure:,.0f}")
 
     cg_row = next(r for r in rows if r["baseline"] == "cashguard")
     for r in rows:

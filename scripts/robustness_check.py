@@ -111,7 +111,7 @@ def main() -> None:
     p20 = [r["precision_at_20"] for r in results]
     p500 = [r["precision_at_500"] for r in results]
     p1000 = [r["precision_at_1000"] for r in results]
-    pthr = [r["precision_at_threshold_0p7"] for r in results]
+    pthr = [r.get("precision_at_threshold_0p7") or 0 for r in results]
     aucs = [r["roc_auc"] for r in results]
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), dpi=130)

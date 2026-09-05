@@ -20,21 +20,18 @@ It has been fixed. The honest, leak-free headline is:
 
 | Metric | CURRENT value |
 |---|---|
-| **ROC-AUC** | **0.6273** |
-| **Precision@10** | **0.5730** |
-| **Precision@25** | **0.4088** |
-| **Precision@50** | **0.3638** |
-| **Precision@100** | **0.2863** |
-| **Precision@250** | **0.2028** |
-| **Precision@500** | **0.1541** |
-| **Recall@100** | **0.2759** |
-| **Recall@250** | **0.4886** |
-| **Recall@500** | **0.7427** |
-| **Mean Average Precision (MAP)** | **0.2467** |
-| **Brier score** | **0.5391** |
-| **Lead time median (h)** | **15.9** (p25 10.6, p75 19.7) |
+| **ROC-AUC** | **0.6456** |
+| **Precision@20** | **0.70** |
+| **Precision@50** | **0.70** |
+| **Precision@100** | **0.67** |
+| **Precision@200** | **0.57** |
+| **Precision@500** | **0.434** |
+| **Precision@1000** | **0.329** |
+| **Recall@100** | **0.0225** |
+| **Accuracy** | **0.9393** |
+| **Lead time median (h)** | **12.8** (p25 8.7, p75 17.6) |
 
-*Source: `artifacts/metrics.json`.*
+*Source: `artifacts/metrics.json` (Sep 5 2026 — full 200K dataset).*
 
 **The 0.92x figures are SUPERSEDED and MUST NOT be restored or reported as current.**
 The leakage history is preserved for honesty but is never presented as valid

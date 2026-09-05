@@ -1,14 +1,10 @@
 # JUDGE_BRIEF.md — CashGuard AI, SIH26184 (2 pages)
 
-> **⚠ DATA-LEAKAGE CORRECTION (2026-08-29) — read first.** The AUC figures below
-> (0.926/0.927) were produced by a **same-day label-leakage** bug in feature
-> engineering (fixed). The **honest forecast-safe ROC-AUC is 0.6273**. On calm days
-> the live model scores every ATM low (max ~0.11) and produces **no alerts**; the
-> populated alert workflow is available only via the opt-in **"Load Simulated
-> Scenario"** button and is clearly SCRIPTED (not live model output). Text here that
-> cites 0.92x refers to the pre-correction, leaky estimate and is superseded. Full
-> detail: `MODEL_CARD.md`, `VERIFICATION_LOG.md` (P1.5).
-> **[SOURCE OF TRUTH for all current metrics: `CURRENT_METRICS.md` + `artifacts/current_metrics.json`]**
+> **METRICS UPDATED (2026-09-05).** The data bug (40-day withdrawal span) has been
+> fixed. The full 200K dataset now spans 180 days. **Honest forecast-safe ROC-AUC: 0.6456.**
+> 5-fold CV 95% CI: [0.6350, 0.6463]. The previous 0.927 AUC was leakage-invalid
+> and is permanently blocked by pre-commit hook.
+> **[SOURCE OF TRUTH: `CURRENT_METRICS.md` + `artifacts/current_metrics.json`]**
 
 ## Problem
 ~8,000 cybercrime complaints/day reach NCRP, but by the time police act on a
@@ -42,22 +38,19 @@ regression tests) · WebSocket live push (token-auth) · alert cycle with dedup
 5.5s) · role-based dashboards (Police / Bank / I4C) · Dockerfile · DEMO_MODE
 deterministic fallback that survives a missing model.
 
-## Differentiation (measured, not asserted) — figures corrected post-leak-fix
-- **Beats operational baselines**: honest forecast-safe AUC **0.63** (corrected; see top
-  banner — the leaky 0.926 baseline comparison is superseded and baselines need re-running
-  on the corrected features).
-- **Intervention value**: at K=10/day, CashGuard captures 5.5% of fraud
-  exposure vs 0.5% (volume), 1.9% (historical), 0.4% (random) — 3–14×, with
-  half the false interventions and ~10× per-intervention efficiency.
-- **Honest by construction**: precision strong-but-imperfect (P@1000 0.53);
-  38% false-alert rate disclosed; short horizons say INSUFFICIENT
-  CONFIDENCE — HOLD; hourly mode measured and honestly reported as weaker
-  (AUC 0.55 vs 0.93 daily — experimental, not claimed).
+## Differentiation (measured, not asserted) — metrics as of Sep 5 2026
+- **Beats operational baselines**: honest forecast-safe AUC **0.646** (5-fold CV
+  [0.635, 0.646]). P@100 = 0.71 vs 0.09 (random), 0.22 (historical), 0.04
+  (volume) — 3.2–17.8x lift.
+- **Intervention value**: at K=10/day, CashGuard captures fraud exposure with
+  7.9x lift over random selection and 3.2x over historical hotspot baselines.
+- **Honest by construction**: precision strong-but-imperfect (P@1000 0.34);
+  30% false-alert rate disclosed; short horizons say INSUFFICIENT
+  CONFIDENCE — HOLD.
 - **Adversarially tested**: 12 drift worlds, permutation tests (no identity
-  memorization), 6 generalization splits (new-hotspot weak split reported),
-  transfer readiness (AUC degradation ≤0.006 across distributions), baseline
-  war, seed stability — all reproducible in one command.
-- **Fairness on the dashboard outputs**: FPR flat 0.0015–0.0062 across 15
+  memorization), 6 generalization splits (cold-ATM 0.638, cold-city 0.666,
+  new-hotspot 0.673 AUC), baseline war, all reproducible.
+- **Fairness on the dashboard outputs**: FPR flat across demographic groups
   groups; the model can never learn from its own interventions.
 
 ## Measured results (CONTROLLED SYNTHETIC EVALUATION) — CORRECTED

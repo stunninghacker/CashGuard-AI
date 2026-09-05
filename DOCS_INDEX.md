@@ -4,15 +4,19 @@
 - **README.md** — overview, architecture, quickstart (`python run.py`)
 - **ONE_SLIDE_EXECUTIVE_SUMMARY.md** — 20-second summary of the project
 - **JUDGE_BRIEF.md** — 2-page judge brief (problem → solution → evidence)
+- **docs/JUDGE_FAQ_FINAL.md** — 20 questions with honest answers (Sep 5 2026)
+- **docs/SIH26184_FINAL_COMPLIANCE.md** — full SIH26184 requirement mapping
 - **DEMO_SCRIPT.md** — click-by-click demo walkthrough + DEMO_MODE fallback plan
 - **docs/DEMO_CREDENTIALS.md** — synthetic demo logins (**NOT FOR PRODUCTION**)
 - **DATA_PROTECTION.md** — single-point data-protection posture (synthetic-only, DPDP-shaped controls, traceable to code)
 - **LIVE_DEMO.md** — live deployment recorder: package (Dockerfile/render.yaml/fly.toml) is READY, live URL is an honest placeholder (not deployed)
 
 ## Read before quoting any metric or claim
+- **CURRENT_METRICS.md** — single source of truth for all headline metrics (ROC-AUC 0.6456)
+- **docs/METRIC_GOVERNANCE.md** — metric hierarchy, update protocol, and audit trail
 - **LIMITATIONS.md** — evaluation ceiling, jurisdiction limits, explainability method
 - **CALIBRATION_NOTES.md** — every data-generation parameter, source-tagged and cited
-- **MODEL_CARD.md** — model facts, and why precision@K isn't artificially perfect
+- **MODEL_CARD.md** — model facts (44 features, XGBoost + Platt)
 - **VERIFICATION_LOG.md** — dated, real test results for every demo feature
 - **REAL_DATA_VALIDATION_PROTOCOL.md** — the 14-step path from authorized data to validated operation (synthetic demo vs real-data pilot vs production)
 - **REAL_DATA_READINESS.md** — exact data contract + onboarding timeline + what changes in the ML pipeline

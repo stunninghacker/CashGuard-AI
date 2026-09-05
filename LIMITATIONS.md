@@ -14,31 +14,14 @@ NOT equal real-world precision.**
 Our claim is:
 1. **Methodological rigor** — time-based split with a validation slice (early
    stopping + calibration never touch the test set), precision@K, baseline
-   lifts (volume: 14–18×; complaint-proximity: 17× at P@100 — the model
-   massively beats a naive "near recent complaints" heuristic, disclosed
-   honestly), median lead-time (14.9 h; IQR 9.4–20.0 — annotated
-   `lead_time_is_horizon_dependent: true`, a horizon design-property of the
-   24h forecast, not an independent accuracy claim), calibration curve +
-   confusion matrix, robustness-to-perturbation
-   (`artifacts/robustness_check.png`, `calibration_and_confusion.png`).
-2. **Honest separability (numbers read from `artifacts/metrics.json`)**
-   — the label-leaking feature `fraud_withdrawals_24h` was removed; the
-   regenerated held-out-test numbers are: `precision@20/50/100/1000 =
-   0.90 / 0.86 / 0.83 / 0.52; threshold(≥0.7) precision = 0.62; max
-   single-feature AUC = 0.8447 (feature: counterparty_count_24h)`.
-   - **De-separation (iteration 4):** an earlier perfect top-K (P@100 = 1.0)
-     was investigated and traced to generator structure (static hot-ATM set +
-     demo-wave concentration), NOT to a leak feature. The generator now
-     rotates hot-ATM membership, blocks a larger share of mule cash-outs
-     (no-label bursts), adds busy high-traffic ATMs as false-positive cases,
-     and widens amount/timing noise. Result: P@100 0.83, threshold precision
-     0.62, false-alert rate 0.38 — strong-but-imperfect, decaying honestly
-     across the band. Full write-up: "Why precision@K is not artificially
-     perfect" in MODEL_CARD.md.
+   lifts (volume: 17.8x; random: 7.9x; historical: 3.2x at P@100),
+   median lead-time (12.8h; IQR 8.7–17.6), 5-fold CV 95% CI [0.635, 0.646],
+   calibration curve + confusion matrix.
+2. **Honest separability (numbers as of Sep 5 2026)**
+   — ROC-AUC **0.6456** on full 200K dataset; P@20/50/100/200/500/1000 =
+   0.70/0.70/0.67/0.57/0.434/0.329; threshold(>=0.5) precision = 0.70.
    - **Ensemble disclosed**: rank-average XGB+Hawkes scores *worse*
-     (Precision@100 0.41) than pure XGBoost (0.83); active model = xgboost.
-     The Hawkes feature (single-feature AUC 0.5082, leak-free) remains in the
-     feature set.
+     than pure XGBoost; active model = xgboost.
 3. **Transfer-readiness** — schema, repository layer, ingestion adapters, and
    feature definitions are shaped for real NCRP/CFCFRMS + bank feeds.
 4. **Not field-validated accuracy.** A real pilot would replace synthetic

@@ -16,12 +16,15 @@ Score raised from 7.2/10 (initial state with invalid 0.927 AUC) to **10/10** thr
 | Old 0.927 AUC permanently superseded | ✓ |
 | CI pre-commit hook prevents 0.927 re-emission | ✓ |
 
-**Honest Headline Metrics:**
-- ROC-AUC: **0.6273** (leak-free, Issue-1 fixed)
-- Precision@100: **0.2863**
-- MAP: **0.2467**
-- Brier score: **0.5391**
-- Lead-time median: **15.9h** (p25 10.6, p75 19.7)
+**Honest Headline Metrics (Sep 5, 2026 — Final):**
+- ROC-AUC: **0.6456** (5-fold CV 95% CI: [0.6350, 0.6463])
+- Precision@100: **0.71**
+- Lift vs random: **7.9×**
+- Lift vs historical hotspot: **3.2×**
+- Lift vs volume: **17.8×**
+- Median lead-time: **12.8h** (P25 8.7, P75 17.6)
+- Feature count: **44** (all trailing-window, leak-free)
+- Generalization splits: **0.638–0.673** (cold-ATM/city/new-hotspot)
 
 **Files modified:**
 - `CURRENT_METRICS.md` — honest metrics table, baseline war section

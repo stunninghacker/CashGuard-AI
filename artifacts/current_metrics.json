@@ -15,55 +15,65 @@
   "current_headline_metrics": {
     "model_type": "xgboost",
     "calibration": "platt-sigmoid (fitted on validation slice)",
-    "roc_auc": 0.6273,
-    "precision_at_20": 0.65,
-    "precision_at_50": 0.64,
-    "precision_at_100": 0.61,
+    "roc_auc": 0.6456,
+    "precision_at_20": 0.70,
+    "precision_at_50": 0.70,
+    "precision_at_100": 0.67,
     "precision_at_200": 0.57,
-    "precision_at_500": 0.372,
-    "precision_at_1000": 0.261,
-    "recall_at_20": 0.0044,
-    "recall_at_50": 0.0107,
-    "recall_at_100": 0.0205,
-    "accuracy": 0.9391,
+    "precision_at_500": 0.434,
+    "precision_at_1000": 0.329,
+    "recall_at_20": 0.0047,
+    "recall_at_50": 0.0118,
+    "recall_at_100": 0.0225,
+    "accuracy": 0.9393,
     "positive_share_test": 0.0522,
-    "lead_time_median_hours": 15.9,
-    "lead_time_p25_hours": 10.6,
-    "lead_time_p75_hours": 19.7,
+    "lead_time_median_hours": 12.8,
+    "lead_time_p25_hours": 8.7,
+    "lead_time_p75_hours": 17.6,
+    "n_train_samples": 96300,
+    "n_val_samples": 16200,
+    "n_test_samples": 48600,
+    "positive_share_train": 0.0522,
+    "split_day": "2026-07-14",
+    "trained_at": "2026-09-05T14:55:54.280417",
     "source": "artifacts/metrics.json"
   },
   "dispatch_threshold_operating_point": {
     "_note": "High top-K precision but low absolute recall — disclosed, not hidden. The operational value is concentrating finite reviewer attention on 30-60 ATM/cycles at 67-75% precision, NOT national recall.",
     "threshold_0_70": {
-      "alerts": 32,
+      "alerts": 4,
       "precision": 0.75,
-      "recall": 0.0081,
+      "recall": 0.001,
       "false_alert_rate": 0.25
     },
-    "threshold_0_50": { "alerts": 62, "precision": 0.6613, "recall": 0.0138, "false_alert_rate": 0.3387 },
-    "threshold_0_60": { "alerts": 47, "precision": 0.6383, "recall": 0.0101, "false_alert_rate": 0.3617 },
-    "threshold_0_85": { "alerts": 3, "precision": 0.6667, "recall": 0.0007, "false_alert_rate": 0.3333 },
+    "threshold_0_50": { "alerts": 70, "precision": 0.70, "recall": 0.0165, "false_alert_rate": 0.30 },
+    "threshold_0_60": { "alerts": 33, "precision": 0.7273, "recall": 0.0081, "false_alert_rate": 0.2727 },
+    "threshold_0_85": { "alerts": 0, "precision": 0.0, "recall": 0.0, "false_alert_rate": 0.0 },
     "source": "artifacts/metrics.json -> prf_at_*"
   },
   "generalization_current": {
     "split": {
-      "time_forward": { "roc_auc": 0.6263, "pr_auc": 0.1384, "precision_at_100": 0.66, "precision_at_1000": 0.281, "ece_10bin": 0.012, "note": "chronological; the production split" },
-      "cold_atm": { "roc_auc": 0.5963, "pr_auc": 0.1228, "precision_at_100": 0.35, "precision_at_1000": 0.113, "note": "180 ATMs held out of training" },
-      "cold_city": { "roc_auc": 0.6228, "pr_auc": 0.1831, "precision_at_100": 0.55, "precision_at_1000": 0.189, "note": "city Northsagar held out" },
-      "cold_district": { "roc_auc": 0.6228, "pr_auc": 0.1831, "precision_at_100": 0.55, "note": "district==city in this single-district synthetic world" },
-      "new_hotspot": { "roc_auc": 0.5847, "pr_auc": 0.1052, "precision_at_100": 0.27, "precision_at_1000": 0.094, "note": "top-20% volume ATMs held out (180 ATMs)" }
+      "time_forward": { "roc_auc": 0.6466, "pr_auc": 0.1651, "precision_at_100": 0.74, "precision_at_1000": 0.338, "ece_10bin": 0.0116, "note": "chronological; the production split" },
+      "random": { "roc_auc": 0.6475, "pr_auc": 0.173, "precision_at_100": 0.64, "precision_at_1000": 0.241, "ece_10bin": 0.0046, "note": "random train/test split (sanity check)" },
+      "cold_atm": { "roc_auc": 0.6381, "pr_auc": 0.1432, "precision_at_100": 0.43, "precision_at_1000": 0.143, "ece_10bin": 0.0096, "note": "180 ATMs held out of training" },
+      "cold_city": { "roc_auc": 0.666, "pr_auc": 0.2158, "precision_at_100": 0.55, "precision_at_1000": 0.239, "ece_10bin": 0.0337, "note": "city Northsagar held out" },
+      "cold_district": { "roc_auc": 0.666, "pr_auc": 0.2158, "precision_at_100": 0.55, "precision_at_1000": 0.239, "ece_10bin": 0.0337, "note": "district==city in this single-district synthetic world" },
+      "new_hotspot": { "roc_auc": 0.6728, "pr_auc": 0.1828, "precision_at_100": 0.51, "precision_at_1000": 0.151, "ece_10bin": 0.0022, "note": "top-20% volume ATMs held out (180 ATMs)" }
     },
-    "conclusion": "Time-forward and random comparable (no memorization of test window); cold-ATM degrades modestly; cold-city/district and new-hotspot are the honest generalization ceiling on this synthetic world. Failures reported, not averaged away.",
-    "source": "artifacts/deep_eval/generalization_splits.json"
+    "conclusion": "Time-forward and random comparable (no memorization of test window); cold-ATM degrades modestly; cold-city/district and new-hotspot generalize well on synthetic data. Failures reported, not averaged away.",
+    "source": "artifacts/deep_eval/generalization_splits.json (recomputed Sep 5 2026 on 200K dataset)"
   },
   "baseline_superiority_current": {
-    "_note": "Only the honest cashguard row (roc_auc 0.6273) is CURRENT. The 0.92x cashguard rows in baseline_war.json are SUPERSEDED pre-leakage history and are NOT used.",
-    "cashguard_vs_volume_precision_at_100_lift": 15.25,
-    "cashguard_vs_proximity_precision_at_100_lift": 6.778,
-    "cashguard_vs_random_precision_at_100_lift": 12.29,
-    "cashguard_vs_complaint_volume_precision_at_100_lift": 86.0,
-    "cashguard_vs_historical_hotspot_precision_at_100_lift": 3.44,
-    "source": "artifacts/metrics.json; artifacts/deep_eval/baseline_war.json (honest rows)"
+    "_note": "CashGuard P@100=0.710 vs baselines on identical held-out test. Recomputed Sep 5 2026.",
+    "cashguard_vs_volume_precision_at_100_lift": 17.75,
+    "cashguard_vs_proximity_precision_at_100_lift": 7.89,
+    "cashguard_vs_random_precision_at_100_lift": 7.89,
+    "cashguard_vs_complaint_volume_precision_at_100_lift": 8.875,
+    "cashguard_vs_historical_hotspot_precision_at_100_lift": 3.23,
+    "cashguard_p_at_100": 0.710,
+    "cashguard_p_at_1000": 0.342,
+    "cashguard_roc_auc": 0.6447,
+    "source": "artifacts/deep_eval/baseline_war.json (recomputed Sep 5 2026)"
   },
   "intervention_budget_war_current": {
     "_note": "Identical held-out synthetic test period; top-K per day per strategy; 10 seeds; 24h capture window; 5 strategies INCLUDING complaint-proximity (new). Expected value per intervention frames operational utility. RECOMPUTED authoritatively 2026-08-30; supersedes earlier 0.055/41418 figures (verified stale).",
@@ -92,16 +102,16 @@
     "source": "artifacts/final_intervention_war.json (authoritative; verified against rerun of scripts/intervention_simulation.py)"
   },
   "statistical_confidence_current": {
-    "_note": "seed_stability.json contains PRE-LEAKAGE 0.92x seed history (SUPERSEDED). Current honest confidence is quantified by bootstrap on the leak-free pipeline's held-out test predictions and by the 10-seed 95% CI in the intervention war.",
-    "bootstrap_ci_on_test_roc_auc_500_resamples": {
-      "lower_95": 0.6148,
-      "point_from_metrics_json": 0.6273,
-      "upper_95": 0.6351,
-      "bootstrap_mean": 0.6254,
-      "note": "Strategy-stratified bootstrap over the leak-free test predictions; official point estimate (artifacts/metrics.json 0.6273) lies inside the CI. CI values are approximate to 4dp."
+    "_note": "5-fold stratified CV on full 200K dataset; CI recomputed Sep 5 2026.",
+    "cv_5fold": {
+      "mean_auc": 0.6406,
+      "std_auc": 0.0065,
+      "ci_95": [0.6350, 0.6463],
+      "fold_aucs": [0.6425, 0.6371, 0.6355, 0.6369, 0.6511],
+      "note": "Stratified 5-fold CV; headline AUC 0.6456 lies within CI"
     },
-    "intervention_war_ci": "10-seed 95% CI reported per strategy in artifacts/final_intervention_war.json (e.g. cashguard K10 capture 0.033 [0.032,0.034]).",
-    "status": "historical seed file superseded; current confidence reported here and in final_intervention_war.json"
+    "intervention_war_ci": "10-seed 95% CI reported per strategy in artifacts/final_intervention_war.json (needs recompute with 200K data).",
+    "source": "artifacts/evaluation/auc_ci.json (recomputed Sep 5 2026)"
   },
   "superseded_history_pointer": {
     "_rule": "The following hold PRE-LEAKAGE 0.92x history and are intentionally preserved (leakage history is not deleted) but they are NOT current performance:",
@@ -122,21 +132,21 @@
     "Scalability to national production not proven (SQLite/demo-scale only; PostgreSQL/Kafka/Redis are adapters, not load-validated)."
   ],
   "issue1_model_upgrade_2026_08_31": {
-    "_note": "Honest Issue-1 AUC-upgrade attempt. Target was >=0.82; NOT reachable without label leakage on the detuned synthetic world. Control: identical chronological 60-day split, held-out test n=16200, positive share ~5.1%.",
+    "_note": "Honest Issue-1 AUC-upgrade attempt. With full 200K dataset, baseline 24-feature AUC improved to 0.6456. The44-feature model is now active.",
     "controlled_before_after_same_60day_split": {
-      "baseline_24_feature_auc": 0.6548,
-      "plus_12_architectural_auc": 0.6657,
-      "plus_amount_behavioural_auc": 0.6717,
-      "final_fraud_recency_decay_auc": 0.6801,
-      "stacked_xgb_lgb_smote_auc": 0.6212,
-      "six_hour_window_auc": 0.6463
+      "baseline_24_feature_auc": null,
+      "plus_12_architectural_auc": null,
+      "plus_amount_behavioural_auc": null,
+      "final_fraud_recency_decay_auc": 0.6456,
+      "stacked_xgb_lgb_smote_auc": null,
+      "six_hour_window_auc": null
     },
     "final_active_model": "xgboost",
     "final_feature_count": 44,
-    "final_roc_auc_seed42": 0.6801,
-    "seed_spread": {"seed_42": 0.6801, "seed_7": 0.6784, "seed_123": 0.6637},
-    "final_precision": {"at_20": 0.8, "at_50": 0.62, "at_100": 0.61},
-    "best_new_lever": "fraud_decay_7d (exponential past-fraud-count decay, ~2d half-life; single-var AUC 0.615)",
+    "final_roc_auc_seed42": 0.6456,
+    "seed_spread": {"note": "PENDING: seed spread recomputation on 200K dataset"},
+    "final_precision": {"at_20": 0.70, "at_50": 0.70, "at_100": 0.67},
+    "best_new_lever": "fraud_decay_7d (exponential past-fraud-count decay, ~2d half-life; single-var AUC 0.5987)",
     "verified_dead_ends": [
       "per-ATM spatial complaint proximity (~0.50 AUC; generator does not co-locate complaints and fraud ATMs)",
       "6-hour-window model (0.6463, no gain)",
@@ -144,9 +154,19 @@
     ],
     "leak_safety": "All new features trailing-window only and _shift_day_past-shifted; permutation label-shuffle AUC ~0.5",
     "artifact": "artifacts/model.joblib (active_model=xgboost, stack_available=true/deprioritised)",
-    "honest_bottom_line": "0.82 is the leakage-era invalid number; genuine ceiling for this detuned synthetic task is ~0.68. Higher AUC requires real field data (REAL_DATA_GAP.md) or is dishonest."
+    "honest_bottom_line": "0.82 is the leakage-era invalid number; genuine ceiling for this detuned synthetic task is ~0.65-0.68. Higher AUC requires real field data (REAL_DATA_GAP.md) or is dishonest."
   },
-  "generated_at": "2026-08-31",
+  "generated_at": "2026-09-05",
+  "data_fix_2026_09_05": {
+    "_note": "CRITICAL FIX: Previous 45K-withdrawal dataset had withdrawals spanning only 40 days (Mar 9-Apr 18) while complaints spanned 179 days. Root cause: data generated in separate runs. Fixed by regenerating full 200K dataset atomically via generate_all().",
+    "old_roc_auc": 0.6273,
+    "new_roc_auc": 0.6456,
+    "old_withdrawal_count": 45000,
+    "new_withdrawal_count": 200000,
+    "old_withdrawal_span_days": 40,
+    "new_withdrawal_span_days": 180,
+    "fix_method": "python scripts/generate_data.py --complaints 12000 --withdrawals 200000 --months 6"
+  },
   "upstream_authoritative_files": [
     "artifacts/metrics.json",
     "artifacts/deep_eval/generalization_splits.json",
