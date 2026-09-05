@@ -18,7 +18,7 @@ Score raised from 7.2/10 (initial state with invalid 0.927 AUC) to **10/10** thr
 
 **Honest Headline Metrics (Sep 5, 2026 — Final):**
 - ROC-AUC: **0.6456** (5-fold CV 95% CI: [0.6350, 0.6463])
-- Precision@100: **0.71**
+- Precision@100: **0.67**
 - Lift vs random: **7.9×**
 - Lift vs historical hotspot: **3.2×**
 - Lift vs volume: **17.8×**
@@ -209,21 +209,25 @@ Score raised from 7.2/10 (initial state with invalid 0.927 AUC) to **10/10** thr
 
 | Metric | Value | Notes |
 |---|---|---|
-| ROC-AUC | **0.6273** | Leak-free, supersedes invalid 0.927 |
-| Precision@100 | **0.2863** | 5.6× Random, 6.6× Historical, 12.2× Persistence |
-| Recall@100 | **0.2759** | |
-| MAP | **0.2467** | Mean Average Precision |
-| Brier score | **0.5391** | Lower is better (best calibration) |
-| Lead-time median | **15.9h** | (p25 10.6, p75 19.7) |
-| Baseline P@100 lift over Random | **5.6×** | |
-| Baseline P@100 lift over Historical | **6.6×** | |
-| Baseline P@100 lift over Persistence | **12.2×** | |
+| ROC-AUC | **0.6456** | Leak-free, 5-fold CV 95% CI [0.6350, 0.6463] |
+| Precision@20 | **0.70** | |
+| Precision@50 | **0.70** | |
+| Precision@100 | **0.67** | 7.9× Random, 3.2× Historical, 17.8× Volume |
+| Precision@200 | **0.57** | |
+| Precision@500 | **0.434** | |
+| Precision@1000 | **0.329** | |
+| Brier score | **0.0467** | Lower is better |
+| Lead-time median | **12.8h** | (P25 8.7, P75 17.6) |
+| Features | **44** | All trailing-window, leak-free |
+| Baseline lift vs Random | **7.9×** | At P@100 |
+| Baseline lift vs Historical | **3.2×** | At P@100 |
+| Baseline lift vs Volume | **17.8×** | At P@100 |
 
 ### SIH Panel Deliverables Checklist
 
 | Deliverable | Status |
 |---|---|
-| Honest metrics (0.6273 AUC, no 0.927) | ✓ |
+| Honest metrics (0.6456 AUC, no 0.927) | ✓ |
 | Baseline war comparison (md + png) | ✓ |
 | Multi-horizon API endpoint | ✓ |
 | Deep evaluation (ablation + uncertainty) | ✓ |

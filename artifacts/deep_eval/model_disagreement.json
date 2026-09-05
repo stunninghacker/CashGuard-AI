@@ -1,10 +1,10 @@
 {
   "model_a": "xgboost",
   "model_b": "logistic-statistical-baseline",
-  "model_a_roc_auc": 0.9259,
-  "model_b_roc_auc": 0.8674,
-  "median_abs_disagreement": 0.0134,
-  "p95_abs_disagreement": 0.1427,
+  "model_a_roc_auc": 0.6434,
+  "model_b_roc_auc": 0.5742,
+  "median_abs_disagreement": 0.4139,
+  "p95_abs_disagreement": 0.5887,
   "disagreement_rule": "Confidence downgraded one level when |A-B| > 0.20; HOLD ACTION when |A-B| > 0.35.",
   "b_features": [
     "withdrawals_24h",
@@ -13,8 +13,5 @@
     "counterparty_count_24h",
     "dist_to_complaint_centroid_km"
   ],
-  "label": "CONTROLLED SYNTHETIC EVALUATION",
-  "_superseded": true,
-  "status": "SUPERSEDED - PRE-LEAKAGE 0.92x-ERA EVAL - NOT CURRENT PERFORMANCE",
-  "note": "Computed on the leaky pipeline. Preserved as leakage history; NOT current. Honest leak-free metrics: CURRENT_METRICS.md / artifacts/current_metrics.json."
+  "label": "CONTROLLED SYNTHETIC EVALUATION"
 }
