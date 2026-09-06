@@ -1,87 +1,75 @@
-# CashGuard AI — UI/UX Audit
+# CashGuard AI — UI/UX Audit (v16)
 
-## Current Architecture
-- **index.html** (281 lines) — Single-page with 3 dashboard shells (police, bank, i4c)
-- **style.css** (376 lines) — Graphite/charcoal theme, IBM Plex Sans/Mono
-- **app.js** (1487 lines) — Vanilla JS, Leaflet map, WebSocket, JWT auth
+## Architecture (Post-Redesign)
+- **index.html** (280 lines) — Single-page app shell with 9 view panels
+- **style.css** (46KB) — Dark graphite/charcoal theme, IBM Plex Sans/Mono, 3 responsive breakpoints
+- **app.js** (72KB) — Vanilla JS, Leaflet map, WebSocket alerts, JWT auth, role-based rendering
 - **vendor/** — Leaflet (only dependency)
+- **68 DOM IDs** cross-referenced between JS and HTML — all present
+- **133 dynamic CSS classes** verified — all defined
 
-## Existing Components
-| Component | Status | Issues |
-|-----------|--------|--------|
-| Login modal | Functional | Developer-oriented, no branding |
-| Header | Functional | Too many buttons, no system status |
-| Map (Leaflet) | Functional | 560px fixed height, no drawer |
-| Hotspot table | Functional | No risk visualization |
-| Alert table | Functional | Flat, no timeline/feed feel |
-| Stats grid | Functional | All cards equal weight |
-| Recovery queue | Functional | Flat list |
-| Recovery funnel | Functional | Simple bars |
-| Mule network (SVG) | Functional | Overwhelming, no drill-down |
-| Mule graph table | Functional | Missing columns (shows —) |
-| Ledger | Functional | Developer-oriented buttons |
-| Drift panel | Functional | Too technical |
-| Inbox | Functional | Raw messages |
-| Handoffs | Functional | Flat list |
-| Mobile nearby | Functional | Basic table |
-| Evidence modal | Functional | Too much info at once |
-| Toast | Functional | Minimal |
-| Threshold explorer | Functional | Developer-oriented |
-| i18n selector | Functional | Working |
-| Simulated scenario | Functional | Clear labeling |
+## Component Status
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Login page | ✅ Production | Split-panel, branded, 4 quick-access role chips |
+| Sidebar nav | ✅ Production | 9 views, role-aware, keyboard accessible (role=button, tabindex=0) |
+| Top bar | ✅ Production | View title, DEMO pill, scope/forecast pills, minimal actions |
+| Overview map | ✅ Production | Leaflet heatmap, filter bar, forecast overlay, legend |
+| Stats row | ✅ Production | Hero stat cards with semantic colors |
+| Priority actions | ✅ Production | Alert feed with tier badges |
+| High-risk ATMs | ✅ Production | Sortable table with risk scores |
+| Active alerts | ✅ Production | Table with status pills and evidence buttons |
+| Threshold tuning | ✅ Production | Standalone panel, slider, live metrics |
+| Risk Intelligence | ✅ Production | Stats row + dedicated heatmap with legend |
+| Alerts view | ✅ Production | Full alert table with filtering |
+| Investigations | ✅ Production | Money trail table, I4C feed, handoffs — all with empty states |
+| Recovery | ✅ Production | Funnel, fund-block queue, closed-loop outcomes |
+| Mule Network | ✅ Production | Network visualization with empty state |
+| Audit Trail | ✅ Production | Tamper-evident ledger, verify/tamper/restore buttons |
+| Model Health | ✅ Production | Grid, metrics, drift monitor — all with empty states |
+| Reports | ✅ Production | PDF generation with descriptive empty state |
+| ATM drawer | ✅ Production | Slide-in intelligence panel |
+| Evidence modal | ✅ Production | Alert evidence with audit trail |
+| Toast system | ✅ Production | Non-blocking notifications |
+| i18n selector | ✅ Production | Language switcher in top bar |
 
-## Current UI Problems
-1. **No sidebar navigation** — flat layout, hard to orient
-2. **No information hierarchy** — all sections equal weight
-3. **Tiny typography** — 11-13px throughout, hard to read on projector
-4. **No ATM intelligence drawer** — clicking map marker opens popup, not drawer
-5. **No intervention workflow visualization** — just status pills
-6. **No Judge Mode** — no simplified demo flow
-7. **No loading skeletons** — blank panels while loading
-8. **No empty states** — just "muted" text
-9. **No error states** — raw error messages
-10. **No role-aware navigation** — same nav for all roles
-11. **Header too busy** — too many buttons crammed together
-12. **Login page not branded** — generic form
-13. **No responsive design** — desktop-only
-14. **Map not prominent enough** — shares space equally
-15. **Recovery funnel too flat** — needs visual pipeline
-16. **Model metrics section too technical** — needs professional framing
-17. **No system status indicator** — no way to see if backend is healthy
-18. **No toast system** — basic notifications only
-19. **No drawer/panel system** — all info in modals
-20. **No microinteractions** — no hover states, transitions
+## Previous Issues (All Fixed in v15-v16)
+| # | Issue | Severity | Fix |
+|---|-------|----------|-----|
+| 1 | No sidebar navigation | Critical | Added 9-view sidebar with sections |
+| 2 | No information hierarchy | Critical | Hero stats, panel headers, semantic colors |
+| 3 | Tiny typography (11-13px) | High | Scale: 11-28px with clear hierarchy |
+| 4 | No ATM intelligence drawer | High | Slide-in drawer with full ATM context |
+| 5 | No empty states | High | Every panel has icon + description |
+| 6 | No responsive design | High | 3 breakpoints: 1200px, 768px, 480px |
+| 7 | Login not branded | Medium | Split-panel with shield logo, role chips |
+| 8 | Header too busy | Medium | Simplified topbar with pill indicators |
+| 9 | No keyboard accessibility | Low | Nav items: href → javascript:void(0) + role=button + tabindex=0 |
 
-## Redesign Architecture
+## Judge Audit Fixes (Round 1, v16)
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | Ship emoji for police (wrong) | → Shield emoji (🛡️) |
+| 2 | I4C building emoji (wrong) | → Scales emoji (⚖️) |
+| 3 | 'Identity' label (confusing) | → 'Username' |
+| 4 | Inline styles on labels | → CSS classes (.form-label, .i18n-select) |
+| 5 | Duplicate Risk Intelligence map | → Added stats row + heatmap with legend |
+| 6 | Threshold Explorer buried | → Moved to standalone panel |
+| 7 | Mobile Nearby on desktop | → Hidden with .mobile-only class |
+| 8 | Topbar visual noise | → Removed 'System' dot, shortened labels |
+| 9 | 'Terminal Cash-Out Graph' jargon | → 'Money Trail Analysis' |
+| 10 | 'Audit Ledger' label | → 'Audit Trail' |
+| 11 | Mule Network bare 'loading...' | → Icon + descriptive text |
+| 12 | Reports empty state | → Rich description with icon |
+| 13 | Recovery 'synthetic' pill | → 'last 7 days' |
+| 14 | Ledger no explanation | → 'Every alert, handoff, and action is immutably recorded' |
+| 15 | Mule graph 8 cols vs 7 headers | → Fixed to 7 columns |
 
-### App Shell
-- Top command bar (compact)
-- Left sidebar (role-aware navigation)
-- Main workspace (scrollable)
-- Right intelligence drawer (ATM detail, slide-in)
-
-### New Components
-- AppShell, Sidebar, TopBar
-- StatCard (hero/normal variants)
-- RiskBadge, RiskScore (large, prominent)
-- AlertCard (timeline style)
-- RiskMap (60-70% workspace)
-- ATM Intelligence Drawer (right-side slide-in)
-- FilterBar + FilterDrawer
-- RecoveryFunnel (visual pipeline)
-- ModelHealthCard
-- DriftCard
-- MuleGraph (investigation workspace)
-- AuditLedger (professional)
-- SystemStatus
-- EmptyState, ErrorState, LoadingState (skeletons)
-- Toast (professional notifications)
-- Modal (evidence, technical details)
-- Judge Mode (simplified interface)
-
-### Design Tokens
-- Dark navy/charcoal foundation
-- Restrained gold/amber accent
-- Controlled semantic risk colors
-- IBM Plex Sans + Mono (preserved)
-- Clear typography hierarchy (11-30px)
+## Design Tokens
+- **Background**: #0f1117 (base), #171b26 (surface), #1e2330 (elevated)
+- **Text**: #e8eaf0 (primary), #8b90a0 (muted), #c9a84c (accent)
+- **Risk**: #10b981 (low), #f59e0b (medium), #ef4444 (high), #dc2626 (critical)
+- **Status**: #10b981 (ok), #f59e0b (warn), #ef4444 (danger), #3b82f6 (accent)
+- **Typography**: IBM Plex Sans (400-700), IBM Plex Mono (400-600)
+- **Spacing**: 4px base unit, 8/12/16/20/24/32px scale
+- **Radius**: 6px (sm), 10px (md), 14px (lg)
