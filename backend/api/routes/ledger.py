@@ -19,7 +19,7 @@ LEDGER_ANCHOR_* env vars are set (see backend/blockchain/onchain.py).
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from ... import repositories as repo, services
@@ -30,21 +30,33 @@ router = APIRouter(prefix="/ledger", tags=["ledger"])
 
 
 @router.get("")
-def ledger_list(user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")), db: Session = Depends(get_db)):
+def ledger_list(
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN")),
+    db: Session = Depends(get_db),
+):
     records = repo.ledger_chain(db)
-    return [
-        {
-            "index": r.index,
-            "created_at": r.created_at.isoformat(),
-            "actor": r.actor,
-            "event_type": r.event_type,
-            "entity_id": r.entity_id,
-            "payload_hash": r.payload_hash[:16] + "…",
-            "prev_hash": r.prev_hash[:16] + "…",
-            "hash": r.hash[:16] + "…",
-        }
-        for r in records
-    ]
+    total = len(records)
+    page = records[offset:offset + limit]
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "records": [
+            {
+                "index": r.index,
+                "created_at": r.created_at.isoformat(),
+                "actor": r.actor,
+                "event_type": r.event_type,
+                "entity_id": r.entity_id,
+                "payload_hash": r.payload_hash[:16] + "\u2026",
+                "prev_hash": r.prev_hash[:16] + "\u2026",
+                "hash": r.hash[:16] + "\u2026",
+            }
+            for r in page
+        ],
+    }
 
 
 @router.get("/verify")

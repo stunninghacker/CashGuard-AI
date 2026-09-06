@@ -17,6 +17,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from ..alerts.scheduler import start_scheduler, stop_scheduler
@@ -112,17 +113,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 @app.middleware("http")
-async def no_cache_frontend(request, call_next):
-    """Prevent stale frontend assets: the dashboard is a hackathon demo that
-    changes between rounds — a cached index.html/app.js breaks sign-in (old
-    markup vs new JS). Force revalidation on every load."""
+async def cache_headers(request, call_next):
+    """Set appropriate cache headers: no-cache for frontend assets, short TTL for API data."""
     response = await call_next(request)
-    if request.url.path in ("/", "/index.html", "/app.js", "/style.css"):
+    path = request.url.path
+    if path in ("/", "/index.html", "/app.js", "/style.css"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
+    elif path.startswith("/auth/"):
+        response.headers["Cache-Control"] = "no-store"
+    elif any(path.startswith(p) for p in ["/atms/banks", "/i18n/locales", "/train/status", "/drift/status"]):
+        response.headers["Cache-Control"] = "public, max-age=60"
+    elif any(path.startswith(p) for p in ["/risk-scores", "/alerts", "/stats/", "/hotspots", "/horizons"]):
+        response.headers["Cache-Control"] = "private, max-age=10"
     return response
 
 

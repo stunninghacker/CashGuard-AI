@@ -1,6 +1,6 @@
 /* CashGuard AI — Proactive Cybercrime Intelligence Platform
    Government-grade frontend: vanilla JS + Leaflet + WebSocket.
-   Preserves all backend API calls and data flows. */
+   Performance-optimized: lazy loading, debouncing, delta updates, abort controllers. */
 "use strict";
 
 const COMPLAINT_TYPES = ["phishing", "investment_fraud", "job_fraud", "upi_fraud", "digital_arrest", "sextortion"];
@@ -17,16 +17,30 @@ const state = {
   simulatedEvidence: {},
   _loadGen: 0,
   currentView: "overview",
+  _viewsRendered: {},   // track which views have been rendered (lazy loading)
+  _sortedRisk: null,    // cached sorted risk array
+  _abortController: null, // for cancelling stale requests
 };
 
 /* ==================== HELPERS ==================== */
 function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
 
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+
+let _activeAbort = null;
 async function api(path, opts = {}) {
   const token = getToken();
+  if (opts._cancelPrevious && _activeAbort) { _activeAbort.abort(); }
+  const controller = new AbortController();
+  if (opts._cancelPrevious) _activeAbort = controller;
+  const { _cancelPrevious, ...fetchOpts } = opts;
   const res = await fetch(path, {
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    ...opts,
+    signal: controller.signal,
+    ...fetchOpts,
   });
   if (res.status === 401) {
     localStorage.removeItem(TOKEN_KEY);
@@ -99,6 +113,14 @@ function tierBadge(tier) {
 }
 function tierOf(score) { return score >= 0.85 ? "dispatch" : score >= 0.7 ? "action" : "monitor"; }
 
+function getSortedRisk() {
+  if (!state._sortedRisk || state._sortedRisk._gen !== state._loadGen) {
+    state._sortedRisk = [...state.risk].sort((a, b) => b.risk_score - a.risk_score);
+    state._sortedRisk._gen = state._loadGen;
+  }
+  return state._sortedRisk;
+}
+
 /* ==================== VIEW SWITCHING ==================== */
 function switchView(view) {
   state.currentView = view;
@@ -112,12 +134,16 @@ function switchView(view) {
     ledger: "Audit Trail", model: "Model Health", reports: "Reports",
   };
   document.getElementById("topbar-view-title").textContent = titles[view] || view;
-  // Render view-specific data
+  // Mark view as rendered (for lazy loading)
+  state._viewsRendered[view] = true;
+  // Render view-specific data (only on first activation or explicit refresh)
   if (view === "risk") renderRiskView();
   if (view === "alerts") renderAlertsFullTable();
   if (view === "recovery") renderRecoveryView();
+  if (view === "mule") { renderMuleGraph(); renderMuleNetwork(); }
   if (view === "ledger") ledgerStatus();
   if (view === "model") renderModelView();
+  if (view === "investigations") { renderMuleGraph(); renderInbox(); renderHandoffs(); }
 }
 
 /* ==================== ROLE-AWARE SIDEBAR ==================== */
@@ -369,7 +395,7 @@ function openDrawer(r) {
 /* ==================== DATA LOADING ==================== */
 async function loadCityCoords() {
   try {
-    const atms = await api("/atms?limit=5000");
+    const atms = await api("/atms?limit=900");
     const byCity = {};
     for (const a of atms) { (byCity[a.city] ||= []).push([a.latitude, a.longitude]); }
     state.cityCoords = {};
@@ -391,7 +417,7 @@ async function loadComplaints() {
   try {
     const to = state.asOf || new Date().toISOString();
     const from = new Date(new Date(to).getTime() - 7 * 864e5).toISOString();
-    state.complaints = await api(`/complaints?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}&limit=20000`).catch(() => []);
+    state.complaints = await api(`/complaints?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}&limit=200`).catch(() => []);
   } catch { state.complaints = []; }
 }
 
@@ -423,19 +449,24 @@ async function loadAll() {
       if (stale()) return;
       state.risk = scen.risk_scores || []; state.alerts = scen.alerts || [];
       state.stats = scen.stats || null; state.simulatedEvidence = scen.evidence || {};
+      state._sortedRisk = null;
       setSimulationUI(true); render(); return;
     }
     const q = state.asOf ? `&as_of=${encodeURIComponent(state.asOf)}` : "";
     const statsP = state.user.role === "BANK" ? Promise.resolve(null) : api("/stats/summary").catch(() => null);
     const [risk, alerts, stats] = await Promise.all([
-      api(`/risk-scores${q}`), api("/alerts?limit=200"), statsP,
+      api(`/risk-scores${q}`, { _cancelPrevious: true }), api("/alerts?limit=200", { _cancelPrevious: true }), statsP,
     ]);
     if (stale()) return;
     state.risk = risk; state.alerts = alerts; state.stats = stats;
+    state._sortedRisk = null;
     await Promise.all([loadCityCoords(), loadComplaints()]);
     if (stale()) return;
     setSimulationUI(false); render();
-  } catch (err) { toast("Load failed: " + err.message, "error"); }
+  } catch (err) {
+    if (err.name === "AbortError") return;
+    toast("Load failed: " + err.message, "error");
+  }
 }
 
 function setSimulationUI(active) {
@@ -530,7 +561,7 @@ function renderPriorityActions() {
   const countEl = document.getElementById("priority-count");
   if (!el) return;
 
-  const top5 = [...state.risk].sort((a, b) => b.risk_score - a.risk_score).slice(0, 5);
+  const top5 = getSortedRisk().slice(0, 5);
   if (!top5.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">&#x1F50D;</div><h3>No High-Risk ATMs</h3><p>No ATMs currently exceed the risk threshold.</p></div>`;
     if (countEl) countEl.textContent = "0";
@@ -556,7 +587,7 @@ function renderPriorityActions() {
 
 function renderPolice() {
   renderMap();
-  const hotspots = [...state.risk].sort((a, b) => b.risk_score - a.risk_score).slice(0, 20);
+  const hotspots = getSortedRisk().slice(0, 20);
   const hCount = document.getElementById("hotspot-count");
   if (hCount) hCount.textContent = `${hotspots.length} hotspots`;
   const tbody = document.querySelector("#hotspot-table tbody");
@@ -607,7 +638,7 @@ function renderI4C() {
   renderMap();
   const alerts = state.alerts;
   const tbody = document.querySelector("#hotspot-table tbody");
-  const hotspots = [...state.risk].sort((a, b) => b.risk_score - a.risk_score).slice(0, 20);
+  const hotspots = getSortedRisk().slice(0, 20);
   if (tbody) tbody.innerHTML = hotspots.map(
     (h, i) => `<tr onclick="openDrawer(state.risk.find(x => x.atm_id === '${esc(h.atm_id)}'))" style="cursor:pointer">
       <td>${i + 1}</td><td><b>${esc(h.atm_id)}</b></td><td>${esc(h.branch_name)}<br/><span class="muted">${esc(h.bank_name)}</span></td><td>${esc(h.city)}</td>
@@ -617,13 +648,14 @@ function renderI4C() {
   if (hCount) hCount.textContent = `${hotspots.length} hotspots`;
   renderAlertTable("alert-table");
   renderRecoveryView();
-  renderMuleGraph();
-  renderDrift();
-  renderMuleNetwork();
-  ledgerStatus();
-  renderModelView();
-  renderInbox();
-  renderHandoffs();
+  // Lazy-load expensive sub-views only on first activation
+  if (state._viewsRendered.mule) renderMuleGraph();
+  if (state._viewsRendered.drift) renderDrift();
+  if (state._viewsRendered.network) renderMuleNetwork();
+  if (state._viewsRendered.ledger) ledgerStatus();
+  if (state._viewsRendered.model) renderModelView();
+  if (state._viewsRendered.inbox) renderInbox();
+  if (state._viewsRendered.handoffs) renderHandoffs();
 }
 
 /* ==================== ALERTS ==================== */
@@ -960,10 +992,11 @@ async function ledgerStatus() {
     } else {
       badge.innerHTML = `<span class="pill pill-danger">TAMPERED at block ${v.broken_at_index}</span>`;
     }
-    const lst = await api("/ledger");
+    const lst = await api("/ledger?limit=20&offset=0");
+    const records = lst.records || lst; // support both paginated and legacy format
     const preview = document.getElementById("ledger-preview");
-    if (preview && lst.length) {
-      const last = lst[lst.length - 1];
+    if (preview && records.length) {
+      const last = records[records.length - 1];
       preview.textContent = `Last block: #${last.index} ${last.event_type} by ${last.actor} @ ${fmtTime(last.created_at)}`;
     }
   } catch { const badge = document.getElementById("ledger-badge"); if (badge) badge.innerHTML = `<span class="pill">Sign in to verify</span>`; }
@@ -1157,30 +1190,56 @@ async function renderOutcomes() {
 async function runAlertCycle() {
   if (state.simulatedOptedIn) { toast("Disabled in SIMULATED mode.", "warning"); return; }
   try {
+    const btn = document.getElementById("btn-cycle");
+    if (btn) { btn.disabled = true; btn.textContent = "\u23F3 Running..."; }
     toast("Running alert cycle...", "info");
     const r = await api("/alerts/run-now", { method: "POST" });
     const s = r.summary;
     toast(`Alert cycle: ${s.created} new \u00b7 ${s.flagged} flagged \u00b7 ${s.skipped} deduped`, "success");
-    loadAll();
+    // Delta refresh: only alerts and overview, not full loadAll()
+    const alerts = await api("/alerts?limit=200").catch(() => state.alerts);
+    state.alerts = alerts;
+    renderAlertTable("alert-table");
+    renderOverviewStats();
+    if (state.currentView === "alerts") renderAlertsFullTable();
   } catch (err) { toast("Alert cycle failed: " + err.message, "error"); }
+  finally { const btn = document.getElementById("btn-cycle"); if (btn) { btn.disabled = false; btn.textContent = "\u26A1 Run Cycle"; } }
 }
 
 /* ==================== WEBSOCKET ==================== */
+let _wsReconnectTimer = null;
 function connectWS() {
   try {
+    if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
     const proto = location.protocol === "https:" ? "wss" : "ws";
     const ws = new WebSocket(`${proto}://${location.host}/ws/alerts?token=${encodeURIComponent(getToken())}`);
+    ws._retries = 0;
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
         if (state.simulatedOptedIn) return;
         if (msg.event === "alert") {
           toast(`LIVE: ${msg.payload.atm_id} flagged ${(msg.payload.risk_score * 100).toFixed(0)}%`, "warning");
-          loadAll();
-        } else if (msg.event === "recovery" || msg.event === "recovery_status") { loadAll(); }
+          // Delta update: add new alert to state, re-render only affected components
+          const existing = state.alerts.findIndex(a => a.alert_id === msg.payload.alert_id);
+          if (existing >= 0) { state.alerts[existing] = msg.payload; } else { state.alerts.unshift(msg.payload); }
+          if (state.currentView === "overview") renderAlertTable("alert-table");
+          if (state.currentView === "alerts") renderAlertsFullTable();
+          renderOverviewStats();
+          // Update sidebar badge
+          const badge = document.getElementById("sidebar-alert-badge");
+          if (badge) { badge.textContent = state.alerts.filter(a => a.status === "new").length; badge.classList.remove("hidden"); }
+        } else if (msg.event === "recovery" || msg.event === "recovery_status") {
+          // Delta update: only refresh recovery data
+          renderRecoveryView();
+        }
       } catch { /* ignore */ }
     };
-    ws.onclose = () => setTimeout(connectWS, 5000);
+    ws.onclose = () => {
+      const delay = Math.min(30000, 2000 * Math.pow(2, ws._retries || 0));
+      ws._retries = ((ws._retries || 0) + 1);
+      _wsReconnectTimer = setTimeout(connectWS, delay);
+    };
   } catch { /* ignore */ }
 }
 
@@ -1288,12 +1347,13 @@ function bindEvents() {
     });
   });
 
-  // Filter bindings
+  // Filter bindings with debouncing
   const ddState = document.getElementById("dd-state");
   const ddCity = document.getElementById("dd-city");
   const ddBank = document.getElementById("dd-bank");
-  if (ddState) ddState.addEventListener("change", (e) => { state.stateFilter = e.target.value; state.cityFilter = "All"; if (ddCity) ddCity.value = "All"; loadAll(); });
-  if (ddCity) ddCity.addEventListener("change", (e) => { state.cityFilter = e.target.value; loadAll(); });
+  const debouncedLoadAll = debounce(loadAll, 300);
+  if (ddState) ddState.addEventListener("change", (e) => { state.stateFilter = e.target.value; state.cityFilter = "All"; if (ddCity) ddCity.value = "All"; debouncedLoadAll(); });
+  if (ddCity) ddCity.addEventListener("change", (e) => { state.cityFilter = e.target.value; debouncedLoadAll(); });
   if (ddBank) ddBank.addEventListener("change", (e) => { state.bankFilter = e.target.value; renderMap(); });
 
   const tHeat = document.getElementById("toggle-heat");

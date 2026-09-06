@@ -1,0 +1,110 @@
+{
+  "timestamp": "2026-09-06",
+  "environment": "Windows, Python 3.x, SQLite, single-worker uvicorn, localhost",
+
+  "before_after": {
+    "ledger_paginated": {
+      "before_ms": 800, "after_ms": 62,
+      "before_bytes": 441753, "after_bytes": 4608,
+      "improvement_ms": "92%", "improvement_bytes": "99%"
+    },
+    "complaints_reduced": {
+      "before_ms": 5878, "after_ms": 117,
+      "before_bytes": 4862464, "after_bytes": 78541,
+      "improvement_ms": "98%", "improvement_bytes": "98%"
+    },
+    "mule_network_limited": {
+      "before_ms": 5872, "after_ms": 5476,
+      "before_bytes": 351109, "after_bytes": 19149,
+      "improvement_ms": "7%", "improvement_bytes": "95%"
+    },
+    "risk_scores_gzip": {
+      "before_bytes_raw": 456141, "after_bytes_gzip": 22060,
+      "improvement_bytes": "95%"
+    },
+    "atms_reduced": {
+      "before_bytes": 241357, "after_bytes": 241357,
+      "note": "Same size (900 ATMs, was 5000 limit but only 900 in DB)"
+    }
+  },
+
+  "frontend_optimizations": {
+    "lazy_loading": {
+      "description": "I4C sub-views (mule, drift, ledger, model, inbox, handoffs) only render when first opened",
+      "api_calls_saved_per_load": 7,
+      "estimated_time_saved_ms": 20000
+    },
+    "debounced_filters": {
+      "description": "Filter changes debounced 300ms before triggering API calls",
+      "impact": "Prevents API storms on rapid filter changes"
+    },
+    "websocket_delta": {
+      "description": "WebSocket alerts update only alerts table + stats, not full dashboard reload",
+      "before": "Full loadAll() = 19 API calls per alert",
+      "after": "1 API call (alerts only) per alert"
+    },
+    "abort_controller": {
+      "description": "Stale API requests cancelled when new ones start",
+      "impact": "Prevents stale data overwriting fresh data"
+    },
+    "cached_sorted_risk": {
+      "description": "Risk array sorted once per load, reused across renders",
+      "before": "3+ sorts per render cycle",
+      "after": "1 sort per load generation"
+    },
+    "reduced_complaints": {
+      "description": "Complaints fetched with limit=200 instead of limit=20000",
+      "before_bytes": 4862464,
+      "after_bytes": 78541,
+      "improvement": "98%"
+    },
+    "alert_cycle_delta": {
+      "description": "Alert cycle refreshes only alerts + overview, not full dashboard",
+      "before": "loadAll() = 19 API calls",
+      "after": "1 API call (alerts only)"
+    }
+  },
+
+  "backend_optimizations": {
+    "gzip_compression": {
+      "description": "GZipMiddleware added, responses > 500 bytes compressed",
+      "risk_scores": "445KB -> 22KB (95% reduction)"
+    },
+    "ledger_pagination": {
+      "description": "GET /ledger now accepts limit/offset, defaults to 50 records",
+      "before": "Returns all 1933 records (431KB)",
+      "after": "Returns 20 records (4.5KB)"
+    },
+    "mule_network_limit": {
+      "description": "GET /graph/mule-network accepts limit param, defaults to 100 nodes",
+      "before": "All nodes (343KB)",
+      "after": "Top 100 by risk (18.7KB)"
+    },
+    "cache_headers": {
+      "description": "API responses get appropriate Cache-Control headers",
+      "static": "no-cache for frontend assets",
+      "reference_data": "60s for bank list, i18n, train status",
+      "live_data": "10s for risk scores, alerts, stats"
+    }
+  },
+
+  "total_impact": {
+    "initial_load_before": {
+      "i4c_admin_api_calls": 19,
+      "i4c_admin_total_payload_kb": 6398,
+      "i4c_admin_sequential_time_ms": 29799,
+      "complaints_payload_kb": 4749,
+      "ledger_payload_kb": 431
+    },
+    "initial_load_after": {
+      "i4c_admin_api_calls": 12,
+      "i4c_admin_total_payload_kb": 1025,
+      "estimated_time_ms": 3500,
+      "complaints_payload_kb": 77,
+      "ledger_payload_kb": 4.5,
+      "note": "7 sub-view APIs deferred until first view activation"
+    },
+    "payload_reduction": "84%",
+    "initial_load_speedup": "8.5x"
+  }
+}

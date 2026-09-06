@@ -1,0 +1,167 @@
+{
+  "timestamp": "2026-09-06T00:00:00Z",
+  "environment": "Windows, Python 3.x, SQLite, single-worker uvicorn",
+  "note": "All measurements from local server on localhost. Network latency excluded.",
+
+  "frontend_assets": {
+    "index_html_bytes": 25141,
+    "style_css_bytes": 46128,
+    "app_js_bytes": 72506,
+    "leaflet_js_bytes": 147558,
+    "leaflet_css_bytes": 14848,
+    "total_bytes": 306181,
+    "total_kb": 299.0
+  },
+
+  "dom_nodes": 358,
+
+  "api_response_times_ms": {
+    "health": 5,
+    "risk_scores": 574,
+    "alerts_200": 126,
+    "stats_summary": 249,
+    "hotspots": 66,
+    "horizons": 37,
+    "recovery_recommendations": 77,
+    "recovery_funnel": 34,
+    "mule_graph_terminal_nodes": 7115,
+    "drift_status": 8333,
+    "graph_mule_network": 5872,
+    "ledger_verify": 76,
+    "ledger_full": 800,
+    "train_status": 36,
+    "mock_i4c_inbox": 61,
+    "handoffs_list": 48,
+    "complaints_20000": 5878,
+    "atms_5000": 330,
+    "mobile_nearby": 54,
+    "threshold_explorer": 33,
+    "atms_banks": 39,
+    "blockchain": 36,
+    "i18n_locales": 27,
+    "blockchain_verify": 33,
+    "blockchain_statistics": 24,
+    "analytics_time_granularity": 61,
+    "withdrawals": 45,
+    "reports_city": -1,
+    "routing_handoff": -1
+  },
+
+  "api_payload_sizes_bytes": {
+    "risk_scores": 456141,
+    "alerts_200": 87449,
+    "stats_summary": 10650,
+    "hotspots": 10035,
+    "horizons": 3686,
+    "recovery_recommendations": 36966,
+    "recovery_funnel": 205,
+    "mule_graph_terminal_nodes": 1331,
+    "drift_status": 820,
+    "graph_mule_network": 351109,
+    "ledger_full": 441753,
+    "ledger_verify": 102,
+    "train_status": 5939,
+    "mock_i4c_inbox": 20173,
+    "handoffs_list": 15974,
+    "complaints_20000": 4862464,
+    "atms_5000": 241357,
+    "mobile_nearby": 102,
+    "threshold_explorer": 5120
+  },
+
+  "i4c_admin_full_load": {
+    "total_payload_bytes": 6551614,
+    "total_payload_kb": 6398.1,
+    "sequential_time_ms": 29799,
+    "estimated_parallel_time_ms": 8940,
+    "endpoints_called": 19,
+    "largest_payload": "complaints_20000 (4748.7KB)",
+    "slowest_endpoint": "drift_status (8333ms)"
+  },
+
+  "initial_dashboard_load": {
+    "police_role": {
+      "endpoints": 5,
+      "total_payload_kb": 554.6,
+      "estimated_time_ms": 1200
+    },
+    "i4c_role": {
+      "endpoints": 19,
+      "total_payload_kb": 6398.1,
+      "sequential_time_ms": 29799
+    }
+  },
+
+  "bottlenecks_ranked": [
+    {
+      "rank": 1,
+      "component": "complaints endpoint",
+      "impact": "4.7MB payload, 5.9s response",
+      "cause": "Frontend requests limit=20000 on initial load",
+      "fix": "Lazy load, reduce limit, server-side aggregation"
+    },
+    {
+      "rank": 2,
+      "component": "drift/status",
+      "impact": "8.3s response for 0.8KB payload",
+      "cause": "Rebuilds entire feature matrix via build_features() on every request",
+      "fix": "Precompute and persist feature matrix"
+    },
+    {
+      "rank": 3,
+      "component": "mule-graph/terminal-nodes",
+      "impact": "7.1s response",
+      "cause": "N x BFS chain_depth_of + pure-Python PageRank + df.iterrows()",
+      "fix": "Memoize BFS, numpy PageRank, vectorized graph building"
+    },
+    {
+      "rank": 4,
+      "component": "graph/mule-network",
+      "impact": "5.9s response, 343KB payload",
+      "cause": "Full graph rebuild per request, large SVG",
+      "fix": "Cache graph, lazy load, reduce node count"
+    },
+    {
+      "rank": 5,
+      "component": "risk-scores",
+      "impact": "445KB payload",
+      "cause": "Returns all 900 ATMs with full data",
+      "fix": "Paginate, sparse fields, lazy load"
+    },
+    {
+      "rank": 6,
+      "component": "ledger",
+      "impact": "431KB payload",
+      "cause": "No pagination, returns entire audit log",
+      "fix": "Add LIMIT/OFFSET, cursor pagination"
+    },
+    {
+      "rank": 7,
+      "component": "renderI4C() fires 10 API calls on every loadAll()",
+      "impact": "All views render even when hidden",
+      "cause": "No lazy loading of hidden panels",
+      "fix": "Lazy load views on first activation"
+    },
+    {
+      "rank": 8,
+      "component": "WebSocket triggers full loadAll()",
+      "impact": "Every live alert re-fetches everything",
+      "cause": "No incremental updates",
+      "fix": "Delta updates, only refresh affected components"
+    },
+    {
+      "rank": 9,
+      "component": "No filter debouncing",
+      "impact": "Rapid filter changes trigger N full reloads",
+      "cause": "Each dropdown change calls loadAll() immediately",
+      "fix": "Debounce 300ms before triggering reload"
+    },
+    {
+      "rank": 10,
+      "component": "stats/summary",
+      "impact": "880ms, 13 sequential DB queries",
+      "cause": "N+1 query pattern for counts",
+      "fix": "Single aggregate query, cache result"
+    }
+  ]
+}

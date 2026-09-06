@@ -27,6 +27,7 @@ def mule_network(
     atm_id: str | None = Query(default=None, description="Scope graph to a component around this ATM"),
     depth: int = Query(default=2, ge=1, le=4),
     include_phone: bool = Query(default=True),
+    limit: int = Query(default=100, ge=10, le=500, description="Max nodes to return"),
     user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "BANK", "I4C_ADMIN")),
     db: Session = Depends(get_db),
 ):
@@ -44,12 +45,20 @@ def mule_network(
         scoped_ids |= {n["id"] for n in payload["nodes"] if n["type"] != "account"}
         keep = {n["id"] for n in payload["nodes"] if n["type"] == "account" and n["id"] in in_scope}
         keep |= {n["id"] for n in payload["nodes"] if n["type"] != "account"}
-        # also keep neighbors of in-scope accounts to preserve the component
         ids_keep = set(keep)
         for e in payload["edges"]:
             if e["to"] in keep or e["from"] in keep:
                 ids_keep.add(e["from"]); ids_keep.add(e["to"])
         payload["nodes"] = [n for n in payload["nodes"] if n["id"] in ids_keep]
         payload["edges"] = [e for e in payload["edges"] if e["from"] in ids_keep and e["to"] in ids_keep]
+
+    # Limit nodes to prevent huge payloads
+    if len(payload.get("nodes", [])) > limit:
+        # Keep highest-risk nodes
+        nodes = payload["nodes"]
+        nodes.sort(key=lambda n: n.get("risk", 0), reverse=True)
+        keep_ids = {n["id"] for n in nodes[:limit]}
+        payload["nodes"] = [n for n in nodes if n["id"] in keep_ids]
+        payload["edges"] = [e for e in payload["edges"] if e["from"] in keep_ids and e["to"] in keep_ids]
 
     return payload
