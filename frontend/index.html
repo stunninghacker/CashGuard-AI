@@ -32,7 +32,7 @@
         <label for="login-password">Passphrase</label>
         <input id="login-password" type="password" placeholder="Enter passphrase" autocomplete="current-password" required />
       </div>
-      <button id="btn-login" class="login-btn" type="submit">Authenticate</button>
+      <button id="btn-login" class="login-btn" type="submit" aria-label="Authenticate">Authenticate</button>
       <div id="login-error" class="login-error"></div>
     </form>
     <div class="login-disclosure">
@@ -150,7 +150,7 @@
         <span class="sim-label"><span class="lucide lucide-alert-triangle"></span> Simulated Scenario</span>
         <span id="sim-banner-text">Scripted cash-out spree across 4 states</span>
         <span class="sim-spacer"></span>
-        <button id="btn-sim-exit" class="btn btn-sm btn-secondary">Exit Simulation</button>
+        <button id="btn-sim-exit" class="btn btn-sm btn-secondary" aria-label="Exit Simulation">Exit Simulation</button>
       </div>
       <div class="stats-strip" id="overview-stats">
         <div class="stat-card">
@@ -240,7 +240,7 @@
             <option value="MEDIUM">Medium</option>
             <option value="LOW">Low</option>
           </select>
-          <button id="btn-run-alerts" class="btn btn-primary btn-sm">Run Alert Cycle</button>
+          <button id="btn-run-alerts" class="btn btn-primary btn-sm" aria-label="Run Alert Cycle">Run Alert Cycle</button>
         </div>
       </div>
       <div class="map-wrap" style="margin-bottom:14px">
@@ -288,7 +288,7 @@
             <option value="dismissed">Dismissed</option>
             <option value="resolved">Resolved</option>
           </select>
-          <button id="btn-run-alerts-2" class="btn btn-primary btn-sm">Run Alert Cycle</button>
+          <button id="btn-run-alerts-2" class="btn btn-primary btn-sm" aria-label="Run Alert Cycle">Run Alert Cycle</button>
         </div>
       </div>
       <div class="card">
@@ -346,7 +346,7 @@
           <div class="card-header"><span class="card-title">Select an ATM from Risk Intelligence or enter ID</span></div>
           <div class="card-body">
             <input id="inv-atm-id-input" type="text" placeholder="e.g. ATM-NOR0001" style="width:240px;margin-right:8px" />
-            <button id="btn-load-atm-profile" class="btn btn-primary btn-sm">Load Profile</button>
+            <button id="btn-load-atm-profile" class="btn btn-primary btn-sm" aria-label="Load ATM Profile">Load Profile</button>
             <div id="inv-atm-profile-content" style="margin-top:16px"></div>
           </div>
         </div>
@@ -356,7 +356,7 @@
           <div class="card-header"><span class="card-title">Money Trail</span></div>
           <div class="card-body">
             <input id="inv-account-input" type="text" placeholder="Account token" style="width:280px;margin-right:8px" />
-            <button id="btn-load-trail" class="btn btn-primary btn-sm">Trace</button>
+            <button id="btn-load-trail" class="btn btn-primary btn-sm" aria-label="Trace Money Trail">Trace</button>
             <div id="money-trail-output" class="money-trail" style="margin-top:16px">
               <div class="empty-state">
                 <div class="empty-icon"><span class="lucide lucide-network"></span></div>
@@ -372,7 +372,7 @@
           <div class="card-header"><span class="card-title">Evidence Viewer</span></div>
           <div class="card-body">
             <input id="inv-evidence-alert-id" type="text" placeholder="Alert ID (e.g. ALT-...)" style="width:280px;margin-right:8px" />
-            <button id="btn-load-evidence" class="btn btn-primary btn-sm">Load Evidence</button>
+            <button id="btn-load-evidence" class="btn btn-primary btn-sm" aria-label="Load Evidence">Load Evidence</button>
             <div id="evidence-output" style="margin-top:16px">
               <div class="empty-state">
                 <div class="empty-icon"><span class="lucide lucide-file-text"></span></div>
@@ -400,7 +400,7 @@
             <option value="4">Depth 4</option>
           </select>
           <input id="mule-atm-id" type="text" placeholder="ATM ID (optional)" style="width:180px" />
-          <button id="btn-load-mule" class="btn btn-primary btn-sm">Load Network</button>
+          <button id="btn-load-mule" class="btn btn-primary btn-sm" aria-label="Load Mule Network">Load Network</button>
         </div>
       </div>
       <div class="card">
@@ -603,7 +603,7 @@
         <div class="card-header"><span class="card-title">Model Retraining</span></div>
         <div class="card-body">
           <div style="display:flex;align-items:center;gap:12px">
-            <button id="btn-retrain" class="btn btn-primary btn-sm">Retrain Model</button>
+            <button id="btn-retrain" class="btn btn-primary btn-sm" aria-label="Retrain Model">Retrain Model</button>
             <span id="train-status" style="font-size:12px;color:var(--text-secondary)"></span>
           </div>
         </div>
@@ -618,9 +618,9 @@
           <div class="view-subtitle">Tamper-proof blockchain ledger with integrity verification</div>
         </div>
         <div class="view-actions">
-          <button id="btn-ledger-verify" class="btn btn-secondary btn-sm">Verify Chain</button>
-          <button id="btn-ledger-tamper" class="btn btn-danger btn-sm">Tamper Demo</button>
-          <button id="btn-ledger-restore" class="btn btn-primary btn-sm">Restore</button>
+          <button id="btn-ledger-verify" class="btn btn-secondary btn-sm" aria-label="Verify Chain">Verify Chain</button>
+          <button id="btn-ledger-tamper" class="btn btn-danger btn-sm" aria-label="Tamper Demo">Tamper Demo</button>
+          <button id="btn-ledger-restore" class="btn btn-primary btn-sm" aria-label="Restore">Restore</button>
         </div>
       </div>
 
@@ -647,9 +647,9 @@
           </div>
         </div>
         <div class="card-footer">
-          <button id="btn-ledger-prev" class="btn btn-ghost btn-sm" disabled>Previous</button>
+            <button id="btn-ledger-prev" class="btn btn-ghost btn-sm" disabled aria-label="Previous Page">Previous</button>
           <span id="ledger-page-info" style="font-size:12px;color:var(--text-muted)">Page 1</span>
-          <button id="btn-ledger-next" class="btn btn-ghost btn-sm">Next</button>
+            <button id="btn-ledger-next" class="btn btn-ghost btn-sm" aria-label="Next Page">Next</button>
         </div>
       </div>
     </div>
@@ -672,7 +672,7 @@
           <div class="card-header"><span class="card-title"><span class="lucide lucide-file-text"></span> National Situational Report</span></div>
           <div class="card-body">
             <p style="color:var(--text-secondary);margin-bottom:12px">Generates a national-level situational awareness report for I4C administration.</p>
-            <button id="btn-sit-report" class="btn btn-primary btn-sm">Generate Report</button>
+            <button id="btn-sit-report" class="btn btn-primary btn-sm" aria-label="Generate Situational Report">Generate Report</button>
             <div id="report-output" class="report-output" style="margin-top:16px;display:none"></div>
           </div>
         </div>
@@ -682,7 +682,7 @@
           <div class="card-header"><span class="card-title"><span class="lucide lucide-flame"></span> Hotspot Analysis</span></div>
           <div class="card-body">
             <p style="color:var(--text-secondary);margin-bottom:12px">Identify geographic concentrations of high-risk ATMs.</p>
-            <button id="btn-hotspot-report" class="btn btn-primary btn-sm">Load Hotspots</button>
+            <button id="btn-hotspot-report" class="btn btn-primary btn-sm" aria-label="Load Hotspots">Load Hotspots</button>
             <div id="hotspot-output" style="margin-top:16px"></div>
           </div>
         </div>
@@ -693,7 +693,7 @@
           <div class="card-body">
             <div style="display:flex;gap:8px;margin-bottom:12px">
               <input id="city-report-input" type="text" placeholder="City name" style="width:240px" />
-              <button id="btn-city-report" class="btn btn-primary btn-sm">Generate</button>
+              <button id="btn-city-report" class="btn btn-primary btn-sm" aria-label="Generate City Report">Generate</button>
             </div>
             <div id="city-report-output" class="report-output" style="display:none"></div>
           </div>

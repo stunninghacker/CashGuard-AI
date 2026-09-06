@@ -429,9 +429,12 @@ tr:last-child td{border-bottom:none}
   #sidebar.mobile-open{transform:translateX(0)}
   .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(7,17,31,0.6);z-index:calc(var(--z-sidebar) - 1)}
   .sidebar-overlay.active{display:block}
+  #mobile-menu-btn{display:flex !important}
+  #sidebar-toggle{display:none}
   .map-container{height:300px}
   .stats-strip{grid-template-columns:1fr 1fr}
   .metric-grid{grid-template-columns:1fr 1fr}
+  .view-actions{flex-wrap:wrap}
 }
 @media(max-width:480px){
   #workspace{padding:12px}
@@ -470,3 +473,13 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 
 /* ── Mono ──────────────────────────────────────────────────── */
 .mono{font-family:var(--font-mono);font-size:12px}
+
+/* ── Reduced Motion ──────────────────────────────────────── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important}
+  .skeleton{animation:none !important}
+}
+
+/* ── Tab Overflow ────────────────────────────────────────── */
+.tab-bar{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab-bar::-webkit-scrollbar{height:0}

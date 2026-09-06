@@ -71,10 +71,12 @@ const Auth = {
 
 /* ── Toast ─────────────────────────────────────────────────── */
 const Toast = {
+  _max: 5,
   show(title, msg, type, dur) {
     type = type || "info"; dur = dur || 4000;
     const c = $("toast-container");
-    const icons = { success: "\u2713", error: "\u2717", warning: "\u26A0", info: "\u2139" };
+    const icons = { success: '<span class="lucide lucide-check-circle"></span>', error: '<span class="lucide lucide-x-circle"></span>', warning: '<span class="lucide lucide-alert-triangle"></span>', info: '<span class="lucide lucide-info"></span>' };
+    while (c.children.length >= this._max) { c.firstChild.remove(); }
     const el = document.createElement("div");
     el.className = "toast " + type;
     el.innerHTML = '<span class="toast-icon">' + (icons[type]||icons.info) + '</span>' +
@@ -94,15 +96,22 @@ const Toast = {
 
 /* ── Modal ─────────────────────────────────────────────────── */
 const Modal = {
+  _prevFocus: null,
   show(cfg) {
+    this._prevFocus = document.activeElement;
     $("modal-title").textContent = cfg.title || "Confirm";
     $("modal-body").innerHTML = cfg.body || "";
     $("modal-footer").innerHTML = cfg.footer || "";
     $("modal-overlay").classList.add("active");
     $("modal-close").onclick = function() { Modal.hide(); };
     $("modal-overlay").onclick = function(e) { if (e.target.id === "modal-overlay") Modal.hide(); };
+    var closeBtn = $("modal-close");
+    if (closeBtn) closeBtn.focus();
   },
-  hide() { $("modal-overlay").classList.remove("active"); },
+  hide() {
+    $("modal-overlay").classList.remove("active");
+    if (this._prevFocus) try { this._prevFocus.focus(); } catch(e) {}
+  },
   confirm(title, msg) {
     return new Promise(function(resolve) {
       var id = "mc-" + Date.now();
@@ -120,16 +129,21 @@ const Modal = {
 
 /* ── Drawer ─────────────────────────────────────────────────── */
 const Drawer = {
+  _prevFocus: null,
   open(cfg) {
+    this._prevFocus = document.activeElement;
     $("drawer-title").textContent = cfg.title || "Details";
     $("drawer-body").innerHTML = cfg.body || "";
     $("drawer-footer").innerHTML = cfg.footer || "";
     $("drawer-overlay").classList.add("active");
     $("drawer").classList.add("open");
+    var closeBtn = $("drawer-close");
+    if (closeBtn) closeBtn.focus();
   },
   close() {
     $("drawer-overlay").classList.remove("active");
     $("drawer").classList.remove("open");
+    if (this._prevFocus) try { this._prevFocus.focus(); } catch(e) {}
   }
 };
 
@@ -232,6 +246,7 @@ MapCtrl.prototype.clearMarkers = function() {
   var self = this;
   this.markers.forEach(function(m) { if (self.map) self.map.removeLayer(m); });
   this.markers = [];
+  if (this._heatLayer && this.map) { this.map.removeLayer(this._heatLayer); this._heatLayer = null; }
 };
 MapCtrl.prototype.addMarker = function(lat, lng, opts) {
   if (!this.map || lat == null || lng == null) return null;
@@ -259,9 +274,10 @@ MapCtrl.prototype.resize = function() {
 };
 MapCtrl.prototype.addHeat = function(data) {
   if (!this.map || !data.length || !L.heatLayer) return;
+  if (this._heatLayer) { this.map.removeLayer(this._heatLayer); this._heatLayer = null; }
   var hd = data.filter(function(d){return d.latitude&&d.longitude;}).map(function(d){return [d.latitude,d.longitude,d.risk_score||0.5];});
   if (hd.length) {
-    L.heatLayer(hd, {radius:25,blur:15,maxZoom:10,max:1.0,
+    this._heatLayer = L.heatLayer(hd, {radius:25,blur:15,maxZoom:10,max:1.0,
       gradient:{0.2:"#22C55E",0.4:"#3B82F6",0.6:"#F59E0B",0.8:"#EF4444",1.0:"#FF0000"}
     }).addTo(this.map);
   }
@@ -275,7 +291,7 @@ function connectWS() {
     State.ws = new WebSocket(proto + "://" + location.host + "/ws/alerts");
     State.ws.onopen = function() { $("conn-status-text").textContent = "Connected"; };
     State.ws.onclose = function() { $("conn-status-text").textContent = "Reconnecting..."; setTimeout(connectWS, 3000); };
-    State.ws.onerror = function() { $("conn-status-text").textContent = "Error"; };
+    State.ws.onerror = function() { $("conn-status-text").textContent = "Error"; setTimeout(connectWS, 5000); };
     State.ws.onmessage = function(evt) {
       try {
         var msg = JSON.parse(evt.data);
@@ -331,14 +347,16 @@ var Overview = {
       $("stat-risk").textContent = fmtNum(s.high_risk_atms);
       $("stat-complaints-7d").textContent = fmtNum(s.complaints_7d);
       $("stat-fraud-7d").textContent = fmtNum(s.fraud_withdrawals_7d);
-    } catch(e) { /* Stats load failed */ }
+    } catch(e) { ["stat-atms","stat-alerts","stat-risk","stat-complaints-7d","stat-fraud-7d"].forEach(function(id){ $(id).textContent="--"; }); }
   },
   loadMap: async function() {
     if (!this.map) { this.map = new MapCtrl("main-map"); this.map.init(); }
     this.map.resize();
     try {
-      var data = State.simulation ? (State.simulationData||{}).risk_scores || [] : [];
-      if (!data.length) {
+      var data;
+      if (State.simulation) {
+        data = (State.simulationData||{}).risk_scores || [];
+      } else {
         data = await API.get("/risk-scores?horizon=24");
         if (data._forbidden) data = [];
       }
@@ -358,13 +376,13 @@ var Overview = {
       var alerts = await API.get("/alerts?limit=10&status=new");
       if (alerts._forbidden) {
         $("recent-alerts-list").innerHTML = '<div class="table-empty">Access restricted</div>';
-        $("priority-actions").innerHTML = '<div class="empty-state"><div class="empty-icon">&#128274;</div><div class="empty-title">Access Restricted</div></div>';
+        $("priority-actions").innerHTML = '<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-lock"></span></div><div class="empty-title">Access Restricted</div></div>';
         return;
       }
       State.alerts = alerts || [];
       if (!alerts.length) {
         $("recent-alerts-list").innerHTML = '<div class="table-empty">No active alerts</div>';
-        $("priority-actions").innerHTML = '<div class="empty-state"><div class="empty-icon">&#10003;</div><div class="empty-title">All Clear</div><div class="empty-desc">No priority actions.</div></div>';
+        $("priority-actions").innerHTML = '<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-check-circle"></span></div><div class="empty-title">All Clear</div><div class="empty-desc">No priority actions.</div></div>';
         return;
       }
       $("recent-alerts-list").innerHTML = alerts.slice(0,5).map(function(a){
@@ -378,11 +396,11 @@ var Overview = {
       if (crit.length) {
         $("priority-actions").innerHTML = crit.slice(0,3).map(function(a){
           return '<div style="padding:10px;background:var(--critical-bg);border:1px solid var(--critical-border);border-radius:var(--radius-md);margin-bottom:8px;cursor:pointer" onclick="Alerts.openDetail(\''+esc(a.alert_id)+'\')">'+
-            '<div style="font-size:12px;font-weight:700;color:var(--critical);margin-bottom:2px">&#9888; '+esc(a.atm_id)+'</div>'+
+            '<div style="font-size:12px;font-weight:700;color:var(--critical);margin-bottom:2px"><span class="lucide lucide-alert-triangle"></span> '+esc(a.atm_id)+'</div>'+
             '<div style="font-size:11px;color:var(--text-secondary)">'+esc(a.recommended_action||"Investigate")+'</div></div>';
         }).join("");
       } else {
-        $("priority-actions").innerHTML = '<div class="empty-state"><div class="empty-icon">&#10003;</div><div class="empty-title">All Clear</div></div>';
+        $("priority-actions").innerHTML = '<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-check-circle"></span></div><div class="empty-title">All Clear</div></div>';
       }
     } catch(e) { /* Alerts load failed */ }
   },
@@ -482,7 +500,7 @@ var Alerts = {
     var url = "/alerts?limit=200";
     if (status) url += "&status=" + encodeURIComponent(status);
     try {
-      SKEL.show("alerts-table-body","table");
+      SKEL.show("alerts-full-table","table");
       var data = await API.get(url);
       if (data._forbidden) { Toast.warning("Access Denied", "Your role cannot view alerts."); return; }
       State.alerts = data || [];
@@ -687,16 +705,16 @@ var Investigations = {
         });
         html += '</div>';
       }
-      if (!html) html = '<div class="empty-state"><div class="empty-icon">&#128269;</div><div class="empty-title">No Data</div><div class="empty-desc">No risk data found for this ATM.</div></div>';
+      if (!html) html = '<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-search"></span></div><div class="empty-title">No Data</div><div class="empty-desc">No risk data found for this ATM.</div></div>';
       $("inv-atm-profile-content").innerHTML = html;
-    } catch(e) { $("inv-atm-profile-content").innerHTML = '<div class="error-banner"><span class="error-banner-icon">&#10007;</span><div class="error-banner-text"><div class="error-banner-title">Load Failed</div><div class="error-banner-msg">'+esc(e.message)+'</div></div></div>'; }
+    } catch(e) { $("inv-atm-profile-content").innerHTML = '<div class="error-banner"><span class="error-banner-icon"><span class="lucide lucide-x-circle"></span></span><div class="error-banner-text"><div class="error-banner-title">Load Failed</div><div class="error-banner-msg">'+esc(e.message)+'</div></div></div>'; }
   },
   loadMoneyTrail: async function(accountToken) {
     try {
       var data = await API.get("/mule-graph/trail/"+encodeURIComponent(accountToken));
       if (data._forbidden) { Toast.warning("Access Denied","Insufficient permissions."); return; }
       if (!data || (!data.chains||!data.chains.length) && (!data.edges||!data.edges.length)) {
-        $("money-trail-output").innerHTML = '<div class="empty-state"><div class="empty-icon">&#128279;</div><div class="empty-title">No Trail</div><div class="empty-desc">No money trail found.</div></div>';
+        $("money-trail-output").innerHTML = '<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-network"></span></div><div class="empty-title">No Trail</div><div class="empty-desc">No money trail found.</div></div>';
         return;
       }
       var html = '<div style="padding:16px"><div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">Account: <span class="mono">'+esc(data.account_token)+'</span> | Window: '+(data.window_days||30)+'d</div>';
@@ -721,7 +739,7 @@ var Investigations = {
       var data = await API.get("/alerts/"+alertId+"/evidence");
       if (data._forbidden) { Toast.warning("Access Denied","Insufficient permissions."); return; }
       if (!data || Object.keys(data).length===0) {
-        $("evidence-output").innerHTML = '<div class="empty-state"><div class="empty-icon">&#128196;</div><div class="empty-title">No Evidence</div><div class="empty-desc">No evidence found for this alert.</div></div>';
+        $("evidence-output").innerHTML = '<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-file-text"></span></div><div class="empty-title">No Evidence</div><div class="empty-desc">No evidence found for this alert.</div></div>';
         return;
       }
       var html = '<div class="report-output"><h4>Evidence for '+esc(alertId)+'</h4>';
@@ -852,14 +870,28 @@ var ModelHealth = {
       var dp = p.threshold_0_70 || {};
       if(dp.precision!=null)$("m-disp-prec").textContent=(dp.precision*100).toFixed(0)+"%";
       if(dp.alerts!=null)$("m-disp-alerts").textContent=dp.alerts;
+
+      var fi = d.feature_importances || {};
+      if (Object.keys(fi).length) {
+        var sorted = Object.entries(fi).sort(function(a,b){return Math.abs(b[1])-Math.abs(a[1]);}).slice(0,10);
+        var maxAbs = Math.max.apply(null, sorted.map(function(p){return Math.abs(p[1]);}));
+        var html = '';
+        sorted.forEach(function(pair){
+          var name = pair[0], val = pair[1];
+          var pct = maxAbs > 0 ? (Math.abs(val)/maxAbs*100) : 0;
+          var cls = val >= 0 ? 'positive' : 'negative';
+          html += '<div class="feature-bar"><span class="feature-bar-name">' + esc(name) + '</span><div class="feature-bar-track"><div class="feature-bar-fill ' + cls + '" style="width:' + pct.toFixed(0) + '%"></div></div><span class="feature-bar-value">' + val.toFixed(3) + '</span></div>';
+        });
+        $("feature-impact-bars").innerHTML = html;
+      }
     } catch(e){ /* Metrics load failed */ }
   },
   loadDrift: async function() {
     try {
       var data = await API.get("/drift/status");
-      if (data._forbidden) { $("drift-status-content").innerHTML='<div class="empty-state"><div class="empty-icon">&#128274;</div><div class="empty-title">Access Restricted</div><div class="empty-desc">Requires I4C_ADMIN role.</div></div>';return; }
+      if (data._forbidden) { $("drift-status-content").innerHTML='<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-lock"></span></div><div class="empty-title">Access Restricted</div><div class="empty-desc">Requires I4C_ADMIN role.</div></div>';return; }
       if (!data||data.status==="PENDING_REFERENCE"||data.status==="missing") {
-        $("drift-status-content").innerHTML='<div class="empty-state"><div class="empty-icon">&#128163;</div><div class="empty-title">No Reference Data</div><div class="empty-desc">Capture a reference snapshot to enable drift monitoring.</div><div class="empty-action"><button class="btn btn-primary btn-sm" onclick="ModelHealth.captureReference()">Capture Reference</button></div></div>';
+        $("drift-status-content").innerHTML='<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-radar"></span></div><div class="empty-title">No Reference Data</div><div class="empty-desc">Capture a reference snapshot to enable drift monitoring.</div><div class="empty-action"><button class="btn btn-primary btn-sm" onclick="ModelHealth.captureReference()">Capture Reference</button></div></div>';
         return;
       }
       var features = data.features||data;
@@ -870,7 +902,7 @@ var ModelHealth = {
           var psi=typeof v==="object"?v.psi:v;
           var status=typeof v==="object"?v.status:(psi>0.2?"red":psi>0.1?"yellow":"green");
           var cls=status==="red"?"drift-crit":status==="yellow"?"drift-warn":"drift-ok";
-          html+='<div class="drawer-kv"><span class="k">'+esc(k)+'</span><span class="v '+cls+'">'+(typeof psi==="number"?psi.toFixed(4):esc(String(psi)))+' '+(status==="green"?"&#10003;":status==="yellow"?"&#9888;":"&#10007;")+'</span></div>';
+          html+='<div class="drawer-kv"><span class="k">'+esc(k)+'</span><span class="v '+cls+'">'+(typeof psi==="number"?psi.toFixed(4):esc(String(psi)))+' '+(status==="green"?"<span class="lucide lucide-check-circle"></span>":status==="yellow"?"<span class="lucide lucide-alert-triangle"></span>":"<span class="lucide lucide-x-circle"></span>")+'</span></div>';
         });
         html+='</div>';
         $("drift-status-content").innerHTML=html;
@@ -948,7 +980,7 @@ var Reports = {
       var data = await API.get("/hotspots?k=20");
       if (data._forbidden) { Toast.warning("Access Denied","Insufficient permissions.");return; }
       var o = $("hotspot-output");
-      if (!data||!data.length) { o.innerHTML='<div class="empty-state"><div class="empty-icon">&#128293;</div><div class="empty-title">No Hotspots</div></div>';return; }
+      if (!data||!data.length) { o.innerHTML='<div class="empty-state"><div class="empty-icon"><span class="lucide lucide-flame"></span></div><div class="empty-title">No Hotspots</div></div>';return; }
       var html='<div class="table-wrap"><table><thead><tr><th>ATM</th><th>City</th><th>District</th><th>Risk</th><th>Level</th></tr></thead><tbody>';
       data.forEach(function(h){
         html+='<tr><td class="mono">'+esc(h.atm_id)+'</td><td>'+esc(h.city)+'</td><td>'+esc(h.district)+'</td><td>'+riskChip(h.risk_score)+'</td><td><span class="chip chip-'+(h.risk_level==="CRITICAL"?"critical":h.risk_level==="HIGH"?"high":"medium")+'">'+esc(h.risk_level)+'</span></td></tr>';
@@ -991,6 +1023,12 @@ var Simulation = {
 
 /* ═══ SETUP & EVENT BINDING ═══ */
 function setupUI() {
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      if ($("modal-overlay")?.classList.contains("active")) { Modal.hide(); return; }
+      if ($("drawer")?.classList.contains("open")) { Drawer.close(); return; }
+    }
+  });
   $("login-form").addEventListener("submit", async function(e) {
     e.preventDefault();
     var btn=$("btn-login"), err=$("login-error");
@@ -1001,7 +1039,10 @@ function setupUI() {
   });
 
   document.querySelectorAll(".nav-item[data-view]").forEach(function(item){
+    item.setAttribute("role","button");
+    item.setAttribute("tabindex","0");
     item.addEventListener("click",function(){ switchView(item.dataset.view); });
+    item.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){e.preventDefault();switchView(item.dataset.view);} });
   });
 
   $("sidebar-toggle").addEventListener("click",function(){
