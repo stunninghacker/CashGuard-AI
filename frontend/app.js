@@ -158,6 +158,22 @@ function tierChip(t) {
   return '<span class="alert-tier '+(m[t]||"monitor")+'">'+esc(t||"monitor")+'</span>';
 }
 
+/* Skeleton / loading helpers */
+var SKEL = {
+  stat: '<div class="skeleton skeleton-stat"></div>',
+  row: '<div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div>',
+  card: '<div class="skeleton skeleton-card"></div>',
+  text: '<div class="skeleton skeleton-text" style="width:90%"></div><div class="skeleton skeleton-text" style="width:70%"></div><div class="skeleton skeleton-text" style="width:80%"></div>',
+  table: function(n){ var h=''; for(var i=0;i<(n||5);i++) h+='<div class="skeleton skeleton-row"></div>'; return h; },
+  show: function(id, type){ var el=$(id); if(el) el.innerHTML=SKEL[type]||SKEL.row; },
+};
+async function withLoading(btnId, fn) {
+  var btn = typeof btnId==="string" ? $(btnId) : btnId;
+  if(btn){ btn.disabled=true; btn.dataset.origText=btn.textContent; btn.textContent="Working..."; btn.classList.add("loading"); }
+  try { return await fn(); }
+  finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||btn.textContent; btn.classList.remove("loading"); } }
+}
+
 /* ── Navigation ────────────────────────────────────────────── */
 function switchView(view) {
   if (!Auth.canAccess(view)) {
@@ -174,7 +190,7 @@ function switchView(view) {
   var titles = {overview:"Overview",risk:"Risk Intelligence",alerts:"Alert Operations",
     recovery:"Recovery Center",investigations:"Investigations","mule-network":"Mule Network",
     "model-health":"Model Health",ledger:"Audit Trail",reports:"Reports"};
-  $("breadcrumb").innerHTML = "<strong>" + (titles[view]||view) + "</strong>";
+  $("breadcrumb").innerHTML = "<strong>" + esc(titles[view]||view) + "</strong>";
   switch(view) {
     case "overview": Overview.load(); break;
     case "risk": Risk.load(); break;
@@ -184,6 +200,7 @@ function switchView(view) {
     case "mule-network": MuleNetwork.load(); break;
     case "model-health": ModelHealth.load(); break;
     case "ledger": Ledger.load(); break;
+    case "reports": Reports.load(); break;
   }
 }
 
@@ -291,6 +308,7 @@ var Overview = {
   },
   loadStats: async function() {
     try {
+      ["stat-atms","stat-alerts","stat-risk","stat-complaints-7d","stat-fraud-7d"].forEach(function(id){ SKEL.show(id,"stat"); });
       var s = await API.get("/stats/summary");
       if (s._forbidden) {
         if (State.simulation && State.simulationData && State.simulationData.stats) {
@@ -313,7 +331,7 @@ var Overview = {
       $("stat-risk").textContent = fmtNum(s.high_risk_atms);
       $("stat-complaints-7d").textContent = fmtNum(s.complaints_7d);
       $("stat-fraud-7d").textContent = fmtNum(s.fraud_withdrawals_7d);
-    } catch(e) { console.error("Stats:", e); }
+    } catch(e) { /* Stats load failed */ }
   },
   loadMap: async function() {
     if (!this.map) { this.map = new MapCtrl("main-map"); this.map.init(); }
@@ -333,7 +351,7 @@ var Overview = {
         this.map.addHeat(data);
         this.map.fitBounds(data);
       }
-    } catch(e) { console.error("Map:", e); }
+    } catch(e) { /* Map load failed */ }
   },
   loadAlerts: async function() {
     try {
@@ -366,7 +384,7 @@ var Overview = {
       } else {
         $("priority-actions").innerHTML = '<div class="empty-state"><div class="empty-icon">&#10003;</div><div class="empty-title">All Clear</div></div>';
       }
-    } catch(e) { console.error("Alerts:", e); }
+    } catch(e) { /* Alerts load failed */ }
   },
 };
 
@@ -381,12 +399,19 @@ var Risk = {
   loadScores: async function() {
     var horizon = $("risk-horizon").value || "24";
     var city = $("risk-city-filter").value || "";
+    var state = $("risk-state-filter") ? $("risk-state-filter").value : "";
+    var bank = $("risk-bank-filter") ? $("risk-bank-filter").value : "";
+    var riskLevel = $("risk-level-filter") ? $("risk-level-filter").value : "";
     var url = "/risk-scores?horizon=" + horizon;
     if (city) url += "&city=" + encodeURIComponent(city);
+    if (state) url += "&state=" + encodeURIComponent(state);
+    if (bank) url += "&bank=" + encodeURIComponent(bank);
     try {
+      SKEL.show("risk-atm-table","table");
       var data = await API.get(url);
       if (data._forbidden) { Toast.warning("Access Denied", "Your role cannot view risk scores."); return; }
       State.riskScores = data || [];
+      if (riskLevel) State.riskScores = State.riskScores.filter(function(a){ return a.risk_level===riskLevel; });
       this.render();
       this.renderMap();
     } catch(e) { Toast.error("Load Failed", e.message); }
@@ -403,10 +428,14 @@ var Risk = {
     $("risk-medium-count").textContent = fmtNum(c.medium);
     $("risk-low-count").textContent = fmtNum(c.low);
     var cities = []; var seen = {};
-    data.forEach(function(d){ if(d.city&&!seen[d.city]){seen[d.city]=1;cities.push(d.city);} });
-    cities.sort();
+    var states = []; var seenS = {};
+    var banks = []; var seenB = {};
+    data.forEach(function(d){ if(d.city&&!seen[d.city]){seen[d.city]=1;cities.push(d.city);} if(d.state&&!seenS[d.state]){seenS[d.state]=1;states.push(d.state);} if(d.bank_name&&!seenB[d.bank_name]){seenB[d.bank_name]=1;banks.push(d.bank_name);} });
+    cities.sort(); states.sort(); banks.sort();
     var cf = $("risk-city-filter"); var cur = cf.value;
     cf.innerHTML = '<option value="">All Cities</option>' + cities.map(function(c){return '<option value="'+esc(c)+'"'+(c===cur?' selected':'')+'>'+esc(c)+'</option>';}).join("");
+    if ($("risk-state-filter")) { var sv = $("risk-state-filter").value; $("risk-state-filter").innerHTML = '<option value="">All States</option>' + states.map(function(s){return '<option value="'+esc(s)+'"'+(s===sv?' selected':'')+'>'+esc(s)+'</option>';}).join(""); }
+    if ($("risk-bank-filter")) { var bv = $("risk-bank-filter").value; $("risk-bank-filter").innerHTML = '<option value="">All Banks</option>' + banks.map(function(b){return '<option value="'+esc(b)+'"'+(b===bv?' selected':'')+'>'+esc(b)+'</option>';}).join(""); }
     var tbody = $("risk-atm-table");
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" class="table-empty">No risk scores</td></tr>'; return; }
     tbody.innerHTML = data.slice(0,100).map(function(a){
@@ -453,6 +482,7 @@ var Alerts = {
     var url = "/alerts?limit=200";
     if (status) url += "&status=" + encodeURIComponent(status);
     try {
+      SKEL.show("alerts-table-body","table");
       var data = await API.get(url);
       if (data._forbidden) { Toast.warning("Access Denied", "Your role cannot view alerts."); return; }
       State.alerts = data || [];
@@ -791,16 +821,38 @@ var ModelHealth = {
   load: async function() { await Promise.all([this.loadMetrics(),this.loadDrift()]); },
   loadMetrics: async function() {
     try {
-      var d = await API.get("/train/status");
-      if (d&&d.metrics) {
-        var m=d.metrics;
-        if(m.roc_auc!=null)$("m-roc-auc").textContent=m.roc_auc.toFixed(4);
-        if(m.precision_at_20!=null)$("m-prec-20").textContent=m.precision_at_20.toFixed(4);
-        if(m.recall_at_20!=null)$("m-rec-20").textContent=m.recall_at_20.toFixed(4);
-        if(m.average_precision_at_50!=null)$("m-ap-50").textContent=m.average_precision_at_50.toFixed(4);
-        if(m.rba_lift!=null)$("m-rba-lift").textContent=m.rba_lift.toFixed(2);
-      }
-    } catch(e){}
+      var d = await API.get("/metrics/current");
+      if (!d || d.error) { return; }
+      var m = d.current_headline_metrics || {};
+      var g = d.generalization_current && d.generalization_current.split || {};
+      var b = d.baseline_superiority_current || {};
+      var p = d.dispatch_threshold_operating_point || {};
+      var s = d.statistical_confidence_current && d.statistical_confidence_current.cv_5fold || {};
+
+      if(m.roc_auc!=null)$("m-roc-auc").textContent=m.roc_auc.toFixed(4);
+      if(m.precision_at_20!=null)$("m-prec-20").textContent=m.precision_at_20.toFixed(4);
+      if(m.precision_at_100!=null)$("m-prec-100").textContent=m.precision_at_100.toFixed(2);
+      if(m.recall_at_100!=null)$("m-rec-100").textContent=m.recall_at_100.toFixed(4);
+      if(m.brier_score!=null)$("m-brier").textContent=m.brier_score.toFixed(4);
+      if(m.lead_time_median_hours!=null)$("m-lead-time").textContent=m.lead_time_median_hours.toFixed(1)+"h";
+      if(s.mean_auc!=null)$("m-cv-auc").textContent=s.mean_auc.toFixed(4);
+      if(s.ci_95)$("m-ci").textContent="["+s.ci_95[0].toFixed(4)+", "+s.ci_95[1].toFixed(4)+"]";
+
+      var tf = g.time_forward || {};
+      if(tf.roc_auc!=null)$("m-tf-auc").textContent=tf.roc_auc.toFixed(4);
+      var ca = g.cold_atm || {};
+      if(ca.roc_auc!=null)$("m-cold-atm").textContent=ca.roc_auc.toFixed(4);
+      var nh = g.new_hotspot || {};
+      if(nh.roc_auc!=null)$("m-new-hotspot").textContent=nh.roc_auc.toFixed(4);
+
+      if(b.cashguard_vs_random_precision_at_100_lift!=null)$("m-lift-random").textContent=b.cashguard_vs_random_precision_at_100_lift.toFixed(1)+"x";
+      if(b.cashguard_vs_historical_hotspot_precision_at_100_lift!=null)$("m-lift-hist").textContent=b.cashguard_vs_historical_hotspot_precision_at_100_lift.toFixed(1)+"x";
+      if(b.cashguard_p_at_100!=null)$("m-cg-p100").textContent=b.cashguard_p_at_100.toFixed(3);
+
+      var dp = p.threshold_0_70 || {};
+      if(dp.precision!=null)$("m-disp-prec").textContent=(dp.precision*100).toFixed(0)+"%";
+      if(dp.alerts!=null)$("m-disp-alerts").textContent=dp.alerts;
+    } catch(e){ /* Metrics load failed */ }
   },
   loadDrift: async function() {
     try {
@@ -876,6 +928,9 @@ var Ledger = {
 
 /* ═══ REPORTS ═══ */
 var Reports = {
+  load: async function() {
+    await this.loadHotspots();
+  },
   generateSituational: async function() {
     try {
       var data = await API.post("/reports/situational");
@@ -908,7 +963,7 @@ var Reports = {
       var data = await API.get("/reports/city?city="+encodeURIComponent(city));
       if (data._forbidden) { Toast.warning("Access Denied","Insufficient permissions.");return; }
       var o = $("city-report-output"); o.style.display="";
-      if (typeof data==="string") { o.innerHTML=data; }
+      if (typeof data==="string") { o.textContent=data; }
       else { o.innerHTML='<h3>City Report: '+esc(city)+'</h3>'+Object.entries(data).map(function(p){return '<div class="drawer-kv"><span class="k">'+esc(p[0])+'</span><span class="v">'+(typeof p[1]==="object"?JSON.stringify(p[1]):esc(String(p[1])))+'</span></div>';}).join(""); }
     } catch(e) { Toast.error("Generation Failed",e.message); }
   },
@@ -968,15 +1023,20 @@ function setupUI() {
 
   $("risk-horizon").addEventListener("change",function(){ Risk.loadScores(); });
   $("risk-city-filter").addEventListener("change",function(){ Risk.loadScores(); });
+  $("risk-state-filter")?.addEventListener("change",function(){ Risk.loadScores(); });
+  $("risk-bank-filter")?.addEventListener("change",function(){ Risk.loadScores(); });
+  $("risk-level-filter")?.addEventListener("change",function(){ Risk.loadScores(); });
   $("alerts-status-filter").addEventListener("change",function(){ Alerts.load(); });
 
   var runAlerts = async function() {
-    try {
-      var r = await API.post("/alerts/run-now");
-      if (r._forbidden) { Toast.warning("Access Denied","Insufficient permissions.");return; }
-      Toast.success("Alert Cycle Complete","Summary: "+JSON.stringify(r.summary||{}).slice(0,100));
-      Alerts.load(); updateBadge();
-    } catch(e) { Toast.error("Alert Cycle Failed",e.message); }
+    await withLoading("btn-run-alerts", async function() {
+      try {
+        var r = await API.post("/alerts/run-now");
+        if (r._forbidden) { Toast.warning("Access Denied","Insufficient permissions.");return; }
+        Toast.success("Alert Cycle Complete","Summary: "+JSON.stringify(r.summary||{}).slice(0,100));
+        Alerts.load(); updateBadge();
+      } catch(e) { Toast.error("Alert Cycle Failed",e.message); }
+    });
   };
   $("btn-run-alerts").addEventListener("click",runAlerts);
   $("btn-run-alerts-2").addEventListener("click",runAlerts);
@@ -1019,9 +1079,9 @@ function setupUI() {
     } catch(e) { Toast.error("Restore Failed",e.message); }
   });
 
-  $("btn-sit-report")?.addEventListener("click",function(){ Reports.generateSituational(); });
-  $("btn-hotspot-report")?.addEventListener("click",function(){ Reports.loadHotspots(); });
-  $("btn-city-report")?.addEventListener("click",function(){ Reports.generateCity(); });
+  $("btn-sit-report")?.addEventListener("click",function(){ withLoading("btn-sit-report",function(){ Reports.generateSituational(); }); });
+  $("btn-hotspot-report")?.addEventListener("click",function(){ withLoading("btn-hotspot-report",function(){ Reports.loadHotspots(); }); });
+  $("btn-city-report")?.addEventListener("click",function(){ withLoading("btn-city-report",function(){ Reports.generateCity(); }); });
   document.querySelectorAll(".tab-bar").forEach(function(bar){
     bar.querySelectorAll(".tab-item[data-tab]").forEach(function(tab){
       tab.addEventListener("click",function(){
