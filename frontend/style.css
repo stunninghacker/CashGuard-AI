@@ -67,7 +67,7 @@
   --fs-xl: 18px;
   --fs-2xl: 22px;
   --fs-3xl: 28px;
-  --fs-hero: 36px;
+  --fs-hero: 28px;
 
   /* Spacing */
   --sp-1: 4px;
@@ -1255,3 +1255,44 @@ body.sim-active .modal-overlay, body.sim-active .modal-card { z-index: 21000; }
 .view-panel.hidden { display: none; }
 .i18n-wrap { display: inline-flex; align-items: center; gap: var(--sp-2); }
 .city-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+
+/* ==================== FORM LABELS ==================== */
+.form-label {
+  display: block; font-size: var(--fs-xs); font-weight: 500;
+  color: var(--text-secondary); margin-bottom: var(--sp-1);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.form-label-gap { margin-top: 12px; }
+
+/* ==================== I18N SELECT ==================== */
+.i18n-select {
+  background: var(--bg-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 3px 6px; font-size: var(--fs-xs);
+  font-family: var(--font-sans); cursor: pointer;
+}
+.i18n-select:focus { outline: none; border-color: var(--accent); }
+
+/* ==================== LOGIN BUTTON ==================== */
+.btn-login { margin-top: 16px; }
+
+/* ==================== THRESHOLD EXPLORER ==================== */
+.threshold-explorer { padding: var(--sp-3) 0; }
+.thr-slider-label {
+  font-size: var(--fs-sm); color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px;
+}
+.thr-slider { flex: 1; accent-color: var(--accent); }
+.thr-value-display {
+  color: var(--accent); font-family: var(--font-num);
+  font-size: var(--fs-md); min-width: 40px; text-align: right;
+}
+.thr-metrics-text {
+  font-size: var(--fs-xs); color: var(--text-muted);
+  margin-top: 8px; line-height: 1.5;
+}
+
+/* ==================== MOBILE ONLY ==================== */
+.mobile-only { display: none; }
+@media (max-width: 768px) {
+  .mobile-only { display: block; }
+}

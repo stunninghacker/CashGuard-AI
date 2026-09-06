@@ -107,12 +107,13 @@ function switchView(view) {
   if (el) el.classList.remove("hidden");
   document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.view === view));
   const titles = {
-    overview: "Overview", risk: "Risk Intelligence", alerts: "Alert Center",
+    overview: "Overview", risk: "Risk Intelligence", alerts: "Alerts",
     investigations: "Investigations", recovery: "Recovery", mule: "Mule Network",
-    ledger: "Audit Ledger", model: "Model Health", reports: "Reports",
+    ledger: "Audit Trail", model: "Model Health", reports: "Reports",
   };
   document.getElementById("topbar-view-title").textContent = titles[view] || view;
   // Render view-specific data
+  if (view === "risk") renderRiskView();
   if (view === "alerts") renderAlertsFullTable();
   if (view === "recovery") renderRecoveryView();
   if (view === "ledger") ledgerStatus();
@@ -569,6 +570,22 @@ function renderPolice() {
   renderMobile(MOBILE_FIX.lat, MOBILE_FIX.lon);
 }
 
+function renderRiskView() {
+  const stats = document.getElementById("risk-stats");
+  if (stats) {
+    const total = state.risk.length;
+    const critical = state.risk.filter(r => r.risk_score >= 0.85).length;
+    const high = state.risk.filter(r => r.risk_score >= 0.7 && r.risk_score < 0.85).length;
+    const medium = state.risk.filter(r => r.risk_score >= 0.4 && r.risk_score < 0.7).length;
+    stats.innerHTML = [
+      { label: "ATMs Scored", value: total, cls: "" },
+      { label: "Critical", value: critical, cls: critical > 0 ? "hero" : "" },
+      { label: "High", value: high, cls: "" },
+      { label: "Medium", value: medium, cls: "" },
+    ].map(s => `<div class="stat-card${s.cls ? " " + s.cls : ""}"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div></div>`).join("");
+  }
+}
+
 function renderBank() {
   renderMap();
   const bank = state.user.scope;
@@ -906,11 +923,11 @@ async function renderMuleGraph() {
   try {
     const res = await api("/mule-graph/terminal-nodes?k=50");
     const nodes = res.nodes || [];
-    if (!nodes.length) { panel.querySelector("tbody").innerHTML = `<tr><td colspan="8" class="muted">No terminal nodes in scope.</td></tr>`; return; }
+    if (!nodes.length) { panel.querySelector("tbody").innerHTML = `<tr><td colspan="7" class="muted">No terminal nodes in scope.</td></tr>`; return; }
     panel.querySelector("tbody").innerHTML = nodes.map((n, i) =>
       `<tr data-token="${esc(n.account_token)}"><td>${i + 1}</td>
       <td class="mono" title="${esc(n.account_token)}">${maskedAccount(n.account_token)}</td>
-      <td>${(n.terminal_risk * 100).toFixed(1)}%</td><td>\u2014</td><td>\u2014</td><td>\u2014</td><td>\u2014</td>
+      <td>${riskPill(n.terminal_risk)}</td><td>\u2014</td><td>\u2014</td><td>\u2014</td>
       <td><button class="btn btn-sm" data-trail="${esc(n.account_token)}">Trail</button></td></tr>`
     ).join("");
     panel.querySelectorAll("button[data-trail]").forEach((b) =>
@@ -926,8 +943,8 @@ async function renderMuleGraph() {
         } catch (err) { detail.innerHTML = `<div class="error-state"><h3>Trail Load Failed</h3><p>${esc(err.message)}</p></div>`; }
       })
     );
-    detail.textContent = "Click Trail on a row to see the money-trail chains.";
-  } catch (err) { panel.querySelector("tbody").innerHTML = `<tr><td colspan="8" class="muted err">Failed to load: ${esc(err.message)}</td></tr>`; }
+    detail.innerHTML = `<p class="muted">Select an account to view its money trail.</p>`;
+  } catch (err) { panel.querySelector("tbody").innerHTML = `<tr><td colspan="7" class="muted err">Failed to load: ${esc(err.message)}</td></tr>`; }
 }
 
 /* ==================== LEDGER ==================== */
@@ -986,7 +1003,7 @@ async function renderInbox() {
     document.querySelectorAll("#inbox-panel .inbox-rawbtn").forEach((b) =>
       b.addEventListener("click", (e) => { const raw = e.currentTarget.closest(".inbox-msg").querySelector(".inbox-raw"); if (raw) raw.classList.toggle("hidden"); })
     );
-  } catch { const el = document.getElementById("inbox-panel"); if (el) el.innerHTML = `<p class="muted">\u2014</p>`; }
+  } catch { const el = document.getElementById("inbox-panel"); if (el) el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">&#x1F4E8;</div><p>No new intelligence items.</p></div>`; }
 }
 
 /* ==================== HANDOFFS ==================== */
@@ -1007,10 +1024,10 @@ async function renderHandoffs() {
         ${h.status === "queued" ? `<button class="btn btn-sm btn-ok" data-hack="${esc(h.handoff_id)}">Ack</button>
           <button class="btn btn-sm" data-hcomplete="${esc(h.handoff_id)}">Complete</button>` : ""}
       </div>`
-    ).join("") || `<div class="empty-state"><p>No cross-state handoffs queued.</p></div>`;
+    ).join("") || `<div class="empty-state"><div class="empty-state-icon">&#x1F310;</div><p>No pending inter-agency handoffs.</p></div>`;
     panel.querySelectorAll("button[data-hack]").forEach((b) => b.addEventListener("click", () => handoffAck(b.dataset.hack, "ack")));
     panel.querySelectorAll("button[data-hcomplete]").forEach((b) => b.addEventListener("click", () => handoffAck(b.dataset.hcomplete, "complete")));
-  } catch { panel.innerHTML = `<p class="muted">\u2014</p>`; if (countEl) countEl.textContent = ""; }
+  } catch { panel.innerHTML = `<div class="empty-state"><p>No pending inter-agency handoffs.</p></div>`; if (countEl) countEl.textContent = ""; }
 }
 
 async function handoffAck(handoffId, status) {

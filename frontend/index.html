@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
   <script>
     window.__cashguardReady = false;
     window.addEventListener('error', function(e) {
@@ -38,21 +38,21 @@
         <h2>Secure Access</h2>
         <p>I4C &bull; Cybercrime Coordination</p>
       </div>
-      <label for="login-username" style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;">Identity</label>
+      <label for="login-username" class="form-label">Username</label>
       <input id="login-username" class="form-input" type="text" placeholder="e.g. officer.district1" autocomplete="off" />
-      <label for="login-password" style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;margin-top:12px;">Password</label>
+      <label for="login-password" class="form-label form-label-gap">Password</label>
       <input id="login-password" class="form-input" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter'){window.cashguardLogin();}" />
-      <button id="btn-login" class="btn btn-primary btn-full" onclick="window.cashguardLogin();" style="margin-top:16px;">Sign In</button>
+      <button id="btn-login" class="btn btn-primary btn-full btn-login" onclick="window.cashguardLogin();">Sign In</button>
       <p id="login-status" class="login-status">Ready &mdash; select a demo role to sign in.</p>
       <div class="demo-roles">
         <p class="demo-roles-label">Quick Access &mdash; Select Role</p>
         <div class="role-grid">
           <button type="button" class="role-chip" onclick="window.autofillDemo('officer.statea','PoliceStateA!1')" title="State-A police &mdash; national dashboard">
-            <span class="role-chip-icon police">&#x1F6A2;</span>
+            <span class="role-chip-icon police">&#x1F6E1;</span>
             <div><div class="role-chip-name">State Police</div><div class="role-chip-user">officer.statea</div></div>
           </button>
           <button type="button" class="role-chip" onclick="window.autofillDemo('officer.district1','District1!1')" title="Northsagar district police">
-            <span class="role-chip-icon police">&#x1F6A2;</span>
+            <span class="role-chip-icon police">&#x1F6E1;</span>
             <div><div class="role-chip-name">District Police</div><div class="role-chip-user">officer.district1</div></div>
           </button>
           <button type="button" class="role-chip" onclick="window.autofillDemo('bank.hdfc','HdfcBank!1')" title="HDFC Bank branch intelligence">
@@ -60,7 +60,7 @@
             <div><div class="role-chip-name">Bank</div><div class="role-chip-user">bank.hdfc</div></div>
           </button>
           <button type="button" class="role-chip" onclick="window.autofillDemo('i4c.admin','I4cAdmin!1')" title="National cybercrime hub &mdash; full oversight">
-            <span class="role-chip-icon i4c">&#x1F3DB;&#xFE0F;</span>
+            <span class="role-chip-icon i4c">&#x2696;&#xFE0F;</span>
             <div><div class="role-chip-name">I4C Admin</div><div class="role-chip-user">i4c.admin</div></div>
           </button>
         </div>
@@ -87,17 +87,17 @@
       </div>
       <nav class="sidebar-nav">
         <div class="sidebar-section">Operations</div>
-        <a class="nav-item active" data-view="overview" href="#"><span class="nav-icon">&#x2302;</span> Overview</a>
-        <a class="nav-item" data-view="risk" href="#"><span class="nav-icon">&#x1F30D;</span> Risk Intelligence</a>
-        <a class="nav-item" data-view="alerts" href="#"><span class="nav-icon">&#x1F6A8;</span> Alerts <span class="nav-badge hidden" id="sidebar-alert-badge"></span></a>
-        <a class="nav-item" data-view="investigations" href="#"><span class="nav-icon">&#x1F50D;</span> Investigations</a>
-        <a class="nav-item" data-view="recovery" href="#"><span class="nav-icon">&#x1F4B0;</span> Recovery</a>
+        <a class="nav-item active" data-view="overview" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2302;</span> Overview</a>
+        <a class="nav-item" data-view="risk" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F30D;</span> Risk Intelligence</a>
+        <a class="nav-item" data-view="alerts" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F6A8;</span> Alerts <span class="nav-badge hidden" id="sidebar-alert-badge"></span></a>
+        <a class="nav-item" data-view="investigations" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F50D;</span> Investigations</a>
+        <a class="nav-item" data-view="recovery" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4B0;</span> Recovery</a>
         <div class="sidebar-section">Intelligence</div>
-        <a class="nav-item" data-view="mule" href="#"><span class="nav-icon">&#x1F310;</span> Mule Network</a>
-        <a class="nav-item" data-view="ledger" href="#"><span class="nav-icon">&#x1F4CB;</span> Audit Ledger</a>
+        <a class="nav-item" data-view="mule" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F310;</span> Mule Network</a>
+        <a class="nav-item" data-view="ledger" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4CB;</span> Audit Trail</a>
         <div class="sidebar-section">System</div>
-        <a class="nav-item" data-view="model" href="#"><span class="nav-icon">&#x2699;&#xFE0F;</span> Model Health</a>
-        <a class="nav-item" data-view="reports" href="#"><span class="nav-icon">&#x1F4C4;</span> Reports</a>
+        <a class="nav-item" data-view="model" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2699;&#xFE0F;</span> Model Health</a>
+        <a class="nav-item" data-view="reports" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4C4;</span> Reports</a>
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-user" id="sidebar-user">
@@ -117,19 +117,16 @@
         <span class="topbar-title" id="topbar-view-title">Overview</span>
         <div class="topbar-spacer"></div>
         <div class="topbar-status">
-          <span class="pill pill-warn" id="mode-pill">SYNTHETIC DEMO</span>
+          <span class="pill pill-warn" id="mode-pill">DEMO</span>
           <span class="pill" id="as-of-pill">Forecast: &mdash;</span>
           <span class="pill" id="scope-pill">Jurisdiction: &mdash;</span>
-          <div class="status-item"><span class="status-dot" id="sys-status-dot"></span><span id="sys-status-text">System</span></div>
         </div>
         <div class="topbar-actions">
-          <label class="i18n-wrap" title="Dashboard language">
-            <select id="i18n-select" aria-label="Language" style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 6px;font-size:11px;font-family:var(--font-sans);"></select>
-          </label>
-          <button id="btn-sim-load" class="btn btn-sm btn-warn" title="Load scripted scenario for demonstration. Not live model output.">&#x1F9EA; Demo Scenario</button>
-          <button id="btn-sim-exit" class="btn btn-sm btn-ghost hidden" title="Return to honest live view">&#x2716; Exit Demo</button>
-          <button id="btn-cycle" class="btn btn-sm btn-accent" title="Run the alert engine now">&#x26A1; Run Alert Cycle</button>
-          <button id="btn-refresh" class="btn btn-sm btn-ghost">&#x27F3; Refresh</button>
+          <select id="i18n-select" class="i18n-select" aria-label="Language" title="Dashboard language"></select>
+          <button id="btn-sim-load" class="btn btn-sm btn-warn" title="Load scripted scenario for demonstration.">&#x1F9EA; Demo</button>
+          <button id="btn-sim-exit" class="btn btn-sm btn-ghost hidden" title="Return to live view">&#x2716; Exit</button>
+          <button id="btn-cycle" class="btn btn-sm btn-accent" title="Run alert engine">&#x26A1; Run Cycle</button>
+          <button id="btn-refresh" class="btn btn-sm btn-ghost" title="Refresh data">&#x27F3;</button>
           <button id="btn-switch" class="btn btn-sm btn-ghost" title="Sign out">&#x2192; Logout</button>
         </div>
       </header>
@@ -141,6 +138,7 @@
           <!-- Sim banner + watermark -->
           <div id="sim-banner" class="sim-banner hidden"><span><b>SIMULATED SCENARIO</b> &mdash; Scripted demonstration data, NOT live model output. <button id="btn-sim-banner-exit" class="btn btn-sm btn-ok">Exit</button></span></div>
           <div id="sim-watermark" class="sim-watermark hidden"></div>
+          <input type="hidden" id="asof-date" />
 
           <!-- ========== OVERVIEW VIEW ========== -->
           <div id="view-overview" class="view-panel">
@@ -184,11 +182,6 @@
                 </div>
                 <div class="filter-divider"></div>
                 <div class="filter-group">
-                  <span class="filter-label">Time</span>
-                  <input type="date" id="asof-date" class="filter-select" style="width:130px;" title="Replay forecast for a past date" />
-                </div>
-                <div class="filter-divider"></div>
-                <div class="filter-group">
                   <span class="filter-label">Horizon</span>
                   <select id="dd-horizon" class="filter-select"><option value="24">24h</option><option value="2">2h</option><option value="6">6h</option><option value="12">12h</option><option value="48">48h</option></select>
                   <span class="pill pill-accent" id="horizon-confidence">&mdash;</span>
@@ -218,7 +211,7 @@
                 </div>
               </div>
               <div class="panel">
-                <div class="panel-header">
+                <div class="panel-header mt-3">
                   <h2>Active Alerts</h2>
                   <span class="pill pill-warn" id="alert-count"></span>
                 </div>
@@ -228,24 +221,27 @@
                     <tbody></tbody>
                   </table>
                 </div>
-                <div class="panel-header mt-3">
-                  <h3>Threshold Explorer</h3>
-                </div>
-                <div id="thr-explorer">
-                  <label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:8px;">
-                    Alert threshold:
-                    <input type="range" id="thr-slider" min="50" max="95" value="70" step="5" style="flex:1;" />
-                    <b id="thr-value" style="color:var(--accent);font-family:var(--font-num);">0.70</b>
-                  </label>
-                  <div id="thr-metrics" class="ev-notice" style="margin-top:8px;">loading...</div>
-                  <div id="thr-bands" class="thr-bands"></div>
-                </div>
               </div>
             </div>
             <div class="panel mt-4">
               <div class="panel-header">
-                <h2>Field / Mobile &mdash; Nearby Actionable ATMs</h2>
-                <button id="btn-mobile-locate" class="btn btn-sm btn-accent" title="Use GPS position or Northsagar demo coords">&#x1F4F1; Use My Location</button>
+                <h2>Threshold Tuning</h2>
+                <span class="pill pill-accent">adjust alert sensitivity</span>
+              </div>
+              <div id="thr-explorer" class="threshold-explorer">
+                <label class="thr-slider-label">
+                  Alert threshold:
+                  <input type="range" id="thr-slider" min="50" max="95" value="70" step="5" class="thr-slider" />
+                  <b id="thr-value" class="thr-value-display">0.70</b>
+                </label>
+                <div id="thr-metrics" class="thr-metrics-text">loading...</div>
+                <div id="thr-bands" class="thr-bands"></div>
+              </div>
+            </div>
+            <div class="panel mt-4 mobile-only">
+              <div class="panel-header">
+                <h2>Nearby ATMs</h2>
+                <button id="btn-mobile-locate" class="btn btn-sm btn-accent" title="Use GPS position">&#x1F4F1; Use My Location</button>
               </div>
               <div id="mobile-nearby" class="empty-state">
                 <p>Click "Use My Location" to find nearby ATMs ranked by risk.</p>
@@ -255,11 +251,18 @@
 
           <!-- ========== RISK VIEW ========== -->
           <div id="view-risk" class="view-panel hidden">
+            <div class="stats-row" id="risk-stats"></div>
             <div class="panel">
               <div class="panel-header">
-                <h2>Risk Intelligence Map</h2>
+                <h2>Risk Heatmap</h2>
+                <div class="map-legend" id="risk-map-legend">
+                  <span class="map-legend-item"><span class="map-legend-dot low"></span> Low</span>
+                  <span class="map-legend-item"><span class="map-legend-dot medium"></span> Medium</span>
+                  <span class="map-legend-item"><span class="map-legend-dot high"></span> High</span>
+                  <span class="map-legend-item"><span class="map-legend-dot critical"></span> Critical</span>
+                </div>
               </div>
-              <div class="map-wrapper" style="height:600px;">
+              <div class="map-wrapper" style="height:500px;">
                 <div id="map-risk" style="width:100%;height:100%;"></div>
               </div>
             </div>
@@ -269,7 +272,7 @@
           <div id="view-alerts" class="view-panel hidden">
             <div class="panel">
               <div class="panel-header">
-                <h2>Alert Center</h2>
+                <h2>Alerts</h2>
                 <span class="pill pill-warn" id="alerts-view-count"></span>
               </div>
               <div class="table-container" style="max-height:600px;">
@@ -284,34 +287,47 @@
           <!-- ========== INVESTIGATIONS VIEW ========== -->
           <div id="view-investigations" class="view-panel hidden">
             <div class="panel">
-              <div class="panel-header"><h2>Money Trail &mdash; Terminal Cash-Out Graph</h2></div>
+              <div class="panel-header"><h2>Money Trail Analysis</h2></div>
               <div class="table-container">
                 <table id="mule-graph-table" class="data-table">
-                  <thead><tr><th>#</th><th>Account</th><th>Terminal Risk</th><th>In-Degree</th><th>Out-Degree</th><th>Inflow (INR)</th><th>Chain Depth</th><th></th></tr></thead>
+                  <thead><tr><th>#</th><th>Account</th><th>Risk</th><th>Connections</th><th>Inflow (INR)</th><th>Chain Depth</th><th></th></tr></thead>
                   <tbody></tbody>
                 </table>
               </div>
-              <div id="mule-graph-detail" class="muted mt-3">Click Trail on a row to see money-trail chains.</div>
-            </div>
-            <div class="panel mt-4">
-              <div class="panel-header">
-                <h2>I4C Inbox (Webhook)</h2>
+              <div id="mule-graph-detail" class="empty-state">
+                <div class="empty-state-icon">&#x1F50D;</div>
+                <p>Select an account to view its money trail.</p>
               </div>
-              <div id="inbox-panel" class="inbox"></div>
             </div>
             <div class="panel mt-4">
               <div class="panel-header">
-                <h2>Inter-Agency Handoffs</h2>
+                <h2>I4C Intelligence Feed</h2>
+              </div>
+              <div id="inbox-panel" class="inbox">
+                <div class="empty-state">
+                  <div class="empty-state-icon">&#x1F4E8;</div>
+                  <p>No new intelligence items.</p>
+                </div>
+              </div>
+            </div>
+            <div class="panel mt-4">
+              <div class="panel-header">
+                <h2>Cross-State Handoffs</h2>
                 <span class="pill" id="handoff-count"></span>
               </div>
-              <div id="handoff-panel" class="muted">loading...</div>
+              <div id="handoff-panel">
+                <div class="empty-state">
+                  <div class="empty-state-icon">&#x1F310;</div>
+                  <p>No pending inter-agency handoffs.</p>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- ========== RECOVERY VIEW ========== -->
           <div id="view-recovery" class="view-panel hidden">
             <div class="panel mb-4">
-              <div class="panel-header"><h2>Recovery Funnel</h2><span class="pill" id="recovery-funnel-note">synthetic</span></div>
+              <div class="panel-header"><h2>Recovery Funnel</h2><span class="pill" id="recovery-funnel-note">last 7 days</span></div>
               <div id="i4c-funnel"></div>
             </div>
             <div class="panel mb-4">
@@ -321,7 +337,7 @@
             <div class="panel">
               <div class="panel-header">
                 <h2>Closed-Loop Outcomes</h2>
-                <button id="btn-evaluate-outcomes" class="btn btn-sm btn-accent">Evaluate Pending</button>
+                <button id="btn-evaluate-outcomes" class="btn btn-sm btn-accent">Evaluate</button>
                 <span id="outcome-badge" class="pill"></span>
               </div>
               <div id="outcome-panel"></div>
@@ -333,9 +349,14 @@
             <div class="panel">
               <div class="panel-header">
                 <h2>Mule Network Intelligence</h2>
-                <span class="pill" id="mule-network-note">bipartite centrality</span>
+                <span class="pill" id="mule-network-note">network analysis</span>
               </div>
-              <div id="mule-network-wrap" class="muted">loading...</div>
+              <div id="mule-network-wrap">
+                <div class="empty-state">
+                  <div class="empty-state-icon">&#x1F310;</div>
+                  <p>Loading network graph...</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -343,15 +364,19 @@
           <div id="view-ledger" class="view-panel hidden">
             <div class="panel">
               <div class="panel-header">
-                <h2>Tamper-Evident Audit Ledger</h2>
+                <h2>Tamper-Evident Audit Trail</h2>
                 <span id="ledger-badge" class="pill pill-ok"></span>
               </div>
+              <p class="ev-notice mb-3">Every alert, handoff, and action is immutably recorded. Verify integrity with one click.</p>
               <div class="ledger-actions">
                 <button id="btn-ledger-verify" class="btn btn-sm btn-ok">Verify Ledger</button>
                 <button id="btn-ledger-tamper" class="btn btn-sm btn-warn">Tamper Demo</button>
                 <button id="btn-ledger-restore" class="btn btn-sm btn-ghost">Restore</button>
               </div>
-              <div id="ledger-preview" class="muted"></div>
+              <div id="ledger-preview" class="empty-state">
+                <div class="empty-state-icon">&#x1F4CB;</div>
+                <p>Click "Verify Ledger" to check integrity.</p>
+              </div>
             </div>
           </div>
 
@@ -365,7 +390,7 @@
               <div class="model-health-grid" id="model-health-grid"></div>
             </div>
             <div class="panel mb-4">
-              <div class="panel-header"><h2>Model Performance</h2></div>
+              <div class="panel-header"><h2>Performance Metrics</h2></div>
               <div id="model-metrics"></div>
             </div>
             <div class="panel mb-4">
@@ -373,7 +398,12 @@
                 <h2>Feature Drift Monitor</h2>
                 <span id="drift-badge"></span>
               </div>
-              <div id="drift-panel" class="muted">loading...</div>
+              <div id="drift-panel">
+                <div class="empty-state">
+                  <div class="empty-state-icon">&#x2699;&#xFE0F;</div>
+                  <p>Running drift analysis...</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -382,10 +412,14 @@
             <div class="panel">
               <div class="panel-header">
                 <h2>Intelligence Reports</h2>
-                <button id="btn-sit-report" class="btn btn-sm btn-accent">Generate Situational Report (PDF)</button>
+                <button id="btn-sit-report" class="btn btn-sm btn-accent">Generate Report (PDF)</button>
               </div>
               <div id="reports-panel">
-                <p class="muted">Generate situational intelligence reports for your jurisdiction.</p>
+                <div class="empty-state">
+                  <div class="empty-state-icon">&#x1F4C4;</div>
+                  <h3>No Reports Generated</h3>
+                  <p>Click "Generate Report" to create a situational intelligence summary for your jurisdiction. Reports include risk assessments, active alerts, and recommended actions.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -431,6 +465,6 @@
   <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn btn-sm btn-ghost" aria-label="Dismiss">&times;</button></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
