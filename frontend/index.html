@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CashGuard AI — Proactive Cybercrime Intelligence</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
   <script>
     window.__cashguardReady = false;
     window.addEventListener('error', function(e) {
@@ -38,8 +38,8 @@
       <label for="login-username" class="form-label">Username</label>
       <input id="login-username" class="form-input" type="text" placeholder="e.g. officer.district1" autocomplete="off" />
       <label for="login-password" class="form-label form-label-gap">Password</label>
-      <input id="login-password" class="form-input" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter'){window.cashguardLogin();}" />
-      <button id="btn-login" class="btn btn-primary btn-full btn-login" onclick="window.cashguardLogin();">Sign In</button>
+      <input id="login-password" class="form-input" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <button id="btn-login" class="btn btn-primary btn-full btn-login">Sign In</button>
       <p id="login-status" class="login-status">Ready &mdash; select a demo role to sign in.</p>
       <div class="demo-roles">
         <p class="demo-roles-label">Quick Access &mdash; Select Role</p>
@@ -81,20 +81,23 @@
           <h3>CashGuard AI</h3>
           <p>I4C &bull; Intelligence</p>
         </div>
+        <button id="sidebar-toggle" class="sidebar-collapse-btn" title="Toggle sidebar" aria-label="Toggle sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
       </div>
       <nav class="sidebar-nav">
         <div class="sidebar-section">Operations</div>
-        <a class="nav-item active" data-view="overview" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2302;</span> Overview</a>
-        <a class="nav-item" data-view="risk" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F30D;</span> Risk Intelligence</a>
-        <a class="nav-item" data-view="alerts" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F6A8;</span> Alerts <span class="nav-badge hidden" id="sidebar-alert-badge"></span></a>
-        <a class="nav-item" data-view="investigations" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F50D;</span> Investigations</a>
-        <a class="nav-item" data-view="recovery" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4B0;</span> Recovery</a>
+        <a class="nav-item active" data-view="overview" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2302;</span><span class="nav-label">Overview</span></a>
+        <a class="nav-item" data-view="risk" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F30D;</span><span class="nav-label">Risk Intelligence</span></a>
+        <a class="nav-item" data-view="alerts" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F6A8;</span><span class="nav-label">Alerts</span><span class="nav-badge hidden" id="sidebar-alert-badge"></span></a>
+        <a class="nav-item" data-view="investigations" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F50D;</span><span class="nav-label">Investigations</span></a>
+        <a class="nav-item" data-view="recovery" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4B0;</span><span class="nav-label">Recovery</span></a>
         <div class="sidebar-section">Intelligence</div>
-        <a class="nav-item" data-view="mule" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F310;</span> Mule Network</a>
-        <a class="nav-item" data-view="ledger" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4CB;</span> Audit Trail</a>
+        <a class="nav-item" data-view="mule" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F310;</span><span class="nav-label">Mule Network</span></a>
+        <a class="nav-item" data-view="ledger" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4CB;</span><span class="nav-label">Audit Trail</span></a>
         <div class="sidebar-section">System</div>
-        <a class="nav-item" data-view="model" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2699;&#xFE0F;</span> Model Health</a>
-        <a class="nav-item" data-view="reports" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4C4;</span> Reports</a>
+        <a class="nav-item" data-view="model" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2699;&#xFE0F;</span><span class="nav-label">Model Health</span></a>
+        <a class="nav-item" data-view="reports" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4C4;</span><span class="nav-label">Reports</span></a>
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-user" id="sidebar-user">
@@ -111,6 +114,9 @@
     <div class="main-area">
       <!-- Top bar -->
       <header class="topbar">
+        <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open navigation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
         <span class="topbar-title" id="topbar-view-title">Overview</span>
         <div class="topbar-spacer"></div>
         <div class="topbar-status">
@@ -259,8 +265,11 @@
                   <span class="map-legend-item"><span class="map-legend-dot critical"></span> Critical</span>
                 </div>
               </div>
-              <div class="map-wrapper" style="height:500px;">
-                <div id="map-risk" style="width:100%;height:100%;"></div>
+              <div class="risk-view-layout">
+                <div class="risk-map-wrap">
+                  <div id="risk-map" style="width:100%;height:100%;"></div>
+                </div>
+                <div class="risk-list" id="risk-atm-list"></div>
               </div>
             </div>
           </div>
@@ -370,6 +379,7 @@
                 <button id="btn-ledger-tamper" class="btn btn-sm btn-warn">Tamper Demo</button>
                 <button id="btn-ledger-restore" class="btn btn-sm btn-ghost">Restore</button>
               </div>
+              <div id="ledger-status"></div>
               <div id="ledger-preview" class="empty-state">
                 <div class="empty-state-icon">&#x1F4CB;</div>
                 <p>Click "Verify Ledger" to check integrity.</p>
@@ -427,14 +437,14 @@
   </div><!-- app-shell -->
 
   <!-- ==================== INTELLIGENCE DRAWER ==================== -->
-  <div id="drawer-overlay" class="drawer-overlay" onclick="document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('atm-drawer').classList.remove('open');"></div>
+  <div id="drawer-overlay" class="drawer-overlay"></div>
   <div id="atm-drawer" class="drawer">
     <div class="drawer-header">
       <div class="drawer-title">
         <h3 id="drawer-atm-id">ATM</h3>
         <p id="drawer-atm-meta">Risk Intelligence</p>
       </div>
-      <button class="drawer-close" onclick="document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('atm-drawer').classList.remove('open');">&times;</button>
+      <button class="drawer-close" onclick="window.closeDrawer()">&times;</button>
     </div>
     <div class="drawer-body" id="drawer-body"></div>
     <div class="drawer-footer" id="drawer-footer"></div>
@@ -452,16 +462,11 @@
     </div>
   </div>
 
-  <!-- ==================== FOOTER ==================== -->
-  <footer style="text-align:center;color:var(--text-muted);font-size:11px;padding:12px;display:none;">
-    <span>CashGuard AI &bull; Smart India Hackathon 2026 &bull; I4C &bull; Synthetic Demonstration Environment &bull; Advisory Only</span>
-  </footer>
-
   <!-- Toast container -->
   <div id="toast" class="toast hidden"></div>
   <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn btn-sm btn-ghost" aria-label="Dismiss">&times;</button></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>

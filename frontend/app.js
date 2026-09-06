@@ -1,63 +1,169 @@
-/* CashGuard AI — Proactive Cybercrime Intelligence Platform
-   Government-grade frontend: vanilla JS + Leaflet + WebSocket.
-   Performance-optimized: lazy loading, debouncing, delta updates, abort controllers. */
+/* CashGuard AI — Government-Grade Cybercrime Intelligence Command Platform
+   Smart India Hackathon 2026 · SIH26184 · MHA / I4C
+   Complete frontend rewrite — vanilla JS, no frameworks, no build tools. */
 "use strict";
 
-const COMPLAINT_TYPES = ["phishing", "investment_fraud", "job_fraud", "upi_fraud", "digital_arrest", "sextortion"];
+/* ==================== CONSTANTS ==================== */
 const TOKEN_KEY = "cashguard_token";
+const COMPLAINT_TYPES = ["phishing", "investment_fraud", "job_fraud", "upi_fraud", "digital_arrest", "sextortion"];
+const RISK_COLORS = { LOW: "#22C55E", MEDIUM: "#F59E0B", HIGH: "#F97316", CRITICAL: "#EF4444" };
+const TIER_COLORS = { DISPATCH: "#EF4444", ACTION: "#F97316", MONITOR: "#22C55E" };
+const MULE_TYPE_COLORS = { account: "#EF4444", victim: "#22C55E", phone: "#F59E0B", atm: "#3B82F6" };
+const INDIA_CENTER = [20.5, 78.9];
+const INDIA_ZOOM = 5;
+
+/* ==================== SVG ICONS ==================== */
+const ICONS = {
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>',
+  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13"/><path d="M15 7v13"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  dollar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  network: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>',
+  ledger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  heartbeat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="20 6 9 17 4 12"/></svg>',
+  chevronR: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>',
+  chevronL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  logOut: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+};
+
+function icon(name, cls) {
+  return `<span class="icon${cls ? ' ' + cls : ''}" aria-hidden="true">${ICONS[name] || ''}</span>`;
+}
+
+/* ==================== STATE ==================== */
 const state = {
   user: null,
-  stateFilter: "All", cityFilter: "All", bankFilter: "All",
-  category: "All", asOf: null, horizon: "24",
-  risk: [], alerts: [], stats: null, banks: [],
-  complaints: [], cityCoords: {}, recovery: [], funnel: null, inbox: [],
-  showHeat: true, showForecast: true,
-  ledgerDemoOptedIn: false,
+  stateFilter: "All",
+  cityFilter: "All",
+  bankFilter: "All",
+  category: "All",
+  asOf: null,
+  horizon: "24",
+  risk: [],
+  alerts: [],
+  stats: null,
+  banks: [],
+  complaints: [],
+  cityCoords: {},
+  recovery: [],
+  funnel: null,
+  inbox: [],
+  handoffs: [],
+  showHeat: true,
+  showForecast: true,
   simulatedOptedIn: false,
   simulatedEvidence: {},
   _loadGen: 0,
   currentView: "overview",
-  _viewsRendered: {},   // track which views have been rendered (lazy loading)
-  _sortedRisk: null,    // cached sorted risk array
-  _abortController: null, // for cancelling stale requests
+  _viewsRendered: {},
+  _sortedRisk: null,
+  _abortController: null,
+  sidebarCollapsed: false,
 };
 
 /* ==================== HELPERS ==================== */
-function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
 
 function debounce(fn, ms) {
   let t;
-  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+  return function (...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
 }
 
-let _activeAbort = null;
+function esc(s) { return s == null ? "" : String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function riskLevel(s) {
+  if (s >= 0.85) return "CRITICAL";
+  if (s >= 0.7) return "HIGH";
+  if (s >= 0.4) return "MEDIUM";
+  return "LOW";
+}
+function riskColor(s) { return RISK_COLORS[riskLevel(s)]; }
+function riskCls(s) { return "risk-" + riskLevel(s).toLowerCase(); }
+function riskPct(s) { return (s * 100).toFixed(1) + "%"; }
+
+function riskPill(s) {
+  const lv = riskLevel(s);
+  return `<span class="risk-pill risk-${lv.toLowerCase()}">${lv} ${riskPct(s)}</span>`;
+}
+
+function tierBadge(tier) {
+  if (!tier) return "";
+  const t = tier.toUpperCase();
+  return `<span class="tier-badge tier-${t.toLowerCase()}">${t}</span>`;
+}
+
+function statusPill(s) {
+  const cls = s === "new" ? "status-new" : s === "actioned" ? "status-actioned" : "status-default";
+  return `<span class="status-pill ${cls}">${esc(s)}</span>`;
+}
+
+function fmtTime(iso) {
+  if (!iso) return "—";
+  try { return new Date(iso).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }); }
+  catch { return esc(iso); }
+}
+
+function maskedAccount(token) {
+  if (!token) return "—";
+  return token.length > 12 ? token.slice(0, 8) + "····" + token.slice(-4) : token;
+}
+
+function fmtMetric(v, dp) {
+  if (v == null || isNaN(v)) return "—";
+  return typeof v === "number" ? v.toFixed(dp || 0) : String(v);
+}
+
+function getSortedRisk() {
+  if (state._sortedRisk) return state._sortedRisk;
+  state._sortedRisk = [...(state.risk || [])].sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
+  return state._sortedRisk;
+}
+
+function invalidateRiskCache() { state._sortedRisk = null; }
+
+/* ==================== API ==================== */
 async function api(path, opts = {}) {
   const token = getToken();
-  if (opts._cancelPrevious && _activeAbort) { _activeAbort.abort(); }
-  const controller = new AbortController();
-  if (opts._cancelPrevious) _activeAbort = controller;
-  const { _cancelPrevious, ...fetchOpts } = opts;
-  const res = await fetch(path, {
-    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    signal: controller.signal,
-    ...fetchOpts,
-  });
-  if (res.status === 401) {
-    localStorage.removeItem(TOKEN_KEY);
-    showLogin();
-    throw new Error("Session expired");
+  const headers = { ...(opts.headers || {}) };
+  if (token) headers["Authorization"] = "Bearer " + token;
+  if (opts.body && typeof opts.body === "object" && !(opts.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(opts.body);
   }
-  if (res.status === 403) {
-    const err = new Error("Permission denied for this action.");
-    err.forbidden = true; err.route = path;
-    throw err;
+  if (state._abortController && opts.method === "GET") {
+    opts.signal = state._abortController.signal;
   }
-  if (!res.ok) {
-    const err = new Error("Action could not be completed.");
-    err.route = path; err.status = res.status;
-    throw err;
-  }
-  return res.json();
+  const resp = await fetch(path, { ...opts, headers });
+  if (resp.status === 401) { showLogin(); throw new Error("Session expired"); }
+  if (resp.status === 403) { toast("Access denied for your role", "error"); throw new Error("Forbidden"); }
+  if (!resp.ok) { const t = await resp.text().catch(() => ""); throw new Error(`Request failed (${resp.status})`); }
+  const ct = resp.headers.get("content-type") || "";
+  if (ct.includes("application/json")) return resp.json();
+  return resp;
+}
+
+/* ==================== TOAST / NOTICE ==================== */
+function toast(msg, type) {
+  const el = document.getElementById("toast");
+  if (!el) return;
+  if (el._t) clearTimeout(el._t);
+  el.textContent = msg;
+  el.className = "toast " + (type || "");
+  el._t = setTimeout(() => el.classList.add("hidden"), 4500);
 }
 
 function clearNotice() {
@@ -65,1145 +171,1189 @@ function clearNotice() {
   if (el) el.classList.add("hidden");
 }
 
-function toast(msg, type) {
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.className = "toast " + (type || "");
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.add("hidden"), 4500);
-}
-
 function showNotice(msg) {
   const el = document.getElementById("notice");
   const txt = document.getElementById("notice-text");
-  if (!el || !txt) return;
-  txt.textContent = msg; el.classList.remove("hidden");
-  const close = document.getElementById("notice-close");
-  if (close) close.onclick = () => el.classList.add("hidden");
+  if (el && txt) { txt.textContent = msg; el.classList.remove("hidden"); }
 }
 
-function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
-function riskLevel(s) { return s >= 0.85 ? "CRITICAL" : s >= 0.7 ? "HIGH" : s >= 0.4 ? "MEDIUM" : "LOW"; }
-function riskColor(s) { return { LOW: "#2d9f4f", MEDIUM: "#d4a72c", HIGH: "#d47a2c", CRITICAL: "#c44040" }[riskLevel(s)]; }
-function riskCls(s) { return { LOW: "low", MEDIUM: "medium", HIGH: "high", CRITICAL: "critical" }[riskLevel(s)]; }
-function statusPill(s) { const c = { new: "pill-danger", acknowledged: "pill-warn", actioned: "pill-ok" }[s] || "pill"; return `<span class="pill ${c}">${esc(s)}</span>`; }
-function riskPill(s) { const l = riskCls(s); return `<span class="risk-pill ${l}">${(s * 100).toFixed(1)}%</span>`; }
-function riskPct(s) { return `${(s * 100).toFixed(1)}%`; }
-function fmtTime(iso) { const d = new Date(iso); return d.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); }
-function maskedAccount(token) { return token.length > 12 ? token.slice(0, 11) + "\u2026" : token; }
-function fmtMetric(v, dp = 2) {
-  if (v === null || v === undefined || (typeof v === "number" && !Number.isFinite(v))) return "n/a";
-  if (typeof v === "number") return dp ? v.toFixed(dp) : String(v);
-  return String(v);
-}
-function emergingBadge(h) {
-  const e = h.emerging_risk || 0;
-  if (e >= 0.6) return `<span class="pill pill-danger">\u25B2 Emerging ${(e * 100).toFixed(0)}%</span>`;
-  if (e >= 0.35) return `<span class="pill pill-warn">\u25B2 rising ${(e * 100).toFixed(0)}%</span>`;
-  return `<span class="pill">historical</span>`;
-}
-function priorityBadge(h) {
-  const pr = h.intervention_priority || 0;
-  const cls = pr >= 0.6 ? "pill-danger" : pr >= 0.4 ? "pill-warn" : "pill";
-  return `<span class="pill ${cls}">\u26A1 ${(pr * 100).toFixed(0)}</span>`;
-}
-function tierBadge(tier) {
-  const cls = tier === "dispatch" ? "tier tier-dispatch" : tier === "action" ? "tier tier-action" : "tier tier-monitor";
-  return `<span class="${cls}">${esc(tier || "monitor")}</span>`;
-}
-function tierOf(score) { return score >= 0.85 ? "dispatch" : score >= 0.7 ? "action" : "monitor"; }
-
-function getSortedRisk() {
-  if (!state._sortedRisk || state._sortedRisk._gen !== state._loadGen) {
-    state._sortedRisk = [...state.risk].sort((a, b) => b.risk_score - a.risk_score);
-    state._sortedRisk._gen = state._loadGen;
+/* ==================== MAP CONTROLLER ==================== */
+class MapController {
+  constructor(containerId, opts = {}) {
+    this.containerId = containerId;
+    this.opts = Object.assign({ center: INDIA_CENTER, zoom: INDIA_ZOOM, maxZoom: 18 }, opts);
+    this.map = null;
+    this.atmLayer = null;
+    this.heatLayer = null;
+    this.tileLayer = null;
+    this.offline = false;
+    this._markerMap = new Map();
+    this._resizeObs = null;
+    this._failCount = 0;
+    this._loaded = false;
   }
-  return state._sortedRisk;
+
+  init() {
+    if (this.map) return this;
+    if (typeof L === "undefined") {
+      this._renderFallback();
+      return this;
+    }
+    const el = document.getElementById(this.containerId);
+    if (!el || el.clientHeight < 10) return this;
+
+    try {
+      this.map = L.map(this.containerId, {
+        center: this.opts.center,
+        zoom: this.opts.zoom,
+        zoomControl: false,
+        attributionControl: true,
+      });
+      L.control.zoom({ position: "topright" }).addTo(this.map);
+
+      this.tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: this.opts.maxZoom,
+        errorTileUrl: "",
+      });
+
+      this.tileLayer.on("tileload", () => { this._loaded = true; this._failCount = 0; });
+      this.tileLayer.on("tileerror", () => {
+        this._failCount++;
+        if (!this._loaded && this._failCount >= 6) this._enableOffline();
+      });
+
+      this.tileLayer.addTo(this.map);
+      this.atmLayer = L.layerGroup().addTo(this.map);
+
+      setTimeout(() => {
+        if (!this._loaded) this._enableOffline();
+      }, 8000);
+
+      this._resizeObs = new ResizeObserver(() => {
+        if (this.map) this.map.invalidateSize();
+      });
+      this._resizeObs.observe(el);
+    } catch (e) {
+      console.warn("Map init failed:", e);
+      this._renderFallback();
+    }
+    return this;
+  }
+
+  invalidateSize() {
+    if (this.map) {
+      requestAnimationFrame(() => this.map.invalidateSize());
+    }
+  }
+
+  setMarkers(atms, riskScores, opts = {}) {
+    if (!this.map || !this.atmLayer) return;
+    const riskMap = new Map();
+    (riskScores || []).forEach(r => riskMap.set(r.atm_id, r));
+
+    const existingIds = new Set();
+    this.atmLayer.eachLayer(l => {
+      if (l._atmId) existingIds.add(l._atmId);
+    });
+
+    const toAdd = [];
+    (atms || []).forEach(atm => {
+      if (atm.latitude == null || atm.longitude == null) return;
+      const risk = riskMap.get(atm.atm_id);
+      const score = risk ? risk.risk_score : 0;
+      const lv = riskLevel(score);
+      const color = RISK_COLORS[lv];
+
+      if (this._markerMap.has(atm.atm_id)) {
+        const marker = this._markerMap.get(atm.atm_id);
+        marker.setRadius(4 + score * 14);
+        marker.setStyle({ color, fillColor: color, fillOpacity: 0.35 + score * 0.45 });
+        return;
+      }
+
+      const marker = L.circleMarker([atm.latitude, atm.longitude], {
+        radius: 4 + score * 14,
+        color: color,
+        weight: 1.5,
+        fillColor: color,
+        fillOpacity: 0.35 + score * 0.45,
+        className: lv === "CRITICAL" ? "marker-pulse" : "",
+      });
+
+      marker._atmId = atm.atm_id;
+      const popupHtml = `<div class="map-popup">
+        <b>${esc(atm.atm_id)}</b><br>
+        <span class="popup-bank">${esc(atm.bank_name)}</span> · ${esc(atm.branch_name)}<br>
+        ${esc(atm.city)}, ${esc(atm.district)}<br>
+        <div class="popup-risk">${riskPill(score)}</div>
+        ${risk ? `<div class="popup-action">${esc(risk.recommended_action || "")}</div>` : ""}
+      </div>`;
+      marker.bindPopup(popupHtml, { maxWidth: 260 });
+      marker.on("click", () => {
+        if (opts.onMarkerClick) opts.onMarkerClick(atm, risk);
+      });
+      toAdd.push(marker);
+      this._markerMap.set(atm.atm_id, marker);
+    });
+
+    toAdd.forEach(m => this.atmLayer.addLayer(m));
+  }
+
+  focusAtm(atmId) {
+    const marker = this._markerMap.get(atmId);
+    if (marker && this.map) {
+      this.map.setView(marker.getLatLng(), 14, { animate: true });
+      marker.openPopup();
+    }
+  }
+
+  fitToResults() {
+    if (!this.map || this._markerMap.size === 0) return;
+    const bounds = L.latLngBounds([]);
+    this._markerMap.forEach(m => bounds.extend(m.getLatLng()));
+    this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+  }
+
+  fitToIndia() {
+    if (this.map) this.map.setView(INDIA_CENTER, INDIA_ZOOM, { animate: true });
+  }
+
+  clearLayers() {
+    if (this.atmLayer) this.atmLayer.clearLayers();
+    this._markerMap.clear();
+  }
+
+  destroy() {
+    if (this._resizeObs) { this._resizeObs.disconnect(); this._resizeObs = null; }
+    if (this.map) { this.map.remove(); this.map = null; }
+    this.atmLayer = null;
+    this._markerMap.clear();
+  }
+
+  _enableOffline() {
+    if (this.offline || !this.map) return;
+    this.offline = true;
+    if (this.tileLayer) this.map.removeLayer(this.tileLayer);
+    const el = document.getElementById(this.containerId);
+    if (el) {
+      const ov = document.createElement("div");
+      ov.className = "map-offline-overlay";
+      ov.innerHTML = '<div class="map-offline-text">Offline Intelligence Map</div>';
+      el.appendChild(ov);
+    }
+    this._drawOfflineCanvas();
+  }
+
+  _drawOfflineCanvas() {
+    if (!this.map) return;
+    const el = document.getElementById(this.containerId);
+    if (!el) return;
+    const canvas = document.createElement("canvas");
+    canvas.className = "offline-canvas";
+    canvas.width = el.clientWidth * (window.devicePixelRatio || 1);
+    canvas.height = el.clientHeight * (window.devicePixelRatio || 1);
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    el.appendChild(canvas);
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    ctx.scale(dpr, dpr);
+    const W = el.clientWidth, H = el.clientHeight;
+    ctx.fillStyle = "#0B1220";
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(148,163,184,0.08)";
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    this._markerMap.forEach((marker) => {
+      const latlng = marker.getLatLng();
+      const point = this.map.latLngToContainerPoint(latlng);
+      const score = marker.options.fillOpacity > 0.6 ? 0.9 : 0.5;
+      const color = marker.options.fillColor || "#F59E0B";
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 3 + score * 5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.6;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  _renderFallback() {
+    const el = document.getElementById(this.containerId);
+    if (el) {
+      el.innerHTML = '<div class="map-fallback"><div class="map-fallback-icon">' + ICONS.map + '</div><p>Map unavailable</p><p class="text-muted">Intelligence map requires a modern browser with JavaScript enabled.</p></div>';
+    }
+  }
 }
 
 /* ==================== VIEW SWITCHING ==================== */
 function switchView(view) {
   state.currentView = view;
-  document.querySelectorAll(".view-panel").forEach(v => v.classList.add("hidden"));
-  const el = document.getElementById("view-" + view);
-  if (el) el.classList.remove("hidden");
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.view === view));
+  document.querySelectorAll(".view-panel").forEach(p => p.classList.add("hidden"));
+  const panel = document.getElementById("view-" + view);
+  if (panel) panel.classList.remove("hidden");
+
+  document.querySelectorAll(".nav-item").forEach(n => {
+    n.classList.toggle("active", n.dataset.view === view);
+  });
+
   const titles = {
-    overview: "Overview", risk: "Risk Intelligence", alerts: "Alerts",
-    investigations: "Investigations", recovery: "Recovery", mule: "Mule Network",
-    ledger: "Audit Trail", model: "Model Health", reports: "Reports",
+    overview: "National Overview", risk: "Risk Intelligence", alerts: "Alert Management",
+    investigations: "Investigations", recovery: "Recovery Operations", mule: "Mule Network",
+    ledger: "Audit Trail", model: "Model Health", reports: "Reports & Analytics",
   };
-  document.getElementById("topbar-view-title").textContent = titles[view] || view;
-  // Mark view as rendered (for lazy loading)
-  state._viewsRendered[view] = true;
-  // Render view-specific data (only on first activation or explicit refresh)
-  if (view === "risk") renderRiskView();
-  if (view === "alerts") renderAlertsFullTable();
-  if (view === "recovery") renderRecoveryView();
-  if (view === "mule") { renderMuleGraph(); renderMuleNetwork(); }
-  if (view === "ledger") ledgerStatus();
-  if (view === "model") renderModelView();
-  if (view === "investigations") { renderMuleGraph(); renderInbox(); renderHandoffs(); }
+  const titleEl = document.getElementById("topbar-view-title");
+  if (titleEl) titleEl.textContent = titles[view] || view;
+
+  if (!state._viewsRendered[view]) {
+    state._viewsRendered[view] = true;
+    renderViewContent(view);
+  }
+
+  setTimeout(() => {
+    if (view === "overview" || view === "risk") {
+      if (view === "overview" && window._mainMap) window._mainMap.invalidateSize();
+      if (view === "risk" && window._riskMap) window._riskMap.invalidateSize();
+    }
+  }, 100);
 }
 
-/* ==================== ROLE-AWARE SIDEBAR ==================== */
+function renderViewContent(view) {
+  switch (view) {
+    case "overview": renderOverview(); break;
+    case "risk": renderRiskIntelligence(); break;
+    case "alerts": renderAlertsView(); break;
+    case "investigations": renderInvestigations(); break;
+    case "recovery": renderRecoveryView(); break;
+    case "mule": renderMuleView(); break;
+    case "ledger": renderLedgerView(); break;
+    case "model": renderModelView(); break;
+    case "reports": renderReportsView(); break;
+  }
+}
+
+/* ==================== ROLE SIDEBAR ==================== */
 function updateSidebarForRole(role) {
-  const nav = document.querySelector(".sidebar-nav");
-  if (!nav) return;
-  // Hide all nav items first
-  nav.querySelectorAll(".nav-item").forEach(item => {
-    const view = item.dataset.view;
-    let show = false;
-    if (role === "BANK") {
-      show = ["overview", "alerts", "recovery"].includes(view);
-    } else if (role === "POLICE_DISTRICT" || role === "POLICE_STATE") {
-      show = ["overview", "risk", "alerts", "investigations", "reports"].includes(view);
-    } else if (role === "I4C_ADMIN") {
-      show = true; // I4C sees everything
-    }
-    item.style.display = show ? "" : "none";
+  const permissions = {
+    I4C_ADMIN: ["overview", "risk", "alerts", "investigations", "recovery", "mule", "ledger", "model", "reports"],
+    POLICE_STATE: ["overview", "risk", "alerts", "investigations", "reports"],
+    POLICE_DISTRICT: ["overview", "risk", "alerts", "investigations", "reports"],
+    BANK: ["overview", "alerts", "recovery"],
+  };
+  const allowed = permissions[role] || permissions.I4C_ADMIN;
+  document.querySelectorAll(".nav-item").forEach(n => {
+    const v = n.dataset.view;
+    n.style.display = allowed.includes(v) ? "" : "none";
   });
-  // Show/hide sections
-  nav.querySelectorAll(".sidebar-section").forEach(sec => {
-    const next = sec.nextElementSibling;
-    if (next && next.classList.contains("nav-item")) {
-      sec.style.display = next.style.display;
-    }
-  });
-  // Role-gate Run Alert Cycle
-  const btnCycle = document.getElementById("btn-cycle");
-  if (btnCycle) btnCycle.style.display = role === "BANK" ? "none" : "";
+  const cycleBtn = document.getElementById("btn-cycle");
+  if (cycleBtn) cycleBtn.style.display = role === "BANK" ? "none" : "";
 }
 
-/* ==================== MAP ==================== */
-let map = null, atmLayer = null, complaintLayer = null;
-let tileMode = "loading";
-let tileProviderIdx = 0;
-let tileFailedCount = 0;
-let tileFailTimer = null;
-const TILE_PROVIDERS = [
-  { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: '&copy; OpenStreetMap contributors' },
-];
-const MAP_TIMEOUT_MS = 9000;
-
-function enableOfflineMap() {
-  if (tileMode === "offline") return;
-  tileMode = "offline"; clearTimeout(tileFailTimer);
-  const el = document.getElementById("map");
-  if (!el) return;
-  el.innerHTML = `<canvas id="offline-map" class="offline-map"></canvas>
-    <div class="map-fallback" style="top:6px">Offline vector map</div>`;
-  requestAnimationFrame(() => drawOfflineMap());
+/* ==================== SKELETON HELPERS ==================== */
+function skeletonCards(n) {
+  return Array(n).fill('<div class="skeleton skeleton-card"></div>').join("");
+}
+function skeletonRows(n) {
+  return Array(n).fill('<div class="skeleton skeleton-row"></div>').join("");
+}
+function skeletonTable(n) {
+  return `<div class="skeleton-table">${Array(n).fill('<div class="skeleton skeleton-row"></div>').join("")}</div>`;
 }
 
-function drawOfflineMap() {
-  const canvas = document.getElementById("offline-map");
-  const rows = (state.risk || []).filter((r) =>
-    (state.cityFilter === "All" || r.city === state.cityFilter) &&
-    (state.bankFilter === "All" || r.bank_name === state.bankFilter)
-  ).filter((r) => typeof r.latitude === "number" && typeof r.longitude === "number");
-  const W = canvas.clientWidth || 800, H = canvas.clientHeight || 420;
-  canvas.width = W * (window.devicePixelRatio || 1);
-  canvas.height = H * (window.devicePixelRatio || 1);
-  if (canvas.getContext) canvas.getContext("2d").setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, W, H);
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, "#1a1d28"); grad.addColorStop(1, "#141620");
-  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
-  const padX = 0.10 * W, padY = 0.12 * H;
-  const poly = [[padX, H - padY], [W / 2, padY], [W - padX, H - padY * 0.8], [W - padX * 0.6, H - padY * 0.2], [W * 0.35, H - padY * 0.1]];
-  ctx.beginPath(); ctx.moveTo(poly[0][0], poly[0][1]);
-  for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i][0], poly[i][1]);
-  ctx.closePath(); ctx.fillStyle = "rgba(148,163,184,0.06)"; ctx.fill();
-  ctx.strokeStyle = "rgba(148,163,184,0.35)"; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.strokeStyle = "rgba(148,163,184,0.10)"; ctx.lineWidth = 1;
-  const step = 46;
-  for (let x = step / 2; x < W; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-  for (let y = step / 2; y < H; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-  const pts = rows.length ? rows : state.risk.filter((r) => typeof r.latitude === "number");
-  let minLat = 8, maxLat = 37, minLng = 68, maxLng = 97;
-  if (pts.length) {
-    minLat = Math.min(...pts.map((r) => r.latitude)); maxLat = Math.max(...pts.map((r) => r.latitude));
-    minLng = Math.min(...pts.map((r) => r.longitude)); maxLng = Math.max(...pts.map((r) => r.longitude));
-    const pad = 0.12 * Math.max(maxLat - minLat, maxLng - minLng, 1);
-    minLat -= pad; maxLat += pad; minLng -= pad; maxLng += pad;
-  }
-  const X = (lng) => ((lng - minLng) / (maxLng - minLng || 1)) * (W - 20) + 10;
-  const Y = (lat) => H - 10 - ((lat - minLat) / (maxLat - minLat || 1)) * (H - 20);
-  if (state.showHeat) {
-    const counts = aggregateComplaints();
-    for (const [city, coords] of Object.entries(state.cityCoords)) {
-      const n = counts[city] || 0; if (!n) continue;
-      const cx = X(coords[1]), cy = Y(coords[0]);
-      const r = 14 + Math.min(n, 40);
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, "rgba(249,115,22,0.28)"); g.addColorStop(1, "rgba(249,115,22,0)");
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-  if (state.showForecast) {
-    for (const r of pts) {
-      const cx = X(r.longitude), cy = Y(r.latitude);
-      const rad = 4 + r.risk_score * 16; const col = riskColor(r.risk_score);
-      ctx.globalAlpha = 0.40 + r.risk_score * 0.45; ctx.fillStyle = col;
-      ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-    }
-  }
-  ctx.fillStyle = "rgba(148,163,184,0.55)"; ctx.font = "11px IBM Plex Sans, sans-serif";
-  ctx.fillText(`${pts.length} ATM risk points rendered offline`, 14, 20);
+/* ==================== LOADING STATE HELPER ==================== */
+function setLoading(containerId, msg) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>${esc(msg)}</p></div>`;
 }
 
-function initMap() {
-  if (map) return;
-  if (tileMode === "offline") { requestAnimationFrame(drawOfflineMap); return; }
-  if (typeof L === "undefined") { enableOfflineMap(); return; }
-  map = L.map("map", { zoomControl: true }).setView([21.2, 78.5], 5);
-  const startProvider = TILE_PROVIDERS[0];
-  const tiles = L.tileLayer(startProvider.url, { attribution: startProvider.attribution, maxZoom: 18 });
-  let loadedAny = false;
-  tiles.on("tileload", () => { loadedAny = true; tileMode = "online"; clearTimeout(tileFailTimer); });
-  tiles.on("tileerror", () => {
-    tileFailedCount++;
-    if (tileMode !== "offline" && !loadedAny && tileProviderIdx < TILE_PROVIDERS.length && tileFailedCount >= 3) {
-      const mapEl = document.getElementById("map");
-      map.removeLayer(tiles);
-      const next = TILE_PROVIDERS[tileProviderIdx % TILE_PROVIDERS.length]; tileProviderIdx++;
-      const t2 = L.tileLayer(next.url, { attribution: next.attribution, maxZoom: 18 });
-      t2.on("tileload", () => { loadedAny = true; tileMode = "online"; clearTimeout(tileFailTimer); });
-      t2.on("tileerror", () => { tileFailedCount++; if (!loadedAny && tileFailedCount >= 6) enableOfflineMap(); });
-      t2.addTo(map);
-    } else if (tileMode !== "offline" && !loadedAny && tileFailedCount >= 6) {
-      enableOfflineMap();
-    }
-  });
-  tileFailTimer = setTimeout(() => { if (!loadedAny && tileMode !== "offline") enableOfflineMap(); }, MAP_TIMEOUT_MS);
-  tiles.addTo(map);
-  atmLayer = L.layerGroup().addTo(map);
-  complaintLayer = L.layerGroup().addTo(map);
+function setError(containerId, msg, retryFn) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = `<div class="error-state"><p>${esc(msg)}</p>${retryFn ? '<button class="btn btn-sm btn-ghost" onclick="(' + retryFn.name + ')()">Retry</button>' : ""}</div>`;
 }
 
-function renderMap() {
+function setEmpty(containerId, msg) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = `<div class="empty-state"><p>${esc(msg)}</p></div>`;
+}
+
+/* ==================== OVERVIEW ==================== */
+async function renderOverview() {
+  const statsEl = document.getElementById("overview-stats");
+  const priorityEl = document.getElementById("priority-actions");
+  const alertTableEl = document.getElementById("alert-table");
+  const hotspotEl = document.getElementById("hotspot-table");
+
+  if (statsEl) statsEl.innerHTML = skeletonCards(5);
+
   try {
-    if (!map) initMap();
-    if (tileMode === "offline") { drawOfflineMap(); return; }
-    if (typeof L === "undefined" || !atmLayer) { enableOfflineMap(); return; }
-    atmLayer.clearLayers(); complaintLayer.clearLayers();
-    const rows = state.risk.filter((r) =>
-      (state.cityFilter === "All" || r.city === state.cityFilter) &&
-      (state.bankFilter === "All" || r.bank_name === state.bankFilter)
-    );
-    if (state.showForecast) {
-      for (const r of rows) {
-        const m = L.circleMarker([r.latitude, r.longitude], {
-          radius: 5 + r.risk_score * 20, color: riskColor(r.risk_score), weight: 1,
-          fillColor: riskColor(r.risk_score), fillOpacity: 0.35 + r.risk_score * 0.45,
-        });
-        m.on("click", () => openDrawer(r));
-        m.bindPopup(
-          `<b>${esc(r.atm_id)}</b><br/>${esc(r.branch_name)}<br/>${esc(r.bank_name)} \u00b7 ${esc(r.city)}<br/>` +
-          `Jurisdiction: ${esc(r.state)} / ${esc(r.district)} / ${esc(r.police_station_area)}<br/>` +
-          `Risk: <b>${riskPct(r.risk_score)} (${riskLevel(r.risk_score)})</b>`
-        );
-        atmLayer.addLayer(m);
-      }
+    if (!state.stats) {
+      const s = await api("/stats/summary");
+      state.stats = s;
     }
-    if (state.showHeat) {
-      const counts = aggregateComplaints();
-      for (const [city, coords] of Object.entries(state.cityCoords)) {
-        const n = counts[city] || 0; if (!n) continue;
-        const m = L.circle(coords, { radius: 4000 + n * 900, color: "#f97316", weight: 1, fillColor: "#f97316", fillOpacity: 0.18 });
-        m.bindPopup(`<b>${esc(city)}</b><br/>${n} complaints in window (${esc(state.category)})`);
-        complaintLayer.addLayer(m);
-      }
-    }
-    map.invalidateSize();
-  } catch (err) { console.warn("renderMap degraded:", err); }
+    renderOverviewStats();
+  } catch (e) { console.warn("Stats load failed:", e); }
+
+  renderPriorityActions();
+  if (alertTableEl) renderAlertTable("alert-table", (state.alerts || []).slice(0, 10));
+  if (hotspotEl) renderHotspotTable();
+
+  setTimeout(() => {
+    if (window._mainMap) window._mainMap.invalidateSize();
+  }, 200);
 }
 
-function aggregateComplaints() {
-  const out = {};
-  for (const c of state.complaints) {
-    if (state.category !== "All" && c.complaint_type !== state.category) continue;
-    if (state.stateFilter !== "All" && c.victim_state !== state.stateFilter) continue;
-    out[c.victim_city] = (out[c.victim_city] || 0) + 1;
+function renderOverviewStats() {
+  const el = document.getElementById("overview-stats");
+  if (!el || !state.stats) return;
+  const s = state.stats;
+  el.innerHTML = `
+    <div class="stat-card stat-critical"><div class="stat-label">High-Risk ATMs</div><div class="stat-value">${fmtMetric(s.high_risk_atms)}</div><div class="stat-sub">Above 0.7 threshold</div></div>
+    <div class="stat-card stat-warning"><div class="stat-label">Active Alerts</div><div class="stat-value">${fmtMetric(s.alerts_new || s.alerts_total)}</div><div class="stat-sub">${fmtMetric(s.alerts_actioned)} actioned</div></div>
+    <div class="stat-card"><div class="stat-label">Complaints (24h)</div><div class="stat-value">${fmtMetric(s.complaints_24h)}</div><div class="stat-sub">${fmtMetric(s.total_complaints)} total</div></div>
+    <div class="stat-card"><div class="stat-label">Fraud Withdrawals (7d)</div><div class="stat-value">${fmtMetric(s.fraud_withdrawals_7d)}</div><div class="stat-sub">${fmtMetric(s.total_withdrawals)} total</div></div>
+    <div class="stat-card"><div class="stat-label">ATMs Monitored</div><div class="stat-value">${fmtMetric(s.total_atms)}</div><div class="stat-sub">Across all jurisdictions</div></div>`;
+}
+
+function renderPriorityActions() {
+  const el = document.getElementById("priority-actions");
+  if (!el) return;
+  const top = getSortedRisk().slice(0, 5);
+  if (top.length === 0) { setEmpty("priority-actions", "No high-risk ATMs detected."); return; }
+  el.innerHTML = top.map((r, i) => `
+    <div class="priority-item" onclick="focusAtmFromOverview('${esc(r.atm_id)}')" role="button" tabindex="0" aria-label="Focus ATM ${esc(r.atm_id)}">
+      <div class="priority-rank">${i + 1}</div>
+      <div class="priority-info">
+        <div class="priority-atm">${esc(r.atm_id)} · ${esc(r.bank_name)}</div>
+        <div class="priority-location">${esc(r.city)}, ${esc(r.district)}</div>
+      </div>
+      <div class="priority-score">${riskPill(r.risk_score)}</div>
+    </div>`).join("");
+}
+
+function focusAtmFromOverview(atmId) {
+  const r = state.risk.find(x => x.atm_id === atmId);
+  if (r) openDrawer(r);
+  if (window._mainMap) window._mainMap.focusAtm(atmId);
+}
+
+function renderHotspotTable() {
+  const el = document.getElementById("hotspot-table");
+  if (!el) return;
+  const top = getSortedRisk().slice(0, 20);
+  if (top.length === 0) { setEmpty("hotspot-table", "No risk data available."); return; }
+  const countEl = document.getElementById("hotspot-count");
+  if (countEl) countEl.textContent = top.length;
+  el.innerHTML = `<table class="data-table"><thead><tr>
+    <th>ATM</th><th>Bank</th><th>City</th><th>Risk</th><th>Action</th>
+  </tr></thead><tbody>${top.map(r => `<tr onclick="focusAtmFromOverview('${esc(r.atm_id)}')" class="clickable-row" role="button" tabindex="0">
+    <td class="mono">${esc(r.atm_id)}</td>
+    <td>${esc(r.bank_name)}</td>
+    <td>${esc(r.city)}</td>
+    <td>${riskPill(r.risk_score)}</td>
+    <td class="text-secondary">${esc(r.recommended_action || "Monitor")}</td>
+  </tr>`).join("")}</tbody></table>`;
+}
+
+/* ==================== MAIN MAP INIT ==================== */
+function initMainMap() {
+  if (window._mainMap && window._mainMap.map) { window._mainMap.invalidateSize(); return; }
+  window._mainMap = new MapController("map", {
+    onMarkerClick: (atm, risk) => { if (risk) openDrawer(risk); }
+  }).init();
+}
+
+function renderMainMap() {
+  initMainMap();
+  if (!window._mainMap || !window._mainMap.map) return;
+  const atms = state.risk.length > 0 ? state.risk : [];
+  window._mainMap.setMarkers(atms, state.risk, {
+    onMarkerClick: (atm, risk) => { if (risk) openDrawer(risk); }
+  });
+  if (atms.length > 0) window._mainMap.fitToResults();
+}
+
+/* ==================== RISK INTELLIGENCE ==================== */
+async function renderRiskIntelligence() {
+  const mapEl = document.getElementById("risk-map");
+  const listEl = document.getElementById("risk-atm-list");
+  if (!mapEl || !listEl) return;
+
+  if (!window._riskMap) {
+    window._riskMap = new MapController("risk-map", {
+      onMarkerClick: (atm, risk) => { if (risk) openDrawer(risk); }
+    }).init();
   }
-  return out;
+  window._riskMap.invalidateSize();
+
+  const sorted = getSortedRisk();
+  window._riskMap.clearLayers();
+  window._riskMap.setMarkers(sorted, state.risk, {
+    onMarkerClick: (atm, risk) => { if (risk) openDrawer(risk); }
+  });
+  if (sorted.length > 0) window._riskMap.fitToResults();
+
+  renderRiskAtmList(sorted);
+}
+
+function renderRiskAtmList(sorted) {
+  const el = document.getElementById("risk-atm-list");
+  if (!el) return;
+  if (!sorted || sorted.length === 0) { setEmpty("risk-atm-list", "No risk data available for current filters."); return; }
+  el.innerHTML = sorted.map(r => `
+    <div class="risk-list-item" onclick="focusRiskAtm('${esc(r.atm_id)}')" role="button" tabindex="0">
+      <div class="risk-list-header">
+        <span class="mono">${esc(r.atm_id)}</span>
+        ${riskPill(r.risk_score)}
+      </div>
+      <div class="risk-list-detail">${esc(r.bank_name)} · ${esc(r.city)}</div>
+      <div class="risk-list-action">${esc(r.recommended_action || "Monitor")}</div>
+    </div>`).join("");
+}
+
+function focusRiskAtm(atmId) {
+  if (window._riskMap) window._riskMap.focusAtm(atmId);
+  const r = state.risk.find(x => x.atm_id === atmId);
+  if (r) openDrawer(r);
 }
 
 /* ==================== ATM INTELLIGENCE DRAWER ==================== */
 function openDrawer(r) {
   const overlay = document.getElementById("drawer-overlay");
   const drawer = document.getElementById("atm-drawer");
+  const header = document.getElementById("drawer-atm-id");
+  const meta = document.getElementById("drawer-atm-meta");
   const body = document.getElementById("drawer-body");
   const footer = document.getElementById("drawer-footer");
+  if (!overlay || !drawer || !body) return;
 
-  document.getElementById("drawer-atm-id").textContent = r.atm_id;
-  document.getElementById("drawer-atm-meta").textContent = `${r.city} \u00b7 ${r.bank_name}`;
+  overlay.classList.remove("hidden");
+  drawer.classList.add("open");
 
-  const level = riskLevel(r.risk_score);
-  const cls = riskCls(r.risk_score);
+  if (header) header.innerHTML = `${esc(r.atm_id)} ${riskPill(r.risk_score)}`;
+  if (meta) meta.textContent = `${esc(r.bank_name)} · ${esc(r.branch_name)} · ${esc(r.city)}`;
+
   body.innerHTML = `
-    <div class="atm-risk-display">
-      <div>
-        <div class="atm-risk-big" style="color:var(--risk-${cls})">${riskPct(r.risk_score)}</div>
-        <div class="risk-score-label" style="color:var(--risk-${cls})">${level} RISK</div>
-      </div>
-      <div class="atm-risk-meta">
-        <div class="atm-risk-label">Forecast Horizon</div>
-        <div style="font-weight:600;margin-top:2px;">Next ${state.horizon || 24} Hours</div>
-        <div class="atm-risk-label" style="margin-top:8px;">Location</div>
-        <div style="font-size:12px;margin-top:2px;">${esc(r.branch_name)}<br/>${esc(r.district || r.city)}, ${esc(r.state)}</div>
-      </div>
-    </div>
-
     <div class="drawer-section">
-      <div class="drawer-section-title">Risk Factors</div>
-      ${emergingBadge(r)} ${priorityBadge(r)}
-      <div class="mt-2" style="font-size:12px;color:var(--text-secondary);">
-        ${r.emerging_risk > 0.35 ? '<div class="evidence-item positive"><h4>Rising Risk</h4><p>Risk has increased significantly in recent activity.</p></div>' : ''}
-        ${r.risk_score >= 0.7 ? '<div class="evidence-item positive"><h4>Elevated Alert Level</h4><p>ATM requires priority attention.</p></div>' : ''}
-      </div>
+      <h4>Location</h4>
+      <div class="drawer-kv"><span>State</span><span>${esc(r.state)}</span></div>
+      <div class="drawer-kv"><span>District</span><span>${esc(r.district)}</span></div>
+      <div class="drawer-kv"><span>Police Station</span><span>${esc(r.police_station_area)}</span></div>
+      <div class="drawer-kv"><span>Coordinates</span><span class="mono">${fmtMetric(r.latitude, 4)}, ${fmtMetric(r.longitude, 4)}</span></div>
     </div>
-
     <div class="drawer-section">
-      <div class="drawer-section-title">Recommended Action</div>
-      <div class="evidence-item positive">
-        <h4>${r.risk_score >= 0.85 ? 'Deploy Patrol + Notify Bank' : r.risk_score >= 0.7 ? 'Enhanced Monitoring' : 'Continue Monitoring'}</h4>
-        <p>${r.risk_score >= 0.85 ? 'Immediate field deployment recommended. Notify branch staff and initiate fund-block assessment.' : r.risk_score >= 0.7 ? 'Increase monitoring frequency. Prepare for potential escalation.' : 'Standard monitoring. No immediate action required.'}</p>
-      </div>
+      <h4>Risk Assessment</h4>
+      <div class="drawer-kv"><span>Risk Score</span><span>${riskPill(r.risk_score)}</span></div>
+      <div class="drawer-kv"><span>Risk Level</span><span class="risk-label ${riskCls(r.risk_score)}">${riskLevel(r.risk_score)}</span></div>
+      <div class="drawer-kv"><span>Forecast Horizon</span><span>${esc(state.horizon)}h</span></div>
+      <div class="drawer-kv"><span>As Of</span><span>${fmtTime(r.as_of)}</span></div>
+      ${r.emerging_risk ? `<div class="drawer-kv"><span>Emerging Risk</span><span class="pill pill-warn">Yes</span></div>` : ""}
     </div>
-
     <div class="drawer-section">
-      <div class="drawer-section-title">Evidence</div>
-      <div class="evidence-item neutral"><h4>Bank</h4><p>${esc(r.bank_name)}</p></div>
-      <div class="evidence-item neutral"><h4>Branch</h4><p>${esc(r.branch_name)}</p></div>
-      <div class="evidence-item neutral"><h4>Coordinates</h4><p>${r.latitude?.toFixed(4)}, ${r.longitude?.toFixed(4)}</p></div>
+      <h4>Recommended Action</h4>
+      <div class="drawer-action-box">${esc(r.recommended_action || "Enhanced monitoring recommended")}</div>
     </div>
-  `;
+    <div class="drawer-section" id="drawer-evidence-section">
+      <h4>Evidence</h4>
+      <div class="loading-state"><div class="spinner"></div><p>Loading evidence...</p></div>
+    </div>`;
 
   footer.innerHTML = `
-    <button class="btn btn-sm btn-ok" onclick="alert('Acknowledged: ${esc(r.atm_id)}')">Acknowledge</button>
-    <button class="btn btn-sm btn-accent" onclick="document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('atm-drawer').classList.remove('open');">Generate Report</button>
-    <button class="btn btn-sm btn-ghost" onclick="document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('atm-drawer').classList.remove('open');">Close</button>
-  `;
+    <button class="btn btn-sm btn-ghost" onclick="drawerAction('${esc(r.atm_id)}', 'acknowledged')" aria-label="Acknowledge">${icon("check")} Acknowledge</button>
+    <button class="btn btn-sm btn-ghost" onclick="drawerAction('${esc(r.atm_id)}', 'monitoring')" aria-label="Monitor">${icon("eye")} Monitor</button>
+    <button class="btn btn-sm btn-ghost" onclick="drawerActionEscalate('${esc(r.atm_id)}')" aria-label="Escalate">${icon("alert")} Escalate</button>
+    <button class="btn btn-sm btn-primary" onclick="drawerGenerateReport('${esc(r.atm_id)}', '${esc(r.alert_id || "")}')" aria-label="Generate Report">${icon("file")} Generate Report</button>
+    <button class="btn btn-sm btn-ghost" onclick="closeDrawer()" aria-label="Close">${icon("x")} Close</button>`;
 
-  overlay.classList.add("open");
-  drawer.classList.add("open");
+  loadDrawerEvidence(r);
+}
+
+function closeDrawer() {
+  const overlay = document.getElementById("drawer-overlay");
+  const drawer = document.getElementById("atm-drawer");
+  if (overlay) overlay.classList.add("hidden");
+  if (drawer) drawer.classList.remove("open");
+}
+
+async function loadDrawerEvidence(r) {
+  const section = document.getElementById("drawer-evidence-section");
+  if (!section) return;
+  const alert = (state.alerts || []).find(a => a.atm_id === r.atm_id);
+  if (!alert) { section.innerHTML = "<h4>Evidence</h4><p class='text-muted'>No active alert for this ATM.</p>"; return; }
+  try {
+    const ev = await api(`/alerts/${alert.alert_id}/evidence`);
+    section.innerHTML = `<h4>Evidence</h4>
+      <div class="drawer-kv"><span>Alert ID</span><span class="mono">${esc(alert.alert_id)}</span></div>
+      <div class="drawer-kv"><span>Tier</span><span>${tierBadge(alert.tier)}</span></div>
+      <div class="drawer-kv"><span>Recommended</span><span>${esc(alert.recommended_action)}</span></div>
+      ${ev.data_through ? `<div class="drawer-kv"><span>Data Through</span><span>${fmtTime(ev.data_through)}</span></div>` : ""}
+      ${ev.scoring_coverage_pct != null ? `<div class="drawer-kv"><span>Coverage</span><span>${fmtMetric(ev.scoring_coverage_coverage_pct || ev.scoring_coverage_pct, 1)}%</span></div>` : ""}
+      ${ev.explainability_note ? `<div class="drawer-note">${esc(ev.explainability_note)}</div>` : ""}`;
+  } catch (e) { section.innerHTML = "<h4>Evidence</h4><p class='text-muted'>Evidence temporarily unavailable.</p>"; }
+}
+
+async function drawerAction(atmId, status) {
+  const alert = (state.alerts || []).find(a => a.atm_id === atmId);
+  if (!alert) { toast("No active alert for this ATM", "error"); return; }
+  try {
+    await api(`/alerts/${alert.alert_id}/status`, { method: "POST", body: { status, reason: "" } });
+    alert.status = status;
+    alert.actioned_at = new Date().toISOString();
+    toast(`ATM ${atmId}: ${status}`, "success");
+    renderAlertTable("alert-table", (state.alerts || []).slice(0, 10));
+    updateAlertBadge();
+  } catch (e) { toast("Action failed: " + e.message, "error"); }
+}
+
+function drawerActionEscalate(atmId) {
+  const alert = (state.alerts || []).find(a => a.atm_id === atmId);
+  if (!alert) { toast("No active alert for this ATM", "error"); return; }
+  const reason = prompt("Enter escalation reason:");
+  if (reason === null) return;
+  setAlertStatus(alert.alert_id, "escalated", reason);
+}
+
+async function drawerGenerateReport(atmId, alertId) {
+  if (!alertId) { const alert = (state.alerts || []).find(a => a.atm_id === atmId); alertId = alert ? alert.alert_id : null; }
+  if (!alertId) { toast("No alert ID available for report generation", "error"); return; }
+  try {
+    toast("Generating intelligence report...", "info");
+    const result = await api(`/reports/hotspot/${alertId}`, { method: "POST" });
+    if (result.pdf) {
+      toast("Report generated successfully", "success");
+      window.open(`/reports/${result.report_id}/download`, "_blank");
+    }
+  } catch (e) { toast("Report generation failed: " + e.message, "error"); }
+}
+
+/* ==================== ALERTS ==================== */
+async function renderAlertsView() {
+  const tableEl = document.getElementById("alerts-full-table");
+  const countEl = document.getElementById("alerts-view-count");
+  if (tableEl) {
+    tableEl.innerHTML = skeletonTable(8);
+    try {
+      if (!state.alerts.length) {
+        const data = await api("/alerts?limit=200");
+        state.alerts = data;
+      }
+      renderAlertTable("alerts-full-table", state.alerts);
+      if (countEl) countEl.textContent = state.alerts.length;
+    } catch (e) { setError("alerts-full-table", "Failed to load alerts.", renderAlertsView); }
+  }
+}
+
+function renderAlertTable(tableId, alerts) {
+  const el = document.getElementById(tableId);
+  if (!el) return;
+  if (!alerts || alerts.length === 0) {
+    el.innerHTML = '<div class="empty-state"><p>No active alerts</p><p class="text-muted">All monitored locations are currently below the intervention threshold.</p></div>';
+    return;
+  }
+  el.innerHTML = `<table class="data-table"><thead><tr>
+    <th>Alert</th><th>ATM</th><th>Location</th><th>Risk</th><th>Tier</th><th>Status</th><th>Actions</th>
+  </tr></thead><tbody>${alerts.map(a => `<tr class="alert-row alert-${a.tier ? a.tier.toLowerCase() : "default"}">
+    <td class="mono text-xs">${esc((a.alert_id || "").slice(0, 8))}</td>
+    <td><span class="mono">${esc(a.atm_id)}</span><br><span class="text-xs text-muted">${esc(a.bank_name)}</span></td>
+    <td>${esc(a.city)}, ${esc(a.district)}</td>
+    <td>${riskPill(a.risk_score)}</td>
+    <td>${tierBadge(a.tier)}</td>
+    <td>${statusPill(a.status)}</td>
+    <td class="alert-actions">${hitlButtons(a)}</td>
+  </tr>`).join("")}</tbody></table>`;
+}
+
+function hitlButtons(a) {
+  if (a.status !== "new") return `<span class="text-muted text-xs">${esc(a.status)}</span>`;
+  return `<div class="btn-group">
+    <button class="btn btn-xs btn-ok" onclick="setAlertStatus('${esc(a.alert_id)}','acknowledged')" title="Acknowledge">${icon("check")}</button>
+    <button class="btn btn-xs btn-ghost" onclick="setAlertStatus('${esc(a.alert_id)}','monitoring')" title="Monitor">${icon("eye")}</button>
+    <button class="btn btn-xs btn-warn" onclick="escalateAlert('${esc(a.alert_id)}')" title="Escalate">${icon("alert")}</button>
+    <button class="btn btn-xs btn-danger" onclick="dismissAlert('${esc(a.alert_id)}')" title="Dismiss">${icon("x")}</button>
+  </div>`;
+}
+
+function escalateAlert(alertId) {
+  const reason = prompt("Enter escalation reason:");
+  if (reason === null) return;
+  setAlertStatus(alertId, "escalated", reason);
+}
+
+function dismissAlert(alertId) {
+  const reason = prompt("Enter dismissal reason:");
+  if (reason === null) return;
+  setAlertStatus(alertId, "dismissed", reason);
+}
+
+async function setAlertStatus(alertId, status, reason) {
+  try {
+    await api(`/alerts/${alertId}/status`, { method: "POST", body: { status, reason: reason || "" } });
+    const alert = state.alerts.find(a => a.alert_id === alertId);
+    if (alert) { alert.status = status; alert.actioned_at = new Date().toISOString(); }
+    toast(`Alert ${status}`, "success");
+    renderAlertTable("alert-table", (state.alerts || []).slice(0, 10));
+    renderAlertTable("alerts-full-table", state.alerts);
+    updateAlertBadge();
+  } catch (e) { toast("Action failed: " + e.message, "error"); }
+}
+
+function updateAlertBadge() {
+  const badge = document.getElementById("sidebar-alert-badge");
+  const newCount = (state.alerts || []).filter(a => a.status === "new").length;
+  if (badge) { badge.textContent = newCount; badge.classList.toggle("hidden", newCount === 0); }
+}
+
+/* ==================== INVESTIGATIONS ==================== */
+async function renderInvestigations() {
+  renderMuleGraph();
+  renderInbox();
+  renderHandoffs();
+}
+
+async function renderMuleGraph() {
+  const el = document.getElementById("mule-graph-table");
+  const detailEl = document.getElementById("mule-graph-detail");
+  if (!el) return;
+  el.innerHTML = skeletonTable(5);
+  try {
+    const data = await api("/mule-graph/terminal-nodes?k=50");
+    if (!data.nodes || data.nodes.length === 0) { setEmpty("mule-graph-table", "No terminal mule accounts detected."); return; }
+    el.innerHTML = `<table class="data-table"><thead><tr>
+      <th>Account</th><th>Terminal Risk</th><th>Trail</th>
+    </tr></thead><tbody>${data.nodes.map(n => `<tr>
+      <td class="mono">${maskedAccount(n.account_token)}</td>
+      <td>${riskPill(n.terminal_risk)}</td>
+      <td><button class="btn btn-xs btn-ghost" onclick="loadMuleTrail('${esc(n.account_token)}')">Trail</button></td>
+    </tr>`).join("")}</tbody></table>`;
+  } catch (e) { setError("mule-graph-table", "Failed to load mule data.", renderMuleGraph); }
+}
+
+async function loadMuleTrail(token) {
+  const el = document.getElementById("mule-graph-detail");
+  if (!el) return;
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Loading trail...</p></div>';
+  try {
+    const data = await api(`/mule-graph/trail/${encodeURIComponent(token)}`);
+    el.innerHTML = `<h4>Money Trail: ${maskedAccount(token)}</h4>
+      <div class="drawer-kv"><span>As Of</span><span>${fmtTime(data.as_of)}</span></div>
+      <div class="drawer-kv"><span>Window</span><span>${data.window_days} days</span></div>
+      ${data.chains ? `<div class="drawer-section"><h4>Chains</h4><pre class="code-block">${esc(JSON.stringify(data.chains, null, 2))}</pre></div>` : ""}
+      ${data.edges ? `<div class="drawer-section"><h4>Edges</h4><p class="text-muted">${(data.edges || []).length} transfer edges</p></div>` : ""}`;
+  } catch (e) { el.innerHTML = '<p class="text-muted">Trail data unavailable.</p>'; }
+}
+
+async function renderInbox() {
+  const el = document.getElementById("inbox-panel");
+  if (!el) return;
+  try {
+    const data = await api("/mock-i4c-inbox");
+    if (!data || data.length === 0) { setEmpty("inbox-panel", "No intelligence messages."); return; }
+    el.innerHTML = (data || []).slice(0, 15).map(m => {
+      const p = m.payload || {};
+      return `<div class="inbox-msg">
+        <div class="inbox-header"><span class="pill">${esc(m.channel)}</span> <span class="text-xs text-muted">${fmtTime(m.received_at)}</span></div>
+        <div class="inbox-body">${esc(p.message || p.subject || JSON.stringify(p).slice(0, 200))}</div>
+      </div>`;
+    }).join("");
+  } catch (e) { el.innerHTML = '<p class="text-muted">Inbox unavailable.</p>'; }
+}
+
+async function renderHandoffs() {
+  const el = document.getElementById("handoff-panel");
+  if (!el) return;
+  try {
+    const data = await api("/alerts/handoffs/list");
+    const handoffs = data.handoffs || [];
+    const countEl = document.getElementById("handoff-count");
+    if (countEl) countEl.textContent = handoffs.length;
+    if (handoffs.length === 0) { setEmpty("handoff-panel", "No cross-state handoffs."); return; }
+    el.innerHTML = handoffs.map(h => `<div class="handoff-item">
+      <div class="handoff-header">
+        <span class="mono">${esc(h.handoff_id.slice(0, 8))}</span>
+        <span class="pill ${h.status === 'ack' ? 'pill-ok' : 'pill-warn'}">${esc(h.status)}</span>
+      </div>
+      <div class="handoff-detail">${esc(h.origin_state)} → ${esc(h.receiving_state)}</div>
+      <div class="text-xs text-muted">${fmtTime(h.created_at)}</div>
+      ${h.status !== "ack" ? `<button class="btn btn-xs btn-ok" onclick="handoffAck('${esc(h.handoff_id)}')">Acknowledge</button>` : ""}
+    </div>`).join("");
+  } catch (e) { el.innerHTML = '<p class="text-muted">Handoffs unavailable.</p>'; }
+}
+
+async function handoffAck(handoffId) {
+  try {
+    await api(`/alerts/handoffs/${handoffId}/ack`, { method: "POST", body: { status: "ack", note: "" } });
+    toast("Handoff acknowledged", "success");
+    renderHandoffs();
+  } catch (e) { toast("Failed to acknowledge handoff", "error"); }
+}
+
+/* ==================== RECOVERY ==================== */
+async function renderRecoveryView() {
+  const funnelEl = document.getElementById("i4c-funnel");
+  const queueEl = document.getElementById("recovery-queue");
+  const outcomeEl = document.getElementById("outcome-panel");
+
+  if (funnelEl) {
+    try {
+      const f = await api("/recovery/funnel?days=7");
+      state.funnel = f;
+      const stages = [
+        { label: "Flagged", value: f.flagged || 0, color: "var(--warn)" },
+        { label: "Held", value: f.held || 0, color: "var(--accent)" },
+        { label: "Recovered", value: f.recovered || 0, color: "var(--ok)" },
+      ];
+      const max = Math.max(...stages.map(s => s.value), 1);
+      funnelEl.innerHTML = `<div class="funnel">${stages.map(s => `
+        <div class="funnel-stage">
+          <div class="funnel-bar" style="width:${(s.value / max * 100)}%;background:${s.color}"></div>
+          <div class="funnel-label">${s.label}</div>
+          <div class="funnel-value">${fmtMetric(s.value)}</div>
+        </div>`).join("")}</div>`;
+    } catch (e) { funnelEl.innerHTML = '<p class="text-muted">Funnel data unavailable.</p>'; }
+  }
+
+  if (queueEl) {
+    queueEl.innerHTML = skeletonTable(3);
+    try {
+      const recs = await api("/recovery/recommendations");
+      state.recovery = recs || [];
+      if (recs.length === 0) { setEmpty("recovery-queue", "No fund-block recommendations."); return; }
+      queueEl.innerHTML = `<table class="data-table"><thead><tr>
+        <th>Account</th><th>Bank</th><th>At Risk</th><th>ATM</th><th>Status</th><th>Actions</th>
+      </tr></thead><tbody>${recs.map(r => `<tr>
+        <td class="mono">${maskedAccount(r.account_token)}</td>
+        <td>${esc(r.home_bank)}</td>
+        <td>₹${fmtMetric(r.amount_at_risk, 2)}</td>
+        <td class="mono">${esc(r.suspected_atm || "—")}</td>
+        <td>${statusPill(r.status)}</td>
+        <td><div class="btn-group">
+          ${r.status === "flagged" ? `<button class="btn btn-xs btn-warn" onclick="updateRecovery('${esc(r.rec_id)}','held')">Hold</button>` : ""}
+          ${r.status === "held" ? `<button class="btn btn-xs btn-ok" onclick="updateRecovery('${esc(r.rec_id)}','recovered')">Recovered</button>` : ""}
+        </div></td>
+      </tr>`).join("")}</tbody></table>`;
+    } catch (e) { setError("recovery-queue", "Failed to load recovery data.", renderRecoveryView); }
+  }
+
+  if (outcomeEl) {
+    try {
+      const o = await api("/alerts/outcomes/summary");
+      outcomeEl.innerHTML = `<div class="outcome-grid">
+        <div class="drawer-kv"><span>Total Evaluated</span><span>${fmtMetric(o.total_evaluated)}</span></div>
+        <div class="drawer-kv"><span>True Positives</span><span class="text-ok">${fmtMetric(o.true_positives)}</span></div>
+        <div class="drawer-kv"><span>False Positives</span><span class="text-danger">${fmtMetric(o.false_positives)}</span></div>
+        <div class="drawer-kv"><span>Precision</span><span>${fmtMetric(o.precision, 3)}</span></div>
+      </div>`;
+    } catch (e) { outcomeEl.innerHTML = '<p class="text-muted">Outcome data unavailable.</p>'; }
+  }
+}
+
+async function updateRecovery(recId, status) {
+  if (status === "recovered" && !confirm("Confirm this account has been recovered?")) return;
+  try {
+    await api(`/recovery/${recId}/status`, { method: "POST", body: { status, amount_held: 0, amount_recovered: 0 } });
+    toast(`Recovery status updated: ${status}`, "success");
+    renderRecoveryView();
+  } catch (e) { toast("Recovery update failed: " + e.message, "error"); }
+}
+
+/* ==================== MULE NETWORK ==================== */
+async function renderMuleView() {
+  const wrapEl = document.getElementById("mule-network-wrap");
+  if (!wrapEl) return;
+  wrapEl.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Loading mule network...</p></div>';
+  try {
+    const data = await api("/graph/mule-network?depth=2&include_phone=true&limit=100");
+    if (!data.nodes || data.nodes.length === 0) { setEmpty("mule-network-wrap", "No mule network data available."); return; }
+    renderMuleSVG(wrapEl, data);
+  } catch (e) { setError("mule-network-wrap", "Failed to load mule network.", renderMuleView); }
+}
+
+function renderMuleSVG(container, data) {
+  const nodes = data.nodes || [];
+  const edges = data.edges || [];
+  const W = container.clientWidth || 800;
+  const H = 500;
+  const positions = {};
+  nodes.forEach((n, i) => {
+    const angle = (2 * Math.PI * i) / nodes.length;
+    const r = Math.min(W, H) * 0.35;
+    positions[n.id] = { x: W / 2 + r * Math.cos(angle), y: H / 2 + r * Math.sin(angle) };
+  });
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="mule-svg" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(148,163,184,0.3)"/></marker></defs>`;
+
+  edges.forEach(e => {
+    const from = positions[e.from];
+    const to = positions[e.to];
+    if (from && to) {
+      svg += `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="rgba(148,163,184,0.2)" stroke-width="1" marker-end="url(#arrow)"/>`;
+    }
+  });
+
+  nodes.forEach(n => {
+    const pos = positions[n.id];
+    if (!pos) return;
+    const color = MULE_TYPE_COLORS[n.type] || "#94A3B8";
+    const r = n.type === "atm" ? 8 : n.type === "account" ? 6 : 4;
+    svg += `<circle cx="${pos.x}" cy="${pos.y}" r="${r}" fill="${color}" opacity="0.8" stroke="${color}" stroke-width="1.5"/>`;
+    if (n.type === "atm" || n.type === "account") {
+      svg += `<text x="${pos.x}" y="${pos.y + r + 12}" text-anchor="middle" fill="#94A3B8" font-size="9">${esc(n.label || n.id.slice(0, 8))}</text>`;
+    }
+  });
+
+  svg += "</svg>";
+  container.innerHTML = `<div class="mule-legend">
+    <span><span class="dot" style="background:#EF4444"></span> Account</span>
+    <span><span class="dot" style="background:#22C55E"></span> Victim</span>
+    <span><span class="dot" style="background:#F59E0B"></span> Phone</span>
+    <span><span class="dot" style="background:#3B82F6"></span> ATM</span>
+  </div>${svg}`;
+  if (data.stats) {
+    container.innerHTML += `<div class="mule-stats">
+      <span>${fmtMetric(data.stats.accounts)} accounts</span>
+      <span>${fmtMetric(data.stats.complaints)} complaints</span>
+      <span>${fmtMetric(data.stats.phones)} phones</span>
+      <span>${fmtMetric(data.components)} components</span>
+    </div>`;
+  }
+}
+
+/* ==================== LEDGER ==================== */
+async function renderLedgerView() {
+  const previewEl = document.getElementById("ledger-preview");
+  const statusEl = document.getElementById("ledger-status");
+  if (!previewEl) return;
+
+  try {
+    const verify = await api("/ledger/verify");
+    if (statusEl) {
+      const isValid = verify.valid || verify.is_valid;
+      statusEl.innerHTML = `<div class="ledger-status ${isValid ? "ledger-ok" : "ledger-tampered"}">
+        <span class="ledger-icon">${isValid ? ICONS.check : ICONS.alert}</span>
+        <span>${isValid ? "VERIFIED" : "TAMPERED"}</span>
+      </div>`;
+    }
+  } catch (e) { if (statusEl) statusEl.innerHTML = '<span class="text-muted">Verification unavailable</span>'; }
+
+  try {
+    const data = await api("/ledger?limit=20&offset=0");
+    const records = data.records || [];
+    if (records.length === 0) { setEmpty("ledger-preview", "No ledger records."); return; }
+    previewEl.innerHTML = `<table class="data-table"><thead><tr>
+      <th>#</th><th>Time</th><th>Actor</th><th>Event</th><th>Entity</th><th>Hash</th>
+    </tr></thead><tbody>${records.map(r => `<tr>
+      <td>${fmtMetric(r.index)}</td>
+      <td class="text-xs">${fmtTime(r.created_at)}</td>
+      <td>${esc(r.actor)}</td>
+      <td><span class="pill">${esc(r.event_type)}</span></td>
+      <td class="mono text-xs">${esc(r.entity_id)}</td>
+      <td class="mono text-xs hash-cell">${esc((r.hash || "").slice(0, 12))}…</td>
+    </tr>`).join("")}</tbody></table>`;
+  } catch (e) { setError("ledger-preview", "Failed to load ledger.", renderLedgerView); }
+}
+
+async function ledgerVerify() {
+  try {
+    const result = await api("/ledger/verify");
+    const isValid = result.valid || result.is_valid;
+    toast(isValid ? "Ledger integrity verified" : "Ledger TAMPERED", isValid ? "success" : "error");
+    renderLedgerView();
+  } catch (e) { toast("Verification failed", "error"); }
+}
+
+async function ledgerTamper() {
+  if (!confirm("This will demonstrate a tamper event on the audit chain. Continue?")) return;
+  try {
+    await api("/ledger/tamper-demo", { method: "POST" });
+    toast("Tamper demo applied — integrity check will fail", "warning");
+    renderLedgerView();
+  } catch (e) { toast("Tamper demo failed", "error"); }
+}
+
+async function ledgerRestore() {
+  try {
+    await api("/ledger/restore", { method: "POST" });
+    toast("Ledger restored — integrity verified", "success");
+    renderLedgerView();
+  } catch (e) { toast("Restore failed", "error"); }
+}
+
+/* ==================== MODEL HEALTH ==================== */
+async function renderModelView() {
+  const gridEl = document.getElementById("model-health-grid");
+  const metricsEl = document.getElementById("model-metrics");
+  const driftEl = document.getElementById("drift-panel");
+
+  if (gridEl) {
+    try {
+      const data = await api("/train/status");
+      const m = data.metrics || {};
+      gridEl.innerHTML = `
+        <div class="model-check ${data.status === 'ok' ? 'check-ok' : 'check-pending'}">
+          <div class="check-label">Training Status</div>
+          <div class="check-value">${esc(data.status)}</div>
+        </div>
+        <div class="model-check check-ok">
+          <div class="check-label">Leakage Audit</div>
+          <div class="check-value">PASSED</div>
+          <div class="check-detail">Same-day leakage fixed</div>
+        </div>
+        <div class="model-check check-ok">
+          <div class="check-label">Data Source</div>
+          <div class="check-value">Synthetic</div>
+          <div class="check-detail">I4C-calibrated patterns</div>
+        </div>`;
+    } catch (e) { gridEl.innerHTML = '<p class="text-muted">Model status unavailable.</p>'; }
+  }
+
+  if (metricsEl) {
+    metricsEl.innerHTML = `<div class="metrics-grid">
+      <div class="metric-row"><span>ROC-AUC</span><span class="metric-value">0.6456</span></div>
+      <div class="metric-row"><span>Precision@20</span><span class="metric-value">0.70</span></div>
+      <div class="metric-row"><span>Precision@50</span><span class="metric-value">0.70</span></div>
+      <div class="metric-row"><span>Precision@100</span><span class="metric-value">0.67</span></div>
+      <div class="metric-row"><span>Brier Score</span><span class="metric-value">0.0467</span></div>
+      <div class="metric-row"><span>Features</span><span class="metric-value">44</span></div>
+      <div class="metric-row"><span>Lift vs Random @P100</span><span class="metric-value">7.9×</span></div>
+      <div class="metric-row"><span>Median Lead Time</span><span class="metric-value">12.8h</span></div>
+    </div>
+    <p class="text-xs text-muted" style="margin-top:12px">Source: CURRENT_METRICS.md — Synthetic demonstration data. No real-world performance claimed.</p>`;
+  }
+
+  if (driftEl) {
+    try {
+      const d = await api("/drift/status");
+      const stateClass = d.status === "green" ? "drift-green" : d.status === "yellow" ? "drift-yellow" : "drift-red";
+      driftEl.innerHTML = `<div class="drift-status ${stateClass}">
+        <span class="drift-dot"></span> ${esc(d.status.toUpperCase())}
+      </div>
+      <div class="drift-detail">
+        <p>${esc(d.summary?.verdict || "Status unknown")}</p>
+        ${d.n_flagged > 0 ? `<p class="text-danger">${d.n_flagged} features flagged</p>` : ""}
+      </div>`;
+    } catch (e) { driftEl.innerHTML = '<p class="text-muted">Drift status unavailable.</p>'; }
+  }
+}
+
+/* ==================== REPORTS ==================== */
+function renderReportsView() {
+  const el = document.getElementById("reports-panel");
+  if (!el) return;
+  el.innerHTML = `
+    <div class="reports-grid">
+      <div class="report-card">
+        <h4>${icon("file")} Situational Intelligence Report</h4>
+        <p class="text-muted">National situational overview with risk distribution and recommendations.</p>
+        <button class="btn btn-primary" onclick="generateSituationalReport()">${icon("download")} Generate PDF</button>
+      </div>
+      <div class="report-card">
+        <h4>${icon("target")} Hotspot Report</h4>
+        <p class="text-muted">Detailed analysis of current high-risk ATM locations.</p>
+        <button class="btn btn-ghost" onclick="generateSituationalReport()">${icon("download")} Generate PDF</button>
+      </div>
+    </div>
+    <div id="reports-output" class="reports-output"></div>`;
+}
+
+async function generateSituationalReport() {
+  const el = document.getElementById("reports-output");
+  if (el) el.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Generating report...</p></div>';
+  try {
+    const result = await api("/reports/situational", { method: "POST" });
+    if (el) el.innerHTML = `<div class="report-result">
+      <p>Report generated successfully.</p>
+      <a href="/reports/${result.report_id}/download" target="_blank" class="btn btn-primary">${icon("download")} Download PDF</a>
+    </div>`;
+    toast("Report generated", "success");
+  } catch (e) {
+    if (el) el.innerHTML = '<p class="text-muted">Report generation unavailable.</p>';
+    toast("Report generation failed", "error");
+  }
+}
+
+/* ==================== THRESHOLD EXPLORER ==================== */
+let THR_CURVE = null;
+async function loadThresholdCurve() {
+  try { THR_CURVE = await api("/threshold-explorer"); } catch { /* ignore */ }
+}
+
+function applyThresholdCurve() {
+  const slider = document.getElementById("thr-slider");
+  const valueEl = document.getElementById("thr-value");
+  const metricsEl = document.getElementById("thr-metrics");
+  if (!slider || !THR_CURVE) return;
+  const val = parseInt(slider.value);
+  if (valueEl) valueEl.textContent = val + "%";
+  if (metricsEl && THR_CURVE.curve) {
+    const point = THR_CURVE.curve.find(c => Math.round(c.threshold * 100) === val) || {};
+    metricsEl.innerHTML = `<span>P: ${fmtMetric(point.precision, 3)}</span> <span>Vol: ${fmtMetric(point.alert_volume, 0)}</span>`;
+  }
 }
 
 /* ==================== DATA LOADING ==================== */
 async function loadCityCoords() {
   try {
     const atms = await api("/atms?limit=900");
-    const byCity = {};
-    for (const a of atms) { (byCity[a.city] ||= []).push([a.latitude, a.longitude]); }
-    state.cityCoords = {};
-    for (const [city, pts] of Object.entries(byCity)) {
-      state.cityCoords[city] = [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
-    }
-    const states = [...new Set(atms.map((a) => a.state))].sort();
-    const cities = [...new Set(atms.map((a) => a.city))].sort();
-    const banks = [...new Set(atms.map((a) => a.bank_name))].sort();
-    const fill = (id, opts) => { const el = document.getElementById(id); if (!el) return; el.innerHTML = opts.map((o) => `<option>${esc(o)}</option>`).join(""); el.insertAdjacentHTML("afterbegin", `<option>All</option>`); };
-    fill("dd-state", states); fill("dd-city", cities); fill("dd-bank", banks);
-  } catch { /* non-fatal */ }
+    const coords = {};
+    const stateSet = new Set();
+    const citySet = new Set();
+    const bankSet = new Set();
+    atms.forEach(a => {
+      if (a.latitude && a.longitude) {
+        if (!coords[a.city]) coords[a.city] = { lat: 0, lon: 0, count: 0 };
+        coords[a.city].lat += a.latitude;
+        coords[a.city].lon += a.longitude;
+        coords[a.city].count++;
+      }
+      stateSet.add(a.state);
+      citySet.add(a.city);
+      bankSet.add(a.bank_name);
+    });
+    Object.keys(coords).forEach(c => {
+      coords[c].lat /= coords[c].count;
+      coords[c].lon /= coords[c].count;
+    });
+    state.cityCoords = coords;
+    populateDropdowns([...stateSet].sort(), [...citySet].sort(), [...bankSet].sort());
+  } catch (e) { console.warn("City coords load failed:", e); }
+}
+
+function populateDropdowns(states, cities, banks) {
+  const ddState = document.getElementById("dd-state");
+  const ddCity = document.getElementById("dd-city");
+  const ddBank = document.getElementById("dd-bank");
+  if (ddState) ddState.innerHTML = '<option value="All">All States</option>' + states.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+  if (ddCity) ddCity.innerHTML = '<option value="All">All Cities</option>' + cities.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  if (ddBank) ddBank.innerHTML = '<option value="All">All Banks</option>' + banks.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("");
 }
 
 async function loadComplaints() {
-  const { role } = state.user || {};
-  const ALLOWED = ["POLICE_STATE", "POLICE_DISTRICT", "I4C_ADMIN"];
-  if (!role || !ALLOWED.includes(role)) { state.complaints = []; return; }
   try {
-    const to = state.asOf || new Date().toISOString();
-    const from = new Date(new Date(to).getTime() - 7 * 864e5).toISOString();
-    state.complaints = await api(`/complaints?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}&limit=200`).catch(() => []);
+    const now = new Date();
+    const weekAgo = new Date(now - 7 * 86400000).toISOString().slice(0, 10);
+    state.complaints = await api(`/complaints?date_from=${weekAgo}&limit=200`);
   } catch { state.complaints = []; }
 }
 
-const ddH = document.getElementById("dd-horizon");
-if (ddH) ddH.addEventListener("change", async (e) => { state.horizon = e.target.value; await renderHorizonConfidence(); });
-
 async function renderHorizonConfidence() {
+  const el = document.getElementById("horizon-confidence");
+  if (!el) return;
   try {
-    const hz = await api("/horizons");
-    const rows = hz.horizons || [];
-    const h = state.horizon || "24";
-    const row = rows.find((r) => String(r.horizon_hours) === h);
-    const el = document.getElementById("horizon-confidence");
-    if (!row) { if (el) el.textContent = "\u2014"; return; }
-    const cls = row.confidence.startsWith("HIGH") ? "pill-ok" : row.confidence.startsWith("MEDIUM") ? "pill-warn" : "pill-danger";
-    el.textContent = `${h}h: ${row.confidence}`;
-    el.className = `pill ${cls}`;
-  } catch { /* panel absent */ }
+    const data = await api("/horizons");
+    const h = data["horizon_" + state.horizon + "h"] || data["horizon_" + state.horizon] || {};
+    el.textContent = h.precision ? `P@20: ${fmtMetric(h.precision, 2)}` : "";
+  } catch { el.textContent = ""; }
 }
 
 async function loadAll() {
-  clearNotice();
-  const gen = ++state._loadGen;
-  const stale = () => gen !== state._loadGen;
-  try {
-    if (state.simulatedOptedIn) {
-      const scen = await api("/simulated/scenario");
-      if (!scen || !scen.simulated) { throw new Error("simulated scenario unavailable"); }
-      if (stale()) return;
-      state.risk = scen.risk_scores || []; state.alerts = scen.alerts || [];
-      state.stats = scen.stats || null; state.simulatedEvidence = scen.evidence || {};
-      state._sortedRisk = null;
-      setSimulationUI(true); render(); return;
-    }
-    const q = state.asOf ? `&as_of=${encodeURIComponent(state.asOf)}` : "";
-    const statsP = state.user.role === "BANK" ? Promise.resolve(null) : api("/stats/summary").catch(() => null);
-    const [risk, alerts, stats] = await Promise.all([
-      api(`/risk-scores${q}`, { _cancelPrevious: true }), api("/alerts?limit=200", { _cancelPrevious: true }), statsP,
-    ]);
-    if (stale()) return;
-    state.risk = risk; state.alerts = alerts; state.stats = stats;
-    state._sortedRisk = null;
-    await Promise.all([loadCityCoords(), loadComplaints()]);
-    if (stale()) return;
-    setSimulationUI(false); render();
-  } catch (err) {
-    if (err.name === "AbortError") return;
-    toast("Load failed: " + err.message, "error");
+  state._loadGen++;
+  const gen = state._loadGen;
+  invalidateRiskCache();
+
+  if (state.simulatedOptedIn) {
+    try {
+      const data = await api("/simulated/scenario");
+      state.risk = data.risk_scores || [];
+      state.alerts = data.alerts || [];
+      state.stats = data.stats || state.stats;
+    } catch (e) { toast("Failed to load scenario", "error"); return; }
+  } else {
+    try {
+      const params = new URLSearchParams();
+      if (state.horizon) params.set("horizon", state.horizon);
+      const [risk, alerts] = await Promise.all([
+        api("/risk-scores?" + params.toString()),
+        api("/alerts?limit=200"),
+      ]);
+      if (gen !== state._loadGen) return;
+      state.risk = risk;
+      state.alerts = alerts;
+    } catch (e) { console.warn("Data load failed:", e); }
+
+    try {
+      const s = await api("/stats/summary");
+      if (gen === state._loadGen) state.stats = s;
+    } catch { /* ignore */ }
+  }
+
+  render();
+  updateAlertBadge();
+}
+
+function render() {
+  if (state.user) {
+    const nameEl = document.getElementById("user-display-name");
+    const roleEl = document.getElementById("user-role-text");
+    const avatarEl = document.getElementById("user-avatar");
+    if (nameEl) nameEl.textContent = state.user.display_name || state.user.username;
+    if (roleEl) roleEl.textContent = state.user.role.replace("_", " ");
+    if (avatarEl) avatarEl.textContent = (state.user.username || "?")[0].toUpperCase();
+  }
+
+  const asOfPill = document.getElementById("as-of-pill");
+  const scopePill = document.getElementById("scope-pill");
+  if (asOfPill) asOfPill.textContent = state.asOf ? fmtTime(state.asOf) : "Live";
+  if (scopePill) scopePill.textContent = state.user ? state.user.scope || "National" : "";
+
+  updateSidebarForRole(state.user?.role);
+
+  renderOverviewStats();
+  renderPriorityActions();
+
+  if (state.currentView === "overview") {
+    renderMainMap();
+    renderAlertTable("alert-table", (state.alerts || []).slice(0, 10));
+    renderHotspotTable();
   }
 }
 
+/* ==================== SIMULATION ==================== */
 function setSimulationUI(active) {
-  state.simulatedOptedIn = !!active;
-  document.body.classList.toggle("sim-active", state.simulatedOptedIn);
+  state.simulatedOptedIn = active;
   const banner = document.getElementById("sim-banner");
-  const wm = document.getElementById("sim-watermark");
-  if (banner) banner.classList.toggle("hidden", !state.simulatedOptedIn);
-  if (wm) wm.classList.toggle("hidden", !state.simulatedOptedIn);
+  const watermark = document.getElementById("sim-watermark");
   const loadBtn = document.getElementById("btn-sim-load");
   const exitBtn = document.getElementById("btn-sim-exit");
-  if (loadBtn) loadBtn.classList.toggle("hidden", state.simulatedOptedIn);
-  if (exitBtn) exitBtn.classList.toggle("hidden", !state.simulatedOptedIn);
+  if (banner) banner.classList.toggle("hidden", !active);
+  if (watermark) watermark.classList.toggle("hidden", !active);
+  if (loadBtn) loadBtn.classList.toggle("hidden", active);
+  if (exitBtn) exitBtn.classList.toggle("hidden", !active);
 }
 
 async function loadSimulatedScenario() {
-  try {
-    await api("/simulated/scenario");
-    state.simulatedOptedIn = true;
-    toast("Loaded scripted scenario", "warning");
-    loadAll();
-  } catch (err) {
-    toast("Could not load scenario: " + err.message, "error");
-    state.simulatedOptedIn = false; state.simulatedEvidence = {};
-    state.alerts = []; state.risk = []; state.stats = null; loadAll();
-  }
+  toast("Loading simulated scenario...", "info");
+  state.simulatedOptedIn = true;
+  setSimulationUI(true);
+  await loadAll();
+  toast("Simulated scenario loaded", "success");
 }
 
 function exitSimulated() {
-  state.simulatedOptedIn = false; state.simulatedEvidence = {};
-  state.alerts = []; state.risk = []; state.stats = null;
-  setSimulationUI(false); loadAll();
+  state.simulatedOptedIn = false;
+  state.simulatedEvidence = {};
+  setSimulationUI(false);
+  loadAll();
+  toast("Exited simulation mode", "info");
 }
 
-/* ==================== RENDERERS ==================== */
-function render() {
-  setSimulationUI(state.simulatedOptedIn);
-  // Update topbar
-  const user = state.user;
-  document.getElementById("scope-pill").textContent = `Jurisdiction: ${user.scope || user.role}`;
-  // Update sidebar user
-  document.getElementById("user-display-name").textContent = user.display_name || user.username;
-  document.getElementById("user-role-text").textContent = `${user.role} \u00b7 ${user.scope || ""}`;
-  document.getElementById("user-avatar").textContent = (user.display_name || user.username || "U").charAt(0).toUpperCase();
-  // Update sidebar badge
-  const badge = document.getElementById("sidebar-alert-badge");
-  const newAlerts = state.alerts.filter(a => a.status === "new").length;
-  if (newAlerts > 0) { badge.textContent = newAlerts; badge.classList.remove("hidden"); }
-  else badge.classList.add("hidden");
-
-  if (user.role === "BANK") renderBank();
-  else if (user.role === "I4C_ADMIN") renderI4C();
-  else renderPolice();
-
-  // Update overview stats
-  renderOverviewStats();
-  renderPriorityActions();
-}
-
-function renderOverviewStats() {
-  const s = state.stats || {};
-  const alertTotal = state.alerts.length;
-  const alertNew = state.alerts.filter(a => a.status === "new").length;
-  const highRisk = state.risk.filter(r => r.risk_score >= 0.7).length;
-  const el = document.getElementById("overview-stats");
-  if (!el) return;
-
-  const heroStats = [
-    { label: "High-Risk ATMs", value: highRisk, hero: true },
-    { label: "Active Alerts", value: alertTotal, hero: true },
-  ];
-  const secondaryStats = state.user.role !== "BANK" ? [
-    { label: "Complaints (24h)", value: s.complaints_24h ?? 0 },
-    { label: "Complaints (7d)", value: s.complaints_7d ?? 0 },
-    { label: "Fraud Withdrawals (7d)", value: s.fraud_withdrawals_7d ?? 0 },
-    { label: "New Alerts", value: alertNew },
-  ] : [
-    { label: "ATMs Scored", value: state.risk.length },
-    { label: "New Alerts", value: alertNew },
-  ];
-
-  el.innerHTML = [...heroStats, ...secondaryStats].map(s => `
-    <div class="stat-card ${s.hero ? 'hero' : ''}">
-      <div class="stat-label">${esc(s.label)}</div>
-      <div class="stat-value">${(s.value ?? 0).toLocaleString()}</div>
-    </div>
-  `).join("");
-}
-
-function renderPriorityActions() {
-  const el = document.getElementById("priority-actions");
-  const countEl = document.getElementById("priority-count");
-  if (!el) return;
-
-  const top5 = getSortedRisk().slice(0, 5);
-  if (!top5.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">&#x1F50D;</div><h3>No High-Risk ATMs</h3><p>No ATMs currently exceed the risk threshold.</p></div>`;
-    if (countEl) countEl.textContent = "0";
-    return;
-  }
-  if (countEl) countEl.textContent = `${top5.length} priority`;
-
-  el.innerHTML = top5.map((r, i) => `
-    <div class="alert-card ${riskCls(r.risk_score)}" onclick="openDrawer(state.risk.find(x => x.atm_id === '${esc(r.atm_id)}'))">
-      <div class="alert-icon">${riskPct(r.risk_score)}</div>
-      <div class="alert-content">
-        <div class="alert-header">
-          <span class="alert-atm">${esc(r.atm_id)}</span>
-          <span class="alert-city">${esc(r.city)}</span>
-          ${emergingBadge(r)}
-        </div>
-        <div class="alert-reason">${esc(r.branch_name)} \u00b7 ${esc(r.bank_name)}</div>
-      </div>
-      <div style="display:flex;align-items:center;">${priorityBadge(r)}</div>
-    </div>
-  `).join("");
-}
-
-function renderPolice() {
-  renderMap();
-  const hotspots = getSortedRisk().slice(0, 20);
-  const hCount = document.getElementById("hotspot-count");
-  if (hCount) hCount.textContent = `${hotspots.length} hotspots`;
-  const tbody = document.querySelector("#hotspot-table tbody");
-  if (tbody) tbody.innerHTML = hotspots.map(
-    (h, i) => `<tr onclick="openDrawer(state.risk.find(x => x.atm_id === '${esc(h.atm_id)}'))" style="cursor:pointer">
-      <td>${i + 1}</td><td><b>${esc(h.atm_id)}</b></td><td>${esc(h.branch_name)}<br/><span class="muted">${esc(h.bank_name)}</span></td><td>${esc(h.city)}</td>
-      <td>${riskPill(h.risk_score)}</td></tr>`
-  ).join("");
-  renderAlertTable("alert-table");
-  loadThresholdCurve();
-  renderMobile(MOBILE_FIX.lat, MOBILE_FIX.lon);
-}
-
-function renderRiskView() {
-  const stats = document.getElementById("risk-stats");
-  if (stats) {
-    const total = state.risk.length;
-    const critical = state.risk.filter(r => r.risk_score >= 0.85).length;
-    const high = state.risk.filter(r => r.risk_score >= 0.7 && r.risk_score < 0.85).length;
-    const medium = state.risk.filter(r => r.risk_score >= 0.4 && r.risk_score < 0.7).length;
-    stats.innerHTML = [
-      { label: "ATMs Scored", value: total, cls: "" },
-      { label: "Critical", value: critical, cls: critical > 0 ? "hero" : "" },
-      { label: "High", value: high, cls: "" },
-      { label: "Medium", value: medium, cls: "" },
-    ].map(s => `<div class="stat-card${s.cls ? " " + s.cls : ""}"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div></div>`).join("");
-  }
-}
-
-function renderBank() {
-  renderMap();
-  const bank = state.user.scope;
-  const atms = state.risk.filter((r) => r.bank_name === bank);
-  const alerts = state.alerts.filter((a) => a.bank_name === bank);
-  const high = atms.filter((a) => a.risk_score >= 0.7).length;
-  const tbody = document.querySelector("#hotspot-table tbody");
-  if (tbody) tbody.innerHTML = atms.map(
-    (a) => `<tr onclick="openDrawer(state.risk.find(x => x.atm_id === '${esc(a.atm_id)}'))" style="cursor:pointer">
-      <td><b>${esc(a.atm_id)}</b></td><td>${esc(a.branch_name)}<br/><span class="muted">${esc(a.bank_name)}</span></td><td>${esc(a.city)}</td>
-      <td>${riskPill(a.risk_score)}</td><td>${esc(bankAction(a.risk_score))}</td></tr>`
-  ).join("");
-  const hCount = document.getElementById("hotspot-count");
-  if (hCount) hCount.textContent = `${atms.length} ATMs scored`;
-  renderAlertTable("alert-table");
-}
-
-function renderI4C() {
-  renderMap();
-  const alerts = state.alerts;
-  const tbody = document.querySelector("#hotspot-table tbody");
-  const hotspots = getSortedRisk().slice(0, 20);
-  if (tbody) tbody.innerHTML = hotspots.map(
-    (h, i) => `<tr onclick="openDrawer(state.risk.find(x => x.atm_id === '${esc(h.atm_id)}'))" style="cursor:pointer">
-      <td>${i + 1}</td><td><b>${esc(h.atm_id)}</b></td><td>${esc(h.branch_name)}<br/><span class="muted">${esc(h.bank_name)}</span></td><td>${esc(h.city)}</td>
-      <td>${riskPill(h.risk_score)}</td></tr>`
-  ).join("");
-  const hCount = document.getElementById("hotspot-count");
-  if (hCount) hCount.textContent = `${hotspots.length} hotspots`;
-  renderAlertTable("alert-table");
-  renderRecoveryView();
-  // Lazy-load expensive sub-views only on first activation
-  if (state._viewsRendered.mule) renderMuleGraph();
-  if (state._viewsRendered.drift) renderDrift();
-  if (state._viewsRendered.network) renderMuleNetwork();
-  if (state._viewsRendered.ledger) ledgerStatus();
-  if (state._viewsRendered.model) renderModelView();
-  if (state._viewsRendered.inbox) renderInbox();
-  if (state._viewsRendered.handoffs) renderHandoffs();
-}
-
-/* ==================== ALERTS ==================== */
-let THR_CURVE = null;
-async function loadThresholdCurve() {
-  if (THR_CURVE) return applyThresholdCurve();
-  try { THR_CURVE = await api("/threshold-explorer"); applyThresholdCurve(); } catch { /* non-fatal */ }
-}
-
-function applyThresholdCurve() {
-  const slider = document.getElementById("thr-slider");
-  const out = document.getElementById("thr-metrics");
-  if (!THR_CURVE || !slider || !out) return;
-  const row = THR_CURVE.curve.find((r) => Math.abs(r.threshold * 100 - Number(slider.value)) < 0.01) || THR_CURVE.curve[0];
-  document.getElementById("thr-value").textContent = row.threshold.toFixed(2);
-  out.innerHTML = `at threshold <b>${row.threshold.toFixed(2)}</b>: precision <b>${(row.precision * 100).toFixed(1)}%</b> \u00b7 recall ${(row.recall * 100).toFixed(1)}% \u00b7 ${row.alert_volume} alerts \u00b7 false-alert rate ${(row.false_alert_rate * 100).toFixed(1)}%`;
-  renderThrBands(row.threshold);
-}
-
-function renderThrBands(t) {
-  const el = document.getElementById("thr-bands");
-  if (!el) return;
-  const BANDS = [
-    { name: "DISPATCH \u00b7 High-Priority", rng: "\u2265 0.85", min: 0.85, act: "ACT \u2014 dispatch to LEA + bank", cls: "band-dispatch" },
-    { name: "ACTION \u00b7 Review", rng: "0.70\u20130.85", min: 0.70, act: "REVIEW \u2014 enhanced monitoring", cls: "band-action" },
-    { name: "MONITOR \u00b7 Hold", rng: "< 0.70", min: 0, act: "HOLD \u2014 watch, no dispatch", cls: "band-monitor" },
-  ];
-  const tier = t >= 0.85 ? "DISPATCH" : t >= 0.70 ? "ACTION" : "MONITOR";
-  el.innerHTML = `<div class="band-label">Dispatch bands at threshold <b>${t.toFixed(2)}</b></div>` +
-    BANDS.map((b) => {
-      const active = b.name.startsWith(tier.split(" ")[0]);
-      return `<div class="band ${b.cls}${active ? " active" : ""}">
-        <b>${b.name}</b><span class="muted">${b.rng}</span>
-        <span class="band-act">${b.act}</span>${active ? '<span class="pill pill-ok" style="margin-left:auto;">active</span>' : ""}
-      </div>`;
-    }).join("");
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const slider = document.getElementById("thr-slider");
-  if (slider) slider.addEventListener("input", applyThresholdCurve);
-});
-
-function tbodyOf(el) { return (el && el.querySelector && el.querySelector("tbody")) || el; }
-
-function renderAlertTable(tableId, alerts = state.alerts) {
-  const countEls = ["alert-count", "alerts-view-count"];
-  countEls.forEach(id => { const c = document.getElementById(id); if (c) c.textContent = `${alerts.filter(a => a.status === "new").length} new`; });
-  const el = document.getElementById(tableId);
-  if (!el) return;
-  tbodyOf(el).innerHTML = alerts.map(
-    (a) => `<tr><td>${fmtTime(a.created_at)}</td><td><b>${esc(a.atm_id)}</b></td><td>${esc(a.city)}</td>
-    <td>${tierBadge(a.tier || tierOf(a.risk_score))}</td><td>${riskPill(a.risk_score)}</td><td>${esc(a.recommended_action)}${alertMeta(a)}</td><td>${statusPill(a.status)}</td>
-    <td>${routingBadge(a)}<button class="btn btn-sm" data-evid="${esc(a.alert_id)}">Details</button>
-    ${hitlButtons(a)}</td></tr>`
-  ).join("");
-  el.querySelectorAll("button[data-act]").forEach((b) => b.addEventListener("click", () => hitlAction(b.dataset.id, b.dataset.act)));
-  el.querySelectorAll("button[data-evid]").forEach((b) => b.addEventListener("click", () => openEvidence(b.dataset.evid)));
-}
-
-function renderAlertsFullTable() {
-  renderAlertTable("alerts-full-table", state.alerts);
-}
-
-function routingBadge(a) {
-  if (a.routing_status && a.routing_status !== "none" && a.origin_state) {
-    const st = a.routing_status === "handoff_complete" ? "done" : a.routing_status === "handoff_ack" ? "acked" : "xstate";
-    return `<span class="rt rt-${st}" title="origin ${esc(a.origin_state)} \u2192 ${esc(a.state)}">\u2197 ${esc(a.origin_state)}\u2192${esc(a.state)}</span><br/>`;
-  }
-  return "";
-}
-
-function alertMeta(a) {
-  let meta = "";
-  if (a.risk_delta_vs_last !== null && a.risk_delta_vs_last !== undefined) {
-    meta += `<span class="rt rt-escl">\u25B2 +${a.risk_delta_vs_last.toFixed(2)} escalation</span>`;
-  }
-  if (a.reobservation_count > 0) {
-    meta += `<span class="rt rt-reobs">re-observed \u00d7${a.reobservation_count}</span>`;
-  }
-  return meta ? `<br/>${meta}` : "";
-}
-
-function hitlButtons(a) {
-  const base = `data-id="${esc(a.alert_id)}"`;
-  if (a.status === "new" || a.status === "acknowledged" || a.status === "monitoring") {
-    return `<button class="btn btn-sm btn-ok" data-act="acknowledged" ${base}>Ack</button>
-      <button class="btn btn-sm" data-act="monitoring" ${base}>Monitor</button>
-      <button class="btn btn-sm btn-warn" data-act="dismissed" ${base}>Dismiss</button>
-      <button class="btn btn-sm btn-danger" data-act="escalated" ${base}>Escalate</button>`;
-  }
-  return "";
-}
-
-function hitlAction(alertId, status) {
-  let reason = "";
-  if (status === "dismissed" || status === "escalated") {
-    reason = prompt(`Reason for "${status}" (recorded to audit ledger):`);
-    if (reason === null) return;
-    if (!reason.trim()) { toast("Reason required", "error"); return; }
-  }
-  setAlertStatus(alertId, status, reason);
-}
-
-async function setAlertStatus(alertId, status, reason = "") {
-  try {
-    if (state.simulatedOptedIn) {
-      const a = state.alerts.find((x) => x.alert_id === alertId);
-      if (a) a.status = status;
-      toast(`Alert ${alertId} \u2192 ${status} (simulated)`);
-      renderAlertTable(state.user.role === "I4C_ADMIN" ? "alert-table" : "alert-table", state.alerts);
-      return;
-    }
-    await api(`/alerts/${alertId}/status`, { method: "POST", body: JSON.stringify({ status, reason }) });
-    toast(`Alert ${alertId} \u2192 ${status}`, "success");
-    loadAll();
-  } catch (err) { toast("Update failed: " + err.message, "error"); }
-}
-
-function bankAction(score) {
-  if (score >= 0.85) return "Freeze linked accounts + alert staff";
-  if (score >= 0.7) return "Enhanced monitoring";
-  if (score >= 0.4) return "Increase monitoring";
-  return "No action required";
-}
-
-/* ==================== RECOVERY ==================== */
-async function renderRecoveryView() {
-  try {
-    state.recovery = await api("/recovery/recommendations");
-    state.funnel = await api("/recovery/funnel?days=7");
-  } catch { return; }
-
-  const q = document.getElementById("recovery-queue");
-  if (q) q.innerHTML = state.recovery.length ? state.recovery.map(
-    (r) => `<div class="rec-row">
-      <span><b>${esc(maskedAccount(r.account_token))}</b> \u00b7 ${esc(r.home_bank)}</span>
-      <span class="muted">\u20B9${r.amount_at_risk.toLocaleString()} at risk \u00b7 ${esc(r.suspected_atm)}</span>
-      <span>${statusPill(r.status)}</span>
-      <span>
-        <button class="btn btn-sm btn-ok" data-rec="${esc(r.rec_id)}" data-s="held">Hold</button>
-        <button class="btn btn-sm btn-warn" data-rec="${esc(r.rec_id)}" data-s="recovered">Recovered</button>
-      </span></div>`
-  ).join("") : `<div class="empty-state"><div class="empty-state-icon">&#x1F4B0;</div><h3>No Fund-Block Recommendations</h3><p>No open recommendations at this time.</p></div>`;
-  if (q) q.querySelectorAll("button[data-rec]").forEach((b) => b.addEventListener("click", () => updateRecovery(b.dataset.rec, b.dataset.s)));
-
-  const f = state.funnel || {};
-  const funnelEl = document.getElementById("i4c-funnel");
-  if (funnelEl) funnelEl.innerHTML = `
-    <div class="recovery-funnel">
-      <div class="funnel-stage"><div class="funnel-stage-label">Flagged</div><div class="funnel-stage-value">\u20B9${Math.round(f.amount_flagged || 0).toLocaleString()}</div><div class="funnel-stage-sub">Potential exposure</div></div>
-      <div class="funnel-arrow">\u2192</div>
-      <div class="funnel-stage"><div class="funnel-stage-label">Held</div><div class="funnel-stage-value">\u20B9${Math.round(f.amount_held || 0).toLocaleString()}</div><div class="funnel-stage-sub">Protected</div></div>
-      <div class="funnel-arrow">\u2192</div>
-      <div class="funnel-stage"><div class="funnel-stage-label">Recovered</div><div class="funnel-stage-value">\u20B9${Math.round(f.amount_recovered || 0).toLocaleString()}</div><div class="funnel-stage-sub">Recovery rate ${f.recovery_rate_pct || 0}%</div></div>
-    </div>
-    <p class="ev-notice">Synthetic demonstration \u2014 CFCFRMS APIs are Tier 2.</p>`;
-}
-
-async function updateRecovery(recId, status) {
-  try {
-    const amt = status === "held" ? { amount_held: 50000 } : { amount_recovered: 40000 };
-    await api(`/recovery/${recId}/status`, { method: "POST", body: JSON.stringify({ status, ...amt }) });
-    toast(`Recommendation ${recId} \u2192 ${status}`, "success");
-    renderRecoveryView();
-  } catch (err) { toast("Update failed: " + err.message, "error"); }
-}
-
-/* ==================== MODEL HEALTH ==================== */
-async function renderModelView() {
-  try {
-    const m = await api("/train/status");
-    if (m.metrics) {
-      const grid = document.getElementById("model-health-grid");
-      if (grid) grid.innerHTML = [
-        ["Forecast-Safe AUC", fmtMetric(m.metrics.roc_auc, 4), "pass"],
-        ["Temporal Validation", "PASS", "pass"],
-        ["Calibration", m.metrics.calibration || "Platt scaling", "pass"],
-        ["Leakage Check", "PASS", "pass"],
-        ["Model Drift", "ATTENTION", "attention"],
-      ].map(([label, value, cls]) => `
-        <div class="model-check">
-          <div class="model-check-label">${esc(label)}</div>
-          <div class="model-check-value ${cls}">${esc(String(value))}</div>
-        </div>
-      `).join("");
-
-      document.getElementById("model-metrics").innerHTML = [
-        ["Model", m.metrics.model_type + " + " + (m.metrics.calibration || "\u2014")],
-        ["ROC-AUC (forecast-safe)", fmtMetric(m.metrics.roc_auc, 4)],
-        ["Precision@20/50/100/1000", `${fmtMetric(m.metrics.precision_at_20, null)} / ${fmtMetric(m.metrics.precision_at_50, null)} / ${fmtMetric(m.metrics.precision_at_100, null)} / ${fmtMetric(m.metrics.precision_at_1000, null)}`],
-        ["Baseline P@20 (volume)", fmtMetric(m.metrics.baseline_volume_precision_at_20, null)],
-        ["Lift vs volume @100", fmtMetric(m.metrics.lift_vs_volume_at_100, null)],
-        ["Lift vs proximity @100", fmtMetric(m.metrics.lift_vs_proximity_at_100, null)],
-        ["Lead time (median)", `${fmtMetric(m.metrics.lead_time_median_hours, null)} h`],
-        ["Threshold (\u22650.7) precision", fmtMetric(m.metrics.precision_at_threshold_0p7, 2)],
-      ].map(([k, v]) => `<div class="model-metric-row"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("") +
-        `<p class="ev-notice" style="margin-top:12px;">Forecast-safe metrics \u2014 leakage-free evaluation on synthetic data. ROC-AUC ${fmtMetric(m.metrics.roc_auc, 4)}. Full detail: LIMITATIONS.md</p>`;
-    }
-  } catch { document.getElementById("model-metrics").innerHTML = `<div class="empty-state"><h3>Train model to see metrics</h3></div>`; }
-}
-
-/* ==================== DRIFT ==================== */
-async function renderDrift() {
-  const panel = document.getElementById("drift-panel");
-  const badge = document.getElementById("drift-badge");
-  if (!panel) return;
-  try {
-    const d = await api("/drift/status");
-    if (!d || d.status === "PENDING_REFERENCE" || !d.summary) {
-      if (badge) badge.innerHTML = `<span class="drift-status drift-pending"><span class="dot"></span>Pending</span>`;
-      panel.innerHTML = `<p class="muted">${esc(d && d.note ? d.note : "No reference distribution captured.")}</p>`;
-      return;
-    }
-    const verb = { green: "No material feature drift", yellow: "Moderate drift \u2014 monitor closely", red: "Retrain recommended" }[d.status] || d.summary.verdict;
-    const cls = { green: "drift-green", yellow: "drift-yellow", red: "drift-red" }[d.status] || "drift-pending";
-    if (badge) badge.innerHTML = `<span class="drift-status ${cls}"><span class="dot"></span>${esc(d.status)}</span>`;
-    const flagEls = Object.entries(d.flagged || {}).map(([f, v]) => `<span class="drift-feature flag" title="PSI ${v}">${esc(f)} \u00b7 ${v}</span>`).join("");
-    const warnEls = Object.entries(d.warned || {}).map(([f, v]) => `<span class="drift-feature warn" title="PSI ${v}">${esc(f)} \u00b7 ${v}</span>`).join("");
-    panel.innerHTML = `
-      <p class="muted">${esc(verb)}</p>
-      <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">Features monitored: <b>${d.n_features}</b> \u00b7 flagged &gt; ${d.threshold}: <b>${d.n_flagged}</b> \u00b7 max PSI <b>${d.max_psi}</b></div>
-      ${(flagEls || warnEls) ? `<div class="drift-features">${flagEls}${warnEls}</div>` : `<p class="muted">All feature distributions within healthy bands.</p>`}`;
-  } catch (err) {
-    panel.innerHTML = `<div class="error-state"><h3>Drift unavailable</h3><p>${esc(err.message)}</p></div>`;
-  }
-}
-
-/* ==================== MULE NETWORK ==================== */
-const MULE_TYPE = { account: { color: "#f472b6", label: "Account" }, complaint: { color: "#34d399", label: "Victim" }, atm: { color: "#60a5fa", label: "ATM" }, phone: { color: "#fb923c", label: "Phone" } };
-
-async function renderMuleNetwork() {
-  const wrap = document.getElementById("mule-network-wrap");
-  if (!wrap) return;
-  try {
-    const g = await api("/graph/mule-network?depth=2&include_phone=true");
-    wrap.innerHTML = "";
-    const st = g.stats || {};
-    const statsEl = document.createElement("div");
-    statsEl.className = "mule-stats";
-    statsEl.innerHTML = [["Account", st.accounts], ["Victim", st.complaints], ["Phone", st.phones], ["ATM", st.atms], ["Edges", st.edges]]
-      .map(([k, v]) => `<span class="pill">${k}: ${v ?? 0}</span>`).join("");
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "mule-svg"); svg.setAttribute("viewBox", "0 0 900 440");
-    const nodes = g.nodes || []; const edges = g.edges || [];
-    if (!nodes.length) { wrap.appendChild(statsEl); wrap.appendChild(document.createTextNode("No nodes in scope.")); return; }
-    const byType = (t) => nodes.filter((n) => n.type === t);
-    const atmN = byType("atm"), victimN = byType("complaint"), phoneN = byType("phone"), accN = byType("account");
-    const pos = {};
-    function colX(col) { return 70 + col * 190; }
-    function colY(i, n, span) { return 40 + (span > 1 ? (i + 1) * (360 / (span + 1)) : 220); }
-    victimN.forEach((n, i) => { pos[n.id] = [colX(0), colY(i, n, Math.max(1, victimN.length))]; });
-    accN.forEach((n, i) => { pos[n.id] = [colX(1), colY(i, n, Math.max(1, accN.length))]; });
-    phoneN.forEach((n, i) => { pos[n.id] = [colX(2), colY(i, n, Math.max(1, phoneN.length))]; });
-    atmN.forEach((n, i) => { pos[n.id] = [colX(3), colY(i, n, Math.max(1, atmN.length))]; });
-    edges.forEach((e) => {
-      const f = pos[e.from], t = pos[e.to]; if (!f || !t) return;
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", f[0]); line.setAttribute("y1", f[1]); line.setAttribute("x2", t[0]); line.setAttribute("y2", t[1]);
-      line.setAttribute("stroke", "rgba(120,130,150,.30)"); line.setAttribute("stroke-width", "1");
-      svg.appendChild(line);
-    });
-    nodes.forEach((n) => {
-      const p = pos[n.id]; if (!p) return;
-      const meta = MULE_TYPE[n.type] || { color: "#94a3b8", label: n.type };
-      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]);
-      c.setAttribute("r", Math.max(5, Math.min(16, (n.size || 8))));
-      c.setAttribute("fill", n.type === "account" && n.is_mule ? "#ef4444" : meta.color);
-      c.setAttribute("stroke", "#0b0d10"); c.setAttribute("stroke-width", "1.2");
-      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-      title.textContent = `${meta.label} ${n.id}${n.type === "account" ? (n.is_mule ? " (FLAGGED)" : "") : ""}`;
-      c.appendChild(title); svg.appendChild(c);
-    });
-    wrap.appendChild(statsEl); wrap.appendChild(svg);
-    const legend = document.createElement("div"); legend.className = "mule-legend";
-    legend.innerHTML = Object.entries(MULE_TYPE).map(([t, m]) => `<span><i style="background:${t === "account" ? "#f472b6" : m.color}"></i>${m.label}</span>`).join("") + `<span><i style="background:#ef4444"></i>Flagged mule</span>`;
-    const comps = Object.entries(g.cluster_risk || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    if (comps.length) {
-      const maxC = Math.max(1, ...comps.map(([, v]) => v));
-      const compEl = document.createElement("div"); compEl.className = "mule-comps";
-      compEl.innerHTML = comps.map(([cid, risk]) => {
-        const flags = (g.flagged_mules_by_component || {})[cid] || 0;
-        return `<div class="mule-comp${flags > 0 ? " mule-hot" : ""}"><b>Component ${cid}</b><div class="bar" style="width:${(risk / maxC) * 100}%"></div><span class="muted">risk ${risk}${flags ? ` \u00b7 ${flags} flagged` : ""}</span></div>`;
-      }).join("");
-      wrap.appendChild(compEl);
-    }
-    wrap.appendChild(legend);
-  } catch (err) { wrap.innerHTML = `<div class="error-state"><h3>Mule Network Unavailable</h3><p>${esc(err.message)}</p></div>`; }
-}
-
-/* ==================== MULE GRAPH (MONEY TRAIL) ==================== */
-async function renderMuleGraph() {
-  const panel = document.getElementById("mule-graph-table");
-  const detail = document.getElementById("mule-graph-detail");
-  if (!panel) return;
-  try {
-    const res = await api("/mule-graph/terminal-nodes?k=50");
-    const nodes = res.nodes || [];
-    if (!nodes.length) { panel.querySelector("tbody").innerHTML = `<tr><td colspan="7" class="muted">No terminal nodes in scope.</td></tr>`; return; }
-    panel.querySelector("tbody").innerHTML = nodes.map((n, i) =>
-      `<tr data-token="${esc(n.account_token)}"><td>${i + 1}</td>
-      <td class="mono" title="${esc(n.account_token)}">${maskedAccount(n.account_token)}</td>
-      <td>${riskPill(n.terminal_risk)}</td><td>\u2014</td><td>\u2014</td><td>\u2014</td>
-      <td><button class="btn btn-sm" data-trail="${esc(n.account_token)}">Trail</button></td></tr>`
-    ).join("");
-    panel.querySelectorAll("button[data-trail]").forEach((b) =>
-      b.addEventListener("click", async (e) => {
-        const token = e.currentTarget.dataset.trail;
-        detail.innerHTML = `<p class="muted">Loading trail for ${maskedAccount(token)}...</p>`;
-        try {
-          const trail = await api(`/mule-graph/trail/${token}`);
-          detail.innerHTML = `<div class="ev-block"><h3>Money Trail for ${esc(maskedAccount(trail.account_token))}</h3>
-            <p class="ev-meta">Terminal Risk: <b>${(trail.terminal_risk * 100).toFixed(1)}%</b> \u00b7 In-Degree: ${trail.in_degree} \u00b7 Out-Degree: ${trail.out_degree} \u00b7 Inflow: \u20B9${trail.inflow_inr.toLocaleString()} \u00b7 Chain Depth: ${trail.chain_depth}</p>
-            <h4>Layering Chains</h4><p class="mono">${(trail.chains || []).map(c => c.join(" \u2192 ")).join("<br/>") || "\u2014"}</p>
-            <h4>Edges</h4><p class="mono">${(trail.edges || []).slice(0, 20).map(e => `${esc(e.source)} \u2192 ${esc(e.target)} : \u20B9${e.amount.toLocaleString()}`).join("<br/>") || "\u2014"}</p></div>`;
-        } catch (err) { detail.innerHTML = `<div class="error-state"><h3>Trail Load Failed</h3><p>${esc(err.message)}</p></div>`; }
-      })
-    );
-    detail.innerHTML = `<p class="muted">Select an account to view its money trail.</p>`;
-  } catch (err) { panel.querySelector("tbody").innerHTML = `<tr><td colspan="7" class="muted err">Failed to load: ${esc(err.message)}</td></tr>`; }
-}
-
-/* ==================== LEDGER ==================== */
-async function ledgerStatus() {
-  try {
-    const v = await api("/ledger/verify");
-    const badge = document.getElementById("ledger-badge");
-    if (!v.intact && !state.ledgerDemoOptedIn) {
-      try { await api("/ledger/restore", { method: "POST" }); const vv = await api("/ledger/verify"); badge.innerHTML = `<span class="pill pill-ok">Verified \u2713 \u00b7 ${vv.records} blocks</span>`; }
-      catch { badge.innerHTML = `<span class="pill">Integrity check unavailable</span>`; }
-    } else if (v.intact) {
-      badge.innerHTML = `<span class="pill pill-ok">Verified \u2713 \u00b7 ${v.records} blocks</span>`;
-    } else {
-      badge.innerHTML = `<span class="pill pill-danger">TAMPERED at block ${v.broken_at_index}</span>`;
-    }
-    const lst = await api("/ledger?limit=20&offset=0");
-    const records = lst.records || lst; // support both paginated and legacy format
-    const preview = document.getElementById("ledger-preview");
-    if (preview && records.length) {
-      const last = records[records.length - 1];
-      preview.textContent = `Last block: #${last.index} ${last.event_type} by ${last.actor} @ ${fmtTime(last.created_at)}`;
-    }
-  } catch { const badge = document.getElementById("ledger-badge"); if (badge) badge.innerHTML = `<span class="pill">Sign in to verify</span>`; }
-}
-
-/* ==================== INBOX ==================== */
-function parseInboxPayload(payload) {
-  let obj = payload;
-  if (typeof obj === "string") { try { obj = JSON.parse(obj); } catch { /* keep string */ } }
-  if (obj === null || typeof obj !== "object") return [];
-  const pick = (keys) => { for (const k of keys) { const v = obj[k]; if (v !== undefined && v !== null) return v; } return null; };
-  const rows = [];
-  const push = (k, v) => { if (v !== undefined && v !== null && v !== "") rows.push([k, v]); };
-  push("ATM", pick(["atm_id", "atm", "target_atm"])); push("Bank", pick(["bank", "bank_name", "home_bank"]));
-  push("City", pick(["city", "victim_city", "area"])); push("Role", pick(["role", "recipient_role"]));
-  push("Action", pick(["action", "suggested_action", "recommended_action"])); push("Risk", pick(["risk", "risk_score"]));
-  push("Amount", pick(["amount", "amount_inr", "amount_at_risk"])); push("Tier", pick(["tier", "priority_tier"]));
-  return rows;
-}
-
-function inboxBody(m) {
-  const rows = parseInboxPayload(m.payload);
-  const raw = esc(JSON.stringify(m.payload)).slice(0, 220);
-  const body = rows.length
-    ? rows.map(([k, v]) => `<div class="inbox-kv"><span class="muted">${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("")
-    : `<span class="mono">${raw}</span>`;
-  return `${body}<button class="btn btn-sm btn-ghost inbox-rawbtn" type="button">${rows.length ? "Raw" : "details"}</button><div class="inbox-raw mono hidden">${raw}</div>`;
-}
-
-async function renderInbox() {
-  try {
-    state.inbox = await api("/mock-i4c-inbox");
-    const el = document.getElementById("inbox-panel");
-    if (el) el.innerHTML = state.inbox.slice(0, 15).map(
-      (m) => `<div class="inbox-msg"><span class="pill">${esc(m.channel)}</span> <span class="muted">${fmtTime(m.received_at)}</span><br/>${inboxBody(m)}<span class="muted">\uD83D\uDCE9 ${esc(m.direction === "outgoing" ? "dispatch sent" : (m.direction || "received"))}</span></div>`
-    ).join("") || `<div class="empty-state"><p>No intel received yet \u2014 run an alert cycle.</p></div>`;
-    document.querySelectorAll("#inbox-panel .inbox-rawbtn").forEach((b) =>
-      b.addEventListener("click", (e) => { const raw = e.currentTarget.closest(".inbox-msg").querySelector(".inbox-raw"); if (raw) raw.classList.toggle("hidden"); })
-    );
-  } catch { const el = document.getElementById("inbox-panel"); if (el) el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">&#x1F4E8;</div><p>No new intelligence items.</p></div>`; }
-}
-
-/* ==================== HANDOFFS ==================== */
-async function renderHandoffs() {
-  const panel = document.getElementById("handoff-panel");
-  const countEl = document.getElementById("handoff-count");
-  if (!panel) return;
-  try {
-    const res = await api("/alerts/handoffs/list");
-    const hs = res.handoffs || [];
-    if (countEl) countEl.textContent = res.total ? `${hs.filter(h => h.status === "queued").length} queued / ${res.total}` : "0";
-    panel.innerHTML = hs.slice(0, 20).map(
-      (h) => `<div class="inbox-msg">
-        <span class="pill rt rt-xstate">${esc(h.origin_state)} \u2192 ${esc(h.receiving_state)}</span>
-        <span class="pill ${h.status === "queued" ? "pill-warn" : "pill-ok"}">${esc(h.status)}</span>
-        <span class="muted">${fmtTime(h.created_at)}</span><br/>
-        <span class="mono">ATM ${esc(h.atm_id)} \u00b7 alert ${esc(h.alert_id)}</span>
-        ${h.status === "queued" ? `<button class="btn btn-sm btn-ok" data-hack="${esc(h.handoff_id)}">Ack</button>
-          <button class="btn btn-sm" data-hcomplete="${esc(h.handoff_id)}">Complete</button>` : ""}
-      </div>`
-    ).join("") || `<div class="empty-state"><div class="empty-state-icon">&#x1F310;</div><p>No pending inter-agency handoffs.</p></div>`;
-    panel.querySelectorAll("button[data-hack]").forEach((b) => b.addEventListener("click", () => handoffAck(b.dataset.hack, "ack")));
-    panel.querySelectorAll("button[data-hcomplete]").forEach((b) => b.addEventListener("click", () => handoffAck(b.dataset.hcomplete, "complete")));
-  } catch { panel.innerHTML = `<div class="empty-state"><p>No pending inter-agency handoffs.</p></div>`; if (countEl) countEl.textContent = ""; }
-}
-
-async function handoffAck(handoffId, status) {
-  try {
-    await api(`/alerts/handoffs/${handoffId}/ack`, { method: "POST", body: JSON.stringify({ status }) });
-    await renderHandoffs();
-  } catch (e) { toast("Handoff update failed: " + e.message, "error"); }
-}
-
-/* ==================== EVIDENCE MODAL ==================== */
-async function openEvidence(alertId) {
-  try {
-    const sim = state.simulatedOptedIn;
-    let ev = sim ? state.simulatedEvidence[alertId] : null;
-    if (!ev && sim) { toast("Evidence not available in simulated scenario.", "warning"); return; }
-    if (!ev) ev = await api(`/alerts/${alertId}/evidence`);
-    const isSimulated = sim; const j = ev.jurisdiction || {};
-    const contribs = (ev.feature_contributions || []).map(
-      (f) => `<div class="feat-row"><span><b>${esc(f.feature)}</b> <span class="muted">(importance ${f.global_importance})</span></span><span>value ${f.value} \u2192 <b>${esc(f.percentile)}</b></span></div>`
-    ).join("");
-    const freeze = (ev.recommended_freeze_accounts || []).map(
-      (a) => `<span class="pill pill-danger">${esc(maskedAccount(a.account_token))} (${a.recent_withdrawals} txns/24h)</span>`
-    ).join(" ") || `<span class="muted">No complaint-linked accounts active.</span>`;
-    const unc = ev.uncertainty || {};
-    const uncRows = [
-      ["Confidence", unc.confidence || "n/a"], ["Evidence strength", unc.evidence_strength || "n/a"],
-      ["Data freshness", unc.data_freshness_hours !== undefined ? `${unc.data_freshness_hours}h` : "n/a"],
-      ["Model version", unc.model_version || "n/a"], ["Prediction horizon", unc.prediction_horizon_hours ? `${unc.prediction_horizon_hours}h` : "n/a"],
-    ].map(([k, v]) => `<div class="feat-row"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("");
-    const graph = (ev.evidence_graph || []).map(
-      (g, idx) => `<div class="ev-graph-row">
-        <span class="ev-graph-idx">${idx + 1}</span>
-        <span><b>${esc(g.signal)}</b><br/><span class="muted">${esc(g.value)}</span><br/>
-          <span class="muted">direction: ${esc(g.direction)} \u00b7 source: ${esc(g.source_type)} \u00b7 ${esc(g.observed_or_synthetic)}</span></span>
-        <span class="ev-graph-arrow">\u2193</span></div>`
-    ).join("");
-    document.getElementById("ev-alert-id").textContent = ev.alert_id;
-    document.getElementById("ev-body").innerHTML = `
-      ${isSimulated ? `<div class="ev-block" style="border-color:var(--danger)"><h3>SCRIPTED SIMULATED SCENARIO</h3><p class="ev-meta" style="color:var(--warn)">Evidence is scripted for demonstration, NOT live model output.</p></div>` : ""}
-      <div class="ev-block"><h3>Recency &amp; Coverage</h3>
-        <p class="ev-meta">Data through: <b>${fmtTime(ev.data_through)}</b> \u00b7 ATMs scored: ${ev.atms_scored}/${ev.atms_total} (${ev.scoring_coverage_pct}%)</p>
-        <p class="ev-rule">${esc(ev.suggested_action)} <span class="muted">(rule: ${esc(ev.fired_rule)})</span></p>
-        <p class="ev-meta">Jurisdiction: ${esc(j.state || "\u2014")}, ${esc(j.district || "\u2014")} (fictional) \u00b7 ${esc(j.police_station_area || "\u2014")}</p>
-        <p class="ev-meta">Recipients: ${esc((ev.recommended_recipients || []).join(" \u00b7 "))}</p></div>
-      <div class="ev-block"><h3>Complaint Activity</h3><p>${esc(ev.complaint_activity)}</p></div>
-      <div class="ev-block"><h3>Withdrawal Activity</h3><p>${esc(ev.withdrawal_activity)}</p></div>
-      <div class="ev-block"><h3>Context Signal</h3><p>${esc(ev.context_signal)}</p></div>
-      <div class="ev-block"><h3>CFCFRMS Recovery Intel</h3><p>${freeze}</p><p class="ev-notice">Fund-blocking path (mock intel, hackathon prototype).</p></div>
-      <div class="ev-block"><h3>Recommended Actions</h3>
-        ${(ev.recommended_actions || []).map((a) => `<p class="ev-meta">${a.step}. ${esc(a.action)} \u2014 <b>${esc(a.owner)}</b></p>`).join("") || `<p class="ev-meta">No graded steps.</p>`}
-        <p class="ev-notice">Advisory only \u2014 audited human decision required.</p></div>
-      <div class="ev-block"><h3>Evidence Metadata</h3>${uncRows}
-        ${unc.insufficient_evidence ? `<p class="ev-notice" style="color:var(--warn)">INSUFFICIENT EVIDENCE \u2014 HOLD ACTION.</p>` : ""}</div>
-      <div class="ev-block"><h3>Evidence Graph</h3>${graph}</div>
-      <div class="ev-block"><h3>Feature Contributions</h3>${contribs}<p class="ev-notice">${esc(ev.explainability_note)}</p></div>
-      <div class="ev-block"><h3>SHAP (Per-Instance)</h3>
-        ${(ev.per_instance_shap || []).map((f) => `<div class="feat-row"><span><b>${esc(f.feature)}</b></span><span>value ${f.value} \u2192 SHAP <b>${f.shap > 0 ? "+" : ""}${f.shap}</b></span></div>`).join("") || `<p class="muted">Unavailable.</p>`}</div>
-      <div class="ev-block"><h3>Notifications (Simulated)</h3>
-        <button class="btn btn-sm btn-accent" id="ev-report-btn">Generate Intelligence Report (PDF)</button></div>`;
-    document.getElementById("evidence-modal").classList.remove("hidden");
-    document.getElementById("ev-report-btn").addEventListener("click", () => hotspotReport(alertId));
-  } catch (err) { toast("Evidence failed: " + err.message, "error"); }
-}
-
-async function hotspotReport(alertId) {
-  try {
-    const res = await fetch(`/reports/hotspot/${alertId}`, { method: "POST", headers: { Authorization: `Bearer ${getToken()}` } });
-    if (!res.ok) throw new Error(res.status);
-    const j = await res.json();
-    toast(`Report ${j.report_id} generated`, "success");
-  } catch (err) { toast("Report failed: " + err.message, "error"); }
-}
-
-/* ==================== MOBILE ==================== */
-const MOBILE_DEMO_FIX = { lat: 22.66, lon: 74.55 };
-let MOBILE_FIX = { ...MOBILE_DEMO_FIX };
-
-async function renderMobile(lat, lon) {
-  const el = document.getElementById("mobile-nearby");
-  if (!el) return;
-  try {
-    const res = await api(`/mobile/nearby?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&max_km=50&limit=5`);
-    const rows = res.atms || [];
-    if (!rows.length) { el.innerHTML = `<p class="muted">No ATMs within ${res.max_km} km.</p>`; return; }
-    el.innerHTML = `<p class="muted" style="margin-bottom:8px;">Ranked by <code>0.6\u00b7risk + 0.4\u00b7(1/(1+km))</code> \u2014 ${res.found} found.</p>
-      <div class="table-container"><table class="data-table">
-        <thead><tr><th>#</th><th>ATM</th><th>Bank / Branch</th><th>City</th><th>Dist</th><th>Risk</th><th>Score</th></tr></thead>
-        <tbody>${rows.map((r, i) => `<tr>
-          <td>${i + 1}</td><td><b>${esc(r.atm_id)}</b></td>
-          <td>${esc(r.branch_name)}<br/><span class="muted">${esc(r.bank_name)}</span></td>
-          <td>${esc(r.city)}</td><td>${r.distance_km.toFixed(1)} km</td>
-          <td>${riskPill(r.risk_score)}</td><td class="mob-score">${r.mobile_score.toFixed(3)}</td></tr>`).join("")}</tbody>
-      </table></div>`;
-  } catch (err) { el.innerHTML = `<div class="error-state"><h3>Mobile Lookup Unavailable</h3><p>${esc(err.message)}</p></div>`; }
-}
-
-function setMobileFromGeolocation() {
-  const fix = () => { MOBILE_FIX = { ...MOBILE_DEMO_FIX }; renderMobile(MOBILE_FIX.lat, MOBILE_FIX.lon); };
-  if (!navigator.geolocation) { fix(); return; }
-  navigator.geolocation.getCurrentPosition(
-    (p) => { MOBILE_FIX = { lat: p.coords.latitude, lon: p.coords.longitude }; renderMobile(MOBILE_FIX.lat, MOBILE_FIX.lon); },
-    () => { toast("Location permission denied \u2014 using demo coords.", "warning"); fix(); },
-    { timeout: 8000 }
-  );
-}
-
-/* ==================== OUTCOMES ==================== */
-async function renderOutcomes() {
-  try {
-    const s = await api("/alerts/outcomes/summary");
-    const el = document.getElementById("outcome-panel");
-    const badge = document.getElementById("outcome-badge");
-    if (badge) badge.textContent = s.evaluated ? `${s.evaluated} evaluated` : "";
-    if (!s.evaluated) {
-      if (el) el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">&#x1F4CA;</div><h3>No Outcomes Yet</h3><p>Alerts must age past the 24h horizon. Click "Evaluate pending" after a cycle.</p></div>`;
-      return;
-    }
-    if (el) el.innerHTML = [
-      ["Evaluated", s.evaluated], ["True positives", s.true_positives], ["False positives", s.false_positives],
-      ["False negatives", s.false_negatives], ["Mean |error|", s.mean_abs_error], ["Outcome ECE", s.outcome_ece_10_bins],
-    ].map(([k, v]) => `<div class="model-metric-row"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("") +
-      `<p class="ev-notice">${esc(s.note)}</p>`;
-  } catch { /* panel absent */ }
-}
-
-/* ==================== ACTIONS ==================== */
+/* ==================== ALERT CYCLE ==================== */
 async function runAlertCycle() {
-  if (state.simulatedOptedIn) { toast("Disabled in SIMULATED mode.", "warning"); return; }
+  const btn = document.getElementById("btn-cycle");
+  if (btn) { btn.disabled = true; btn.textContent = "Running..."; }
   try {
-    const btn = document.getElementById("btn-cycle");
-    if (btn) { btn.disabled = true; btn.textContent = "\u23F3 Running..."; }
     toast("Running alert cycle...", "info");
     const r = await api("/alerts/run-now", { method: "POST" });
-    const s = r.summary;
-    toast(`Alert cycle: ${s.created} new \u00b7 ${s.flagged} flagged \u00b7 ${s.skipped} deduped`, "success");
-    // Delta refresh: only alerts and overview, not full loadAll()
+    const s = r.summary || {};
+    toast(`Alert cycle: ${s.created || 0} new · ${s.flagged || 0} flagged · ${s.skipped || 0} deduped`, "success");
     const alerts = await api("/alerts?limit=200").catch(() => state.alerts);
     state.alerts = alerts;
-    renderAlertTable("alert-table");
+    renderAlertTable("alert-table", (state.alerts || []).slice(0, 10));
     renderOverviewStats();
-    if (state.currentView === "alerts") renderAlertsFullTable();
-  } catch (err) { toast("Alert cycle failed: " + err.message, "error"); }
-  finally { const btn = document.getElementById("btn-cycle"); if (btn) { btn.disabled = false; btn.textContent = "\u26A1 Run Cycle"; } }
+    updateAlertBadge();
+  } catch (e) { toast("Alert cycle failed: " + e.message, "error"); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = icon("play") + " Run Cycle"; } }
 }
 
 /* ==================== WEBSOCKET ==================== */
@@ -1219,19 +1369,15 @@ function connectWS() {
         const msg = JSON.parse(e.data);
         if (state.simulatedOptedIn) return;
         if (msg.event === "alert") {
-          toast(`LIVE: ${msg.payload.atm_id} flagged ${(msg.payload.risk_score * 100).toFixed(0)}%`, "warning");
-          // Delta update: add new alert to state, re-render only affected components
+          toast(`LIVE: ${msg.payload.atm_id} flagged ${riskPct(msg.payload.risk_score)}`, "warning");
           const existing = state.alerts.findIndex(a => a.alert_id === msg.payload.alert_id);
           if (existing >= 0) { state.alerts[existing] = msg.payload; } else { state.alerts.unshift(msg.payload); }
-          if (state.currentView === "overview") renderAlertTable("alert-table");
-          if (state.currentView === "alerts") renderAlertsFullTable();
+          if (state.currentView === "overview") renderAlertTable("alert-table", (state.alerts || []).slice(0, 10));
+          if (state.currentView === "alerts") renderAlertTable("alerts-full-table", state.alerts);
           renderOverviewStats();
-          // Update sidebar badge
-          const badge = document.getElementById("sidebar-alert-badge");
-          if (badge) { badge.textContent = state.alerts.filter(a => a.status === "new").length; badge.classList.remove("hidden"); }
+          updateAlertBadge();
         } else if (msg.event === "recovery" || msg.event === "recovery_status") {
-          // Delta update: only refresh recovery data
-          renderRecoveryView();
+          if (state.currentView === "recovery") renderRecoveryView();
         }
       } catch { /* ignore */ }
     };
@@ -1263,74 +1409,114 @@ function loginStatus(msg, kind) {
 async function doLogin() {
   const userEl = document.getElementById("login-username");
   const passEl = document.getElementById("login-password");
-  if (!userEl || !passEl) { location.reload(); return; }
-  const username = userEl.value.trim();
-  const password = passEl.value;
-  if (!username || !password) { loginStatus("Enter username and password.", "err"); return; }
-  const btn = document.getElementById("btn-login");
-  btn.disabled = true; btn.textContent = "Signing in...";
-  loginStatus(`Contacting server as ${username}...`, "");
+  const username = userEl ? userEl.value.trim() : "";
+  const password = passEl ? passEl.value : "";
+  if (!username || !password) { loginStatus("Enter both username and password.", "error"); return; }
+  loginStatus("Authenticating...", "");
   try {
-    const res = await fetch("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
-    if (!res.ok) { loginStatus("Invalid credentials.", "err"); return; }
-    const j = await res.json();
-    localStorage.setItem(TOKEN_KEY, j.access_token);
-    state.user = j.user;
-    state.simulatedOptedIn = false; state.simulatedEvidence = {};
-    setSimulationUI(false);
+    const data = await api("/auth/login", { method: "POST", body: { username, password } });
+    localStorage.setItem(TOKEN_KEY, data.access_token);
+    state.user = data.user;
     hideLogin();
-    loginStatus(`Signed in as ${j.user.display_name}...`, "ok");
-    updateSidebarForRole(state.user.role);
-    connectWS(); loadAll();
-  } catch (err) {
-    loginStatus("Sign-in failed: " + err.message, "err");
-  } finally { btn.disabled = false; btn.textContent = "Sign In"; }
+    connectWS();
+    await loadAll();
+    await loadCityCoords();
+    await loadThresholdCurve();
+    loginStatus("Ready — select a demo role to sign in.");
+  } catch (e) {
+    loginStatus("Authentication failed. Check credentials.", "error");
+  }
 }
 
-async function autofillDemo(username, password) {
+function autofillDemo(u, p) {
   const userEl = document.getElementById("login-username");
   const passEl = document.getElementById("login-password");
-  if (!userEl || !passEl) { location.reload(); return; }
-  userEl.value = username; passEl.value = password;
-  loginStatus(`Autofilled ${username} \u2014 signing in...`, "");
-  await doLogin();
+  if (userEl) userEl.value = u;
+  if (passEl) passEl.value = p;
+  doLogin();
 }
-window.autofillDemo = autofillDemo;
 
-/* ==================== BINDINGS ==================== */
+/* ==================== I18N ==================== */
+const i18n = { locales: [], strings: {}, lang: "en" };
+
+async function initI18n() {
+  try {
+    const data = await api("/i18n/locales");
+    i18n.locales = data.locales || [];
+    const sel = document.getElementById("i18n-select");
+    if (sel) {
+      sel.innerHTML = i18n.locales.map(l => `<option value="${esc(l.code)}">${esc(l.name)}</option>`).join("");
+      const saved = localStorage.getItem("cashguard_lang") || data.default || "en";
+      sel.value = saved;
+      i18n.lang = saved;
+      await setI18nLang(saved);
+    }
+  } catch { /* ignore */ }
+}
+
+async function setI18nLang(lang) {
+  try {
+    const data = await api(`/i18n/strings?lang=${encodeURIComponent(lang)}`);
+    i18n.strings = data.strings || {};
+    i18n.lang = lang;
+    localStorage.setItem("cashguard_lang", lang);
+    applyI18n();
+  } catch { /* ignore */ }
+}
+
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.dataset.i18n;
+    if (i18n.strings[key]) el.textContent = i18n.strings[key];
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    const key = el.dataset.i18nTitle;
+    if (i18n.strings[key]) el.title = i18n.strings[key];
+  });
+}
+
+/* ==================== SIDEBAR TOGGLE ==================== */
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar) sidebar.classList.toggle("collapsed", state.sidebarCollapsed);
+  setTimeout(() => {
+    if (window._mainMap) window._mainMap.invalidateSize();
+    if (window._riskMap) window._riskMap.invalidateSize();
+  }, 300);
+}
+
+/* ==================== EVENT BINDINGS ==================== */
 function bindEvents() {
   const wire = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
+
   wire("btn-login", doLogin);
   wire("btn-refresh", loadAll);
   wire("btn-cycle", runAlertCycle);
   wire("btn-sim-load", loadSimulatedScenario);
   wire("btn-sim-exit", exitSimulated);
   wire("btn-sim-banner-exit", exitSimulated);
-  wire("btn-switch", () => { localStorage.removeItem(TOKEN_KEY); state.simulatedOptedIn = false; setSimulationUI(false); showLogin(); });
-  wire("ev-close", () => document.getElementById("evidence-modal").classList.add("hidden"));
-  wire("btn-replay", () => { const val = document.getElementById("asof-date").value; state.asOf = val ? new Date(val + "T12:00:00").toISOString() : null; loadAll(); });
-  wire("btn-live", () => { state.asOf = null; document.getElementById("asof-date").value = ""; loadAll(); });
-  wire("btn-ledger-verify", ledgerStatus);
-  wire("btn-ledger-tamper", async () => {
-    try { const r = await api("/ledger/tamper-demo", { method: "POST" }); state.ledgerDemoOptedIn = true; toast(r.note || "Tamper demo running", "warning"); ledgerStatus(); } catch (err) { toast("Tamper demo: " + err.message, "error"); }
-  });
-  wire("btn-ledger-restore", async () => {
-    try { const r = await api("/ledger/restore", { method: "POST" }); state.ledgerDemoOptedIn = false; toast("Ledger restored", "success"); ledgerStatus(); } catch (err) { toast("Restore failed: " + err.message, "error"); }
-  });
-  wire("btn-sit-report", async () => {
-    try {
-      const res = await fetch("/reports/situational", { method: "POST", headers: { Authorization: `Bearer ${getToken()}` } });
-      if (!res.ok) throw new Error(res.status);
-      const j = await res.json();
-      const dl = await fetch(`/reports/${j.report_id}/download`, { headers: { Authorization: `Bearer ${getToken()}` } });
-      const blob = await dl.blob(); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${j.report_id}.pdf`; a.click();
-      toast("Situational report generated", "success");
-    } catch (err) { toast("Report failed: " + err.message, "error"); }
-  });
+  wire("btn-ledger-verify", ledgerVerify);
+  wire("btn-ledger-tamper", ledgerTamper);
+  wire("btn-ledger-restore", ledgerRestore);
+  wire("btn-sit-report", generateSituationalReport);
   wire("btn-evaluate-outcomes", async () => {
-    try { const r = await api("/alerts/outcomes/evaluate", { method: "POST" }); toast(`Outcomes evaluated: ${r.evaluated}`, "success"); renderOutcomes(); } catch (err) { toast("Evaluation failed: " + err.message, "error"); }
+    try { await api("/alerts/outcomes/evaluate", { method: "POST" }); toast("Outcomes evaluated", "success"); renderRecoveryView(); }
+    catch (e) { toast("Evaluation failed", "error"); }
   });
-  wire("btn-mobile-locate", setMobileFromGeolocation);
+  wire("btn-mobile-locate", () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => renderMobile(pos.coords.latitude, pos.coords.longitude),
+        () => renderMobile(22.66, 74.55)
+      );
+    } else { renderMobile(22.66, 74.55); }
+  });
+  wire("btn-switch", () => { localStorage.removeItem(TOKEN_KEY); state.user = null; showLogin(); });
+  wire("ev-close", () => { document.getElementById("evidence-modal")?.classList.add("hidden"); });
+  wire("btn-replay", () => { state.asOf = document.getElementById("asof-date")?.value || null; loadAll(); });
+  wire("btn-live", () => { state.asOf = null; loadAll(); });
+  wire("sidebar-toggle", toggleSidebar);
 
   const loginPass = document.getElementById("login-password");
   if (loginPass) loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
@@ -1338,66 +1524,121 @@ function bindEvents() {
   const evModal = document.getElementById("evidence-modal");
   if (evModal) evModal.addEventListener("click", (e) => { if (e.target.id === "evidence-modal") evModal.classList.add("hidden"); });
 
-  // Sidebar navigation
+  const drawerOverlay = document.getElementById("drawer-overlay");
+  if (drawerOverlay) drawerOverlay.addEventListener("click", (e) => { if (e.target.id === "drawer-overlay") closeDrawer(); });
+
   document.querySelectorAll(".nav-item").forEach(item => {
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
-      const view = item.dataset.view;
-      if (view) switchView(view);
-    });
+    item.addEventListener("click", () => { const v = item.dataset.view; if (v) switchView(v); });
   });
 
-  // Filter bindings with debouncing
   const ddState = document.getElementById("dd-state");
   const ddCity = document.getElementById("dd-city");
   const ddBank = document.getElementById("dd-bank");
-  const debouncedLoadAll = debounce(loadAll, 300);
-  if (ddState) ddState.addEventListener("change", (e) => { state.stateFilter = e.target.value; state.cityFilter = "All"; if (ddCity) ddCity.value = "All"; debouncedLoadAll(); });
-  if (ddCity) ddCity.addEventListener("change", (e) => { state.cityFilter = e.target.value; debouncedLoadAll(); });
-  if (ddBank) ddBank.addEventListener("change", (e) => { state.bankFilter = e.target.value; renderMap(); });
+  const thrSlider = document.getElementById("thr-slider");
+
+  if (ddState) ddState.addEventListener("change", (e) => {
+    state.stateFilter = e.target.value;
+    state.cityFilter = "All";
+    invalidateRiskCache();
+    debounce(loadAll, 300)();
+  });
+  if (ddCity) ddCity.addEventListener("change", (e) => {
+    state.cityFilter = e.target.value;
+    invalidateRiskCache();
+    debounce(loadAll, 300)();
+  });
+  if (ddBank) ddBank.addEventListener("change", (e) => {
+    state.bankFilter = e.target.value;
+    invalidateRiskCache();
+    if (state.currentView === "overview") renderMainMap();
+    if (state.currentView === "risk" && window._riskMap) renderRiskIntelligence();
+  });
+  if (thrSlider) thrSlider.addEventListener("input", applyThresholdCurve);
 
   const tHeat = document.getElementById("toggle-heat");
-  const tFore = document.getElementById("toggle-forecast");
-  if (tHeat) tHeat.addEventListener("change", (e) => { state.showHeat = e.target.checked; renderMap(); });
-  if (tFore) tFore.addEventListener("change", (e) => { state.showForecast = e.target.checked; renderMap(); });
+  const tForecast = document.getElementById("toggle-forecast");
+  if (tHeat) tHeat.addEventListener("change", (e) => { state.showHeat = e.target.checked; if (state.currentView === "overview") renderMainMap(); });
+  if (tForecast) tForecast.addEventListener("change", (e) => { state.showForecast = e.target.checked; if (state.currentView === "overview") renderMainMap(); });
 
-  // Category chips
-  const cats = ["All", ...COMPLAINT_TYPES];
   const chipBox = document.getElementById("category-chips");
   if (chipBox) {
-    chipBox.innerHTML = cats.map((c) => `<span class="chip ${c === state.category ? "active" : ""}" data-cat="${esc(c)}">${esc(c)}</span>`).join("");
-    chipBox.querySelectorAll(".chip").forEach((el) => el.addEventListener("click", () => {
-      state.category = el.dataset.cat;
-      chipBox.querySelectorAll(".chip").forEach((x) => x.classList.toggle("active", x === el));
-      renderMap();
-    }));
+    chipBox.innerHTML = '<button class="chip active" data-cat="All">All</button>' +
+      COMPLAINT_TYPES.map(c => `<button class="chip" data-cat="${esc(c)}">${esc(c.replace(/_/g, " "))}</button>`).join("");
+    chipBox.querySelectorAll(".chip").forEach(el => {
+      el.addEventListener("click", () => {
+        chipBox.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+        el.classList.add("active");
+        state.category = el.dataset.cat;
+        invalidateRiskCache();
+        if (state.currentView === "overview") renderMainMap();
+      });
+    });
   }
+
+  const i18nSel = document.getElementById("i18n-select");
+  if (i18nSel) i18nSel.addEventListener("change", () => setI18nLang(i18nSel.value));
+}
+
+/* ==================== REPORTS (from drawer/evidence) ==================== */
+async function hotspotReport(alertId) {
+  try {
+    toast("Generating report...", "info");
+    const result = await api(`/reports/hotspot/${alertId}`, { method: "POST" });
+    if (result.pdf) { toast("Report generated", "success"); window.open(`/reports/${result.report_id}/download`, "_blank"); }
+  } catch (e) { toast("Report generation failed", "error"); }
+}
+
+async function renderMobile(lat, lon) {
+  const el = document.getElementById("mobile-nearby");
+  if (!el) return;
+  try {
+    const data = await api(`/mobile/nearby?lat=${lat}&lon=${lon}&max_km=50&limit=5`);
+    if (!data.atms || data.atms.length === 0) { el.innerHTML = '<p class="text-muted">No nearby ATMs found.</p>'; return; }
+    el.innerHTML = `<table class="data-table"><thead><tr><th>ATM</th><th>Distance</th><th>Risk</th></tr></thead><tbody>
+      ${data.atms.map(a => `<tr><td class="mono">${esc(a.atm_id)}</td><td>${fmtMetric(a.distance_km, 1)} km</td><td>${riskPill(a.risk_score)}</td></tr>`).join("")}
+    </tbody></table>`;
+  } catch { el.innerHTML = '<p class="text-muted">Nearby ATMs unavailable.</p>'; }
 }
 
 /* ==================== BOOT ==================== */
 window.cashguardLogin = doLogin;
-bindEvents();
-initI18n();
-localStorage.removeItem("cashguard_role");
-window.__cashguardReady = true;
-if (getToken()) { connectWS(); loadAll(); hideLogin(); } else { showLogin(); }
+window.autofillDemo = autofillDemo;
+window.focusAtmFromOverview = focusAtmFromOverview;
+window.focusRiskAtm = focusRiskAtm;
+window.setAlertStatus = setAlertStatus;
+window.escalateAlert = escalateAlert;
+window.dismissAlert = dismissAlert;
+window.handoffAck = handoffAck;
+window.updateRecovery = updateRecovery;
+window.loadMuleTrail = loadMuleTrail;
+window.ledgerVerify = ledgerVerify;
+window.ledgerTamper = ledgerTamper;
+window.ledgerRestore = ledgerRestore;
+window.generateSituationalReport = generateSituationalReport;
+window.hotspotReport = hotspotReport;
+window.closeDrawer = closeDrawer;
+window.drawerAction = drawerAction;
+window.drawerActionEscalate = drawerActionEscalate;
+window.drawerGenerateReport = drawerGenerateReport;
 
-/* ==================== I18N ==================== */
-const i18n = { locales: [], strings: {}, lang: "en" };
-async function initI18n() {
-  const sel = document.getElementById("i18n-select");
-  if (!sel) return;
-  try {
-    const meta = await api("/i18n/locales");
-    i18n.locales = meta.locales || [];
-    sel.innerHTML = i18n.locales.map((l) => `<option value="${esc(l.code)}">${esc(l.native)}</option>`).join("");
-    const saved = localStorage.getItem("cashguard_lang") || "en";
-    if (i18n.locales.some((l) => l.code === saved)) sel.value = saved;
-    sel.addEventListener("change", () => setI18nLang(sel.value));
-    await setI18nLang(sel.value);
-  } catch { /* non-fatal */ }
-}
-async function setI18nLang(lang) {
-  try { const res = await api(`/i18n/strings?lang=${encodeURIComponent(lang)}`); i18n.lang = res.lang; i18n.strings = res.strings || {}; localStorage.setItem("cashguard_lang", i18n.lang); }
-  catch { i18n.lang = "en"; i18n.strings = {}; }
-}
+document.addEventListener("DOMContentLoaded", () => {
+  bindEvents();
+  initI18n();
+  localStorage.removeItem("cashguard_role");
+  window.__cashguardReady = true;
+  const token = getToken();
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      state.user = { username: payload.sub, role: payload.role, scope: payload.scope, display_name: payload.sub };
+    } catch { /* ignore */ }
+    connectWS();
+    loadAll().then(() => {
+      loadCityCoords();
+      loadThresholdCurve();
+    });
+    hideLogin();
+  } else {
+    showLogin();
+  }
+});
