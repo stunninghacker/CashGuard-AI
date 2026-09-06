@@ -3,279 +3,434 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CashGuard AI — Predictive Fraud Withdrawal Intelligence</title>
+  <title>CashGuard AI — Proactive Cybercrime Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=15" />
   <script>
-    /* Stale-cache self-healing: if the dashboard JS failed to load (old cached
-       app.js), show a clear banner instead of a dead Sign-in button. */
     window.__cashguardReady = false;
-    window.addEventListener('error', function (e) {
+    window.addEventListener('error', function(e) {
       var el = document.getElementById('js-error-banner');
       if (!el) { el = document.createElement('div'); el.id = 'js-error-banner'; document.body.prepend(el); }
-      el.textContent = 'Frontend script error detected — press Ctrl+F5 to reload the fresh dashboard.';
-      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:#fff;padding:10px;text-align:center;font:600 13px sans-serif;';
+      el.textContent = 'Frontend script error — press Ctrl+F5 to reload.';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c44040;color:#fff;padding:10px;text-align:center;font:600 13px IBM Plex Sans,sans-serif;';
       e.preventDefault();
     });
   </script>
 </head>
 <body>
-  <!-- Login modal (real JWT auth — Phase 3) -->
-  <div id="login-modal" class="modal">
-    <div class="modal-card">
-      <div class="logo-badge"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></div>
-      <h1>CashGuard <span>AI</span></h1>
-      <p class="sub">Predictive Analytics Framework — Forecast Likely Cash Withdrawal Locations from Cybercrime Complaints</p>
-      <label for="login-username">Username</label>
-      <input id="login-username" type="text" placeholder="e.g. officer.district1" autocomplete="off" />
-      <label for="login-password">Password</label>
-      <input id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){window.cashguardLogin();}" />
-      <button id="btn-login" class="btn primary" onclick="window.cashguardLogin();">Sign in</button>
-      <p id="login-status" class="login-status">Ready — select a demo role below to autofill and sign in (or type a credential).</p>
-      <div class="demo-users">
-        <b>One-click demo sign-in — select a role</b>
-        <span class="du-note">Autofills the credential and signs in immediately.</span>
+  <!-- ==================== LOGIN PAGE ==================== -->
+  <div id="login-page" class="login-page">
+    <div class="login-left">
+      <div class="login-left-content">
+        <div class="login-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+        </div>
+        <h1>CashGuard <span>AI</span></h1>
+        <p class="login-subtitle">Proactive Cybercrime Intelligence</p>
+        <p class="login-tagline">Predictive analytics framework for forecasting likely cash withdrawal locations from cybercrime complaints, enabling actionable intelligence for timely intervention.</p>
+      </div>
+    </div>
+    <div class="login-right">
+      <div class="login-form-header">
+        <h2>Secure Access</h2>
+        <p>I4C &bull; Cybercrime Coordination</p>
+      </div>
+      <label for="login-username" style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;">Identity</label>
+      <input id="login-username" class="form-input" type="text" placeholder="e.g. officer.district1" autocomplete="off" />
+      <label for="login-password" style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;margin-top:12px;">Password</label>
+      <input id="login-password" class="form-input" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter'){window.cashguardLogin();}" />
+      <button id="btn-login" class="btn btn-primary btn-full" onclick="window.cashguardLogin();" style="margin-top:16px;">Sign In</button>
+      <p id="login-status" class="login-status">Ready &mdash; select a demo role to sign in.</p>
+      <div class="demo-roles">
+        <p class="demo-roles-label">Quick Access &mdash; Select Role</p>
         <div class="role-grid">
-          <button type="button" class="role-chip" onclick="window.autofillDemo('officer.statea','PoliceStateA!1')" title="State-A police — national dashboard">
-            <span class="role-emoji">🚔</span><span class="role-name">State Police</span><small>officer.statea</small>
+          <button type="button" class="role-chip" onclick="window.autofillDemo('officer.statea','PoliceStateA!1')" title="State-A police &mdash; national dashboard">
+            <span class="role-chip-icon police">&#x1F6A2;</span>
+            <div><div class="role-chip-name">State Police</div><div class="role-chip-user">officer.statea</div></div>
           </button>
           <button type="button" class="role-chip" onclick="window.autofillDemo('officer.district1','District1!1')" title="Northsagar district police">
-            <span class="role-emoji">🚔</span><span class="role-name">District Police</span><small>officer.district1</small>
+            <span class="role-chip-icon police">&#x1F6A2;</span>
+            <div><div class="role-chip-name">District Police</div><div class="role-chip-user">officer.district1</div></div>
           </button>
           <button type="button" class="role-chip" onclick="window.autofillDemo('bank.hdfc','HdfcBank!1')" title="HDFC Bank branch intelligence">
-            <span class="role-emoji">🏦</span><span class="role-name">Bank</span><small>bank.hdfc</small>
+            <span class="role-chip-icon bank">&#x1F3E6;</span>
+            <div><div class="role-chip-name">Bank</div><div class="role-chip-user">bank.hdfc</div></div>
           </button>
-          <button type="button" class="role-chip" onclick="window.autofillDemo('i4c.admin','I4cAdmin!1')" title="National cybercrime hub — full oversight">
-            <span class="role-emoji">🏛️</span><span class="role-name">I4C Admin</span><small>i4c.admin</small>
+          <button type="button" class="role-chip" onclick="window.autofillDemo('i4c.admin','I4cAdmin!1')" title="National cybercrime hub &mdash; full oversight">
+            <span class="role-chip-icon i4c">&#x1F3DB;&#xFE0F;</span>
+            <div><div class="role-chip-name">I4C Admin</div><div class="role-chip-user">i4c.admin</div></div>
           </button>
         </div>
       </div>
-      <p class="hint">Hackathon prototype — bcrypt + JWT (access/refresh); production: OAuth2/OIDC + org SSO</p>
-    </div>
-  </div>
-
-  <!-- Header -->
-  <header>
-    <div class="brand">
-      <div class="logo-badge"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></div>
-      <div>
-        <h1>CashGuard <span>AI</span></h1>
-        <p>I4C · Cybercrime Withdrawal Intelligence</p>
+      <div class="login-footer">
+        <span>Synthetic demonstration environment</span>
+        <span>Smart India Hackathon 2026</span>
       </div>
     </div>
-    <div class="header-meta">
-      <label class="i18n-wrap" title="Dashboard language — labels only, data stays English">
-        <span class="i18n-lang-icon" aria-hidden="true">🌐</span>
-        <select id="i18n-select" aria-label="Language"></select>
-      </label>
-      <span id="as-of" class="pill info">Forecast as of —</span>
-      <span id="role-badge" class="pill">—</span>
-      <button id="btn-sim-load" class="btn warn" title="Load a clearly-labelled SCRIPTED scenario so the alert workflow can be demonstrated. Not live model output.">🧪 Load Simulated Scenario</button>
-      <button id="btn-sim-exit" class="btn ghost hidden" title="Return to the honest live risk view">Exit Simulated Mode</button>
-      <button id="btn-cycle" class="btn accent" title="Run the alert engine now (demo)">⚡ Run Alert Cycle</button>
-      <button id="btn-refresh" class="btn">⟳ Refresh</button>
-      <button id="btn-switch" class="btn ghost">Switch User</button>
-    </div>
-  </header>
-
-  <!-- Persistent banner + watermark for the OPT-IN simulated scenario. Hidden by
-       default (honest live view). Unmissable while an explicitly-loaded scripted
-       scenario is on screen so judges can never mistake it for live output. -->
-  <div id="sim-banner" class="sim-banner hidden">
-    <span>🧪 <b>SIMULATED SCENARIO</b> — this screen shows SCRIPTED example data, NOT live
-      model output. The leak-fixed risk engine reports low risk for calm days and produced no
-      alerts; this stands in for a cash-out spree. Risk levels, alerts, evidence &amp; dispatch
-      logs are scripted. &nbsp;<button id="btn-sim-banner-exit" class="btn small ok">Exit &amp; return to live</button></span>
   </div>
-  <div id="sim-watermark" class="sim-watermark hidden">SIMULATED SCENARIO — NOT LIVE</div>
 
-  <!-- Police dashboard -->
-  <main id="dash-police" class="dash hidden">
-    <section class="panel map-panel">
-      <div class="panel-head">
-        <h2>Risk Heatmap — Predicted Fraud Withdrawal Hotspots (next 24h)</h2>
-        <div class="legend">
-          <span class="lg low">● Low</span><span class="lg med">● Medium</span>
-          <span class="lg high">● High</span><span class="lg crit">● Critical</span>
-          <span class="lg orange">◌ Complaint heat</span>
+  <!-- ==================== APP SHELL ==================== -->
+  <div id="app-shell" class="app-shell hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+        </div>
+        <div class="sidebar-brand-text">
+          <h3>CashGuard AI</h3>
+          <p>I4C &bull; Intelligence</p>
         </div>
       </div>
-      <div class="ev-notice" id="state-scope-note" style="margin:-2px 0 8px;font-size:11.5px"></div>
-      <!-- Drill-down filter panel (deliverable b: time / location / category) -->
-      <div class="drilldown">
-        <select id="dd-state"><option value="All">State: All</option></select>
-        <select id="dd-city"><option value="All">City: All</option></select>
-        <select id="dd-bank"><option value="All">Bank: All</option></select>
-        <span class="dd-label">Crime category</span>
-        <div class="city-chips" id="category-chips"></div>
-        <span class="dd-label">Time (as-of replay)</span>
-        <input type="date" id="asof-date" class="date-input" title="Replay the forecast for a past date" />
-        <span class="dd-label">Forecast horizon</span>
-        <select id="dd-horizon" class="date-input"><option value="24">24h (active)</option><option value="2">2h</option><option value="6">6h</option><option value="12">12h</option><option value="48">48h</option></select>
-        <span id="horizon-confidence" class="pill info">—</span>
-        <button id="btn-replay" class="btn small">⟲ Replay</button>
-        <button id="btn-live" class="btn small">Live</button>
-        <label class="dd-toggle"><input type="checkbox" id="toggle-heat" checked /> Complaint heat</label>
-        <label class="dd-toggle"><input type="checkbox" id="toggle-forecast" checked /> Forecast risk</label>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">Operations</div>
+        <a class="nav-item active" data-view="overview" href="#"><span class="nav-icon">&#x2302;</span> Overview</a>
+        <a class="nav-item" data-view="risk" href="#"><span class="nav-icon">&#x1F30D;</span> Risk Intelligence</a>
+        <a class="nav-item" data-view="alerts" href="#"><span class="nav-icon">&#x1F6A8;</span> Alerts <span class="nav-badge hidden" id="sidebar-alert-badge"></span></a>
+        <a class="nav-item" data-view="investigations" href="#"><span class="nav-icon">&#x1F50D;</span> Investigations</a>
+        <a class="nav-item" data-view="recovery" href="#"><span class="nav-icon">&#x1F4B0;</span> Recovery</a>
+        <div class="sidebar-section">Intelligence</div>
+        <a class="nav-item" data-view="mule" href="#"><span class="nav-icon">&#x1F310;</span> Mule Network</a>
+        <a class="nav-item" data-view="ledger" href="#"><span class="nav-icon">&#x1F4CB;</span> Audit Ledger</a>
+        <div class="sidebar-section">System</div>
+        <a class="nav-item" data-view="model" href="#"><span class="nav-icon">&#x2699;&#xFE0F;</span> Model Health</a>
+        <a class="nav-item" data-view="reports" href="#"><span class="nav-icon">&#x1F4C4;</span> Reports</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebar-user">
+          <div class="sidebar-user-avatar" id="user-avatar">U</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="user-display-name">User</div>
+            <div class="sidebar-user-role" id="user-role-text">Role</div>
+          </div>
+        </div>
       </div>
-      <div id="map"></div>
-    </section>
-    <div class="two-col">
-      <section class="panel">
-        <div class="panel-head"><h2>Top High-Risk ATMs — Next 24h</h2><span class="pill info" id="hotspot-count"></span></div>
-        <div class="table-scroll"><table id="hotspot-table" class="data-table">
-          <thead><tr><th>#</th><th>ATM</th><th>Bank / Branch</th><th>City</th><th>Risk</th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket)</span></h2><span class="pill warn" id="alert-count"></span></div>
-        <div class="table-scroll"><table id="alert-table" class="data-table">
-          <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-        <div class="panel-head" style="margin-top:10px"><h2>Threshold Explorer <span class="ev-notice">(artifact-backed curve)</span></h2></div>
-        <div id="thr-explorer">
-          <label class="dd-label">Alert threshold:
-            <input type="range" id="thr-slider" min="50" max="95" value="70" step="5" />
-            <b id="thr-value">0.70</b>
+    </aside>
+
+    <!-- Main content area -->
+    <div class="main-area">
+      <!-- Top bar -->
+      <header class="topbar">
+        <span class="topbar-title" id="topbar-view-title">Overview</span>
+        <div class="topbar-spacer"></div>
+        <div class="topbar-status">
+          <span class="pill pill-warn" id="mode-pill">SYNTHETIC DEMO</span>
+          <span class="pill" id="as-of-pill">Forecast: &mdash;</span>
+          <span class="pill" id="scope-pill">Jurisdiction: &mdash;</span>
+          <div class="status-item"><span class="status-dot" id="sys-status-dot"></span><span id="sys-status-text">System</span></div>
+        </div>
+        <div class="topbar-actions">
+          <label class="i18n-wrap" title="Dashboard language">
+            <select id="i18n-select" aria-label="Language" style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 6px;font-size:11px;font-family:var(--font-sans);"></select>
           </label>
-          <div id="thr-metrics" class="ev-notice">loading…</div>
-          <div id="thr-bands" class="thr-bands"></div>
+          <button id="btn-sim-load" class="btn btn-sm btn-warn" title="Load scripted scenario for demonstration. Not live model output.">&#x1F9EA; Demo Scenario</button>
+          <button id="btn-sim-exit" class="btn btn-sm btn-ghost hidden" title="Return to honest live view">&#x2716; Exit Demo</button>
+          <button id="btn-cycle" class="btn btn-sm btn-accent" title="Run the alert engine now">&#x26A1; Run Alert Cycle</button>
+          <button id="btn-refresh" class="btn btn-sm btn-ghost">&#x27F3; Refresh</button>
+          <button id="btn-switch" class="btn btn-sm btn-ghost" title="Sign out">&#x2192; Logout</button>
         </div>
-      </section>
-    </div>
-    <section class="panel">
-      <div class="panel-head"><h2>Field / Mobile — Nearby Actionable ATMs <span class="ev-notice">(0.6·risk + 0.4·(1/(1+km)) · Item 8)</span></h2>
-        <button id="btn-mobile-locate" class="btn small" title="Use your GPS position, else Northsagar demo coords">📱 Use my location</button></div>
-      <div id="mobile-nearby" class="muted">No fix yet — click “Use my location” (or it will demo Northsagar).</div>
-    </section>
-  </main>
+      </header>
 
-  <!-- Bank dashboard -->
-  <main id="dash-bank" class="dash hidden">
-    <section class="panel">
-      <div class="panel-head"><h2>Bank Branch Intelligence</h2><span class="pill info" id="bank-summary"></span></div>
-    </section>
-    <div class="two-col">
-      <section class="panel">
-        <div class="panel-head"><h2>Your ATMs — Risk Scores</h2></div>
-        <div class="table-scroll"><table id="bank-atm-table" class="data-table">
-          <thead><tr><th>ATM</th><th>Branch</th><th>City</th><th>Risk</th><th>Suggested Action</th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Fund-Block Recommendations (CFCFRMS loop)</h2></div>
-        <div id="recovery-queue"></div>
-        <div class="panel-head" style="margin-top:14px"><h2>Recovery Funnel <span class="ev-notice">(synthetic outcomes)</span></h2></div>
-        <div id="bank-funnel"></div>
-      </section>
-    </div>
-    <section class="panel">
-      <div class="panel-head"><h2>Alerts for Your Branches</h2></div>
-      <div class="table-scroll"><table id="bank-alert-table" class="data-table">
-        <thead><tr><th>Time</th><th>ATM</th><th>Risk</th><th>Action</th><th>Status</th><th></th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-    </section>
-  </main>
+      <!-- Workspace -->
+      <div class="workspace" id="workspace">
+        <div class="workspace-scroll">
 
-  <!-- I4C dashboard -->
-  <main id="dash-i4c" class="dash hidden">
-    <section class="stats-grid" id="i4c-stats"></section>
-    <p class="ev-notice" id="i4c-scale-note" style="margin:6px 2px 0"></p>
-    <section class="panel">
-      <div class="panel-head"><h2>Active Alerts <span class="ev-notice">(live via WebSocket · deduplicated)</span></h2><span class="pill warn" id="alert-count"></span></div>
-      <div class="table-scroll"><table id="i4c-alert-table" class="data-table">
-        <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Recommended Action</th><th>Status</th><th></th></tr></thead>
-        <tbody></tbody>
-      </table></div>
-    </section>
-    <section class="panel">
-      <div class="panel-head"><h2>Recovery Funnel (flagged → held → recovered)</h2><span class="ev-notice">synthetic/illustrative — CFCFRMS APIs are Tier 2</span></div>
-      <div id="i4c-funnel"></div>
-    </section>
-    <div class="two-col">
-      <section class="panel">
-        <div class="panel-head"><h2>Complaints by City</h2></div>
-        <div id="city-bars"></div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Model Performance</h2><span id="i4c-audit"></span></div>
-        <div id="model-metrics"></div>
-      </section>
-    </div>
-    <section class="panel" id="drift-panel-wrap">
-      <div class="panel-head"><h2>Model Feature Drift <span class="ev-notice">(PSI vs training reference · Item 11)</span></h2>
-        <span id="drift-badge"></span></div>
-      <div id="drift-panel" class="muted">loading…</div>
-    </section>
-    <section class="panel">
-      <div class="panel-head"><h2>Mule Network — Victim → Account → ATM <span class="ev-notice">(bipartite centrality + cluster risk · Item 6)</span></h2></div>
-      <div id="mule-network-wrap" class="muted">loading…</div>
-    </section>
-    <div class="two-col">
-<section class="panel">
-      <div class="panel-head"><h2>Ledger (tamper-evident hash chain)</h2><span id="ledger-badge"></span></div>
-      <div class="ledger-actions">
-        <button id="btn-ledger-verify" class="btn small">Verify Ledger</button>
-        <button id="btn-ledger-tamper" class="btn small warn">Tamper-demo (flip a block)</button>
-        <button id="btn-ledger-restore" class="btn small ok">Restore Ledger</button>
-        <button id="btn-sit-report" class="btn small accent">Generate Situational Report (PDF)</button>
+          <!-- Sim banner + watermark -->
+          <div id="sim-banner" class="sim-banner hidden"><span><b>SIMULATED SCENARIO</b> &mdash; Scripted demonstration data, NOT live model output. <button id="btn-sim-banner-exit" class="btn btn-sm btn-ok">Exit</button></span></div>
+          <div id="sim-watermark" class="sim-watermark hidden"></div>
+
+          <!-- ========== OVERVIEW VIEW ========== -->
+          <div id="view-overview" class="view-panel">
+            <div class="stats-row" id="overview-stats"></div>
+            <div class="panel mb-4">
+              <div class="panel-header">
+                <h2>Priority Actions</h2>
+                <span class="pill pill-accent" id="priority-count"></span>
+              </div>
+              <div id="priority-actions" class="alert-feed"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Risk Intelligence Map</h2>
+                <div class="map-legend" id="map-legend">
+                  <span class="map-legend-item"><span class="map-legend-dot low"></span> Low</span>
+                  <span class="map-legend-item"><span class="map-legend-dot medium"></span> Medium</span>
+                  <span class="map-legend-item"><span class="map-legend-dot high"></span> High</span>
+                  <span class="map-legend-item"><span class="map-legend-dot critical"></span> Critical</span>
+                </div>
+              </div>
+              <div class="filter-bar" id="map-filter-bar">
+                <div class="filter-group">
+                  <span class="filter-label">State</span>
+                  <select id="dd-state" class="filter-select"><option value="All">All</option></select>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                  <span class="filter-label">City</span>
+                  <select id="dd-city" class="filter-select"><option value="All">All</option></select>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                  <span class="filter-label">Bank</span>
+                  <select id="dd-bank" class="filter-select"><option value="All">All</option></select>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                  <span class="filter-label">Crime</span>
+                  <div class="city-chips" id="category-chips" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                  <span class="filter-label">Time</span>
+                  <input type="date" id="asof-date" class="filter-select" style="width:130px;" title="Replay forecast for a past date" />
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                  <span class="filter-label">Horizon</span>
+                  <select id="dd-horizon" class="filter-select"><option value="24">24h</option><option value="2">2h</option><option value="6">6h</option><option value="12">12h</option><option value="48">48h</option></select>
+                  <span class="pill pill-accent" id="horizon-confidence">&mdash;</span>
+                </div>
+                <div class="filter-divider"></div>
+                <button id="btn-replay" class="btn btn-sm">&#x27F2; Replay</button>
+                <button id="btn-live" class="btn btn-sm btn-ghost">Live</button>
+                <div class="filter-divider"></div>
+                <label class="chip" id="toggle-heat-chip"><input type="checkbox" id="toggle-heat" checked style="margin-right:4px;" /> Heat</label>
+                <label class="chip" id="toggle-forecast-chip"><input type="checkbox" id="toggle-forecast" checked style="margin-right:4px;" /> Forecast</label>
+              </div>
+              <div class="map-container">
+                <div id="map" class="map-wrapper"></div>
+              </div>
+            </div>
+            <div class="two-col mt-4">
+              <div class="panel">
+                <div class="panel-header">
+                  <h2>High-Risk ATMs</h2>
+                  <span class="pill" id="hotspot-count"></span>
+                </div>
+                <div class="table-container">
+                  <table id="hotspot-table" class="data-table">
+                    <thead><tr><th>#</th><th>ATM</th><th>Bank / Branch</th><th>City</th><th>Risk</th></tr></thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-header">
+                  <h2>Active Alerts</h2>
+                  <span class="pill pill-warn" id="alert-count"></span>
+                </div>
+                <div class="table-container">
+                  <table id="alert-table" class="data-table">
+                    <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Action</th><th>Status</th><th></th></tr></thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+                <div class="panel-header mt-3">
+                  <h3>Threshold Explorer</h3>
+                </div>
+                <div id="thr-explorer">
+                  <label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:8px;">
+                    Alert threshold:
+                    <input type="range" id="thr-slider" min="50" max="95" value="70" step="5" style="flex:1;" />
+                    <b id="thr-value" style="color:var(--accent);font-family:var(--font-num);">0.70</b>
+                  </label>
+                  <div id="thr-metrics" class="ev-notice" style="margin-top:8px;">loading...</div>
+                  <div id="thr-bands" class="thr-bands"></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel mt-4">
+              <div class="panel-header">
+                <h2>Field / Mobile &mdash; Nearby Actionable ATMs</h2>
+                <button id="btn-mobile-locate" class="btn btn-sm btn-accent" title="Use GPS position or Northsagar demo coords">&#x1F4F1; Use My Location</button>
+              </div>
+              <div id="mobile-nearby" class="empty-state">
+                <p>Click "Use My Location" to find nearby ATMs ranked by risk.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== RISK VIEW ========== -->
+          <div id="view-risk" class="view-panel hidden">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Risk Intelligence Map</h2>
+              </div>
+              <div class="map-wrapper" style="height:600px;">
+                <div id="map-risk" style="width:100%;height:100%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== ALERTS VIEW ========== -->
+          <div id="view-alerts" class="view-panel hidden">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Alert Center</h2>
+                <span class="pill pill-warn" id="alerts-view-count"></span>
+              </div>
+              <div class="table-container" style="max-height:600px;">
+                <table id="alerts-full-table" class="data-table">
+                  <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Action</th><th>Status</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== INVESTIGATIONS VIEW ========== -->
+          <div id="view-investigations" class="view-panel hidden">
+            <div class="panel">
+              <div class="panel-header"><h2>Money Trail &mdash; Terminal Cash-Out Graph</h2></div>
+              <div class="table-container">
+                <table id="mule-graph-table" class="data-table">
+                  <thead><tr><th>#</th><th>Account</th><th>Terminal Risk</th><th>In-Degree</th><th>Out-Degree</th><th>Inflow (INR)</th><th>Chain Depth</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div id="mule-graph-detail" class="muted mt-3">Click Trail on a row to see money-trail chains.</div>
+            </div>
+            <div class="panel mt-4">
+              <div class="panel-header">
+                <h2>I4C Inbox (Webhook)</h2>
+              </div>
+              <div id="inbox-panel" class="inbox"></div>
+            </div>
+            <div class="panel mt-4">
+              <div class="panel-header">
+                <h2>Inter-Agency Handoffs</h2>
+                <span class="pill" id="handoff-count"></span>
+              </div>
+              <div id="handoff-panel" class="muted">loading...</div>
+            </div>
+          </div>
+
+          <!-- ========== RECOVERY VIEW ========== -->
+          <div id="view-recovery" class="view-panel hidden">
+            <div class="panel mb-4">
+              <div class="panel-header"><h2>Recovery Funnel</h2><span class="pill" id="recovery-funnel-note">synthetic</span></div>
+              <div id="i4c-funnel"></div>
+            </div>
+            <div class="panel mb-4">
+              <div class="panel-header"><h2>Fund-Block Recommendations</h2></div>
+              <div id="recovery-queue"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Closed-Loop Outcomes</h2>
+                <button id="btn-evaluate-outcomes" class="btn btn-sm btn-accent">Evaluate Pending</button>
+                <span id="outcome-badge" class="pill"></span>
+              </div>
+              <div id="outcome-panel"></div>
+            </div>
+          </div>
+
+          <!-- ========== MULE NETWORK VIEW ========== -->
+          <div id="view-mule" class="view-panel hidden">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Mule Network Intelligence</h2>
+                <span class="pill" id="mule-network-note">bipartite centrality</span>
+              </div>
+              <div id="mule-network-wrap" class="muted">loading...</div>
+            </div>
+          </div>
+
+          <!-- ========== LEDGER VIEW ========== -->
+          <div id="view-ledger" class="view-panel hidden">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Tamper-Evident Audit Ledger</h2>
+                <span id="ledger-badge" class="pill pill-ok"></span>
+              </div>
+              <div class="ledger-actions">
+                <button id="btn-ledger-verify" class="btn btn-sm btn-ok">Verify Ledger</button>
+                <button id="btn-ledger-tamper" class="btn btn-sm btn-warn">Tamper Demo</button>
+                <button id="btn-ledger-restore" class="btn btn-sm btn-ghost">Restore</button>
+              </div>
+              <div id="ledger-preview" class="muted"></div>
+            </div>
+          </div>
+
+          <!-- ========== MODEL HEALTH VIEW ========== -->
+          <div id="view-model" class="view-panel hidden">
+            <div class="panel mb-4">
+              <div class="panel-header">
+                <h2>Model Health</h2>
+                <span id="i4c-audit" class="pill pill-ok"></span>
+              </div>
+              <div class="model-health-grid" id="model-health-grid"></div>
+            </div>
+            <div class="panel mb-4">
+              <div class="panel-header"><h2>Model Performance</h2></div>
+              <div id="model-metrics"></div>
+            </div>
+            <div class="panel mb-4">
+              <div class="panel-header">
+                <h2>Feature Drift Monitor</h2>
+                <span id="drift-badge"></span>
+              </div>
+              <div id="drift-panel" class="muted">loading...</div>
+            </div>
+          </div>
+
+          <!-- ========== REPORTS VIEW ========== -->
+          <div id="view-reports" class="view-panel hidden">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Intelligence Reports</h2>
+                <button id="btn-sit-report" class="btn btn-sm btn-accent">Generate Situational Report (PDF)</button>
+              </div>
+              <div id="reports-panel">
+                <p class="muted">Generate situational intelligence reports for your jurisdiction.</p>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- workspace-scroll -->
+      </div><!-- workspace -->
+    </div><!-- main-area -->
+  </div><!-- app-shell -->
+
+  <!-- ==================== INTELLIGENCE DRAWER ==================== -->
+  <div id="drawer-overlay" class="drawer-overlay" onclick="document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('atm-drawer').classList.remove('open');"></div>
+  <div id="atm-drawer" class="drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <h3 id="drawer-atm-id">ATM</h3>
+        <p id="drawer-atm-meta">Risk Intelligence</p>
       </div>
-      <div id="ledger-preview" class="muted"></div>
-    </section>
-    <section class="panel">
-      <div class="panel-head"><h2>Closed-Loop Outcomes (predicted vs actual)</h2>
-        <button id="btn-evaluate-outcomes" class="btn small">Evaluate pending (24h horizon)</button>
-        <span id="outcome-badge"></span></div>
-      <div id="outcome-panel"></div>
-    </section>
-      <section class="panel">
-        <div class="panel-head"><h2>I4C Inbox (received via webhook)</h2><span class="ev-notice">real POST path → local mock receiver</span></div>
-        <div id="inbox-panel" class="inbox"></div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Inter-Agency Jurisdiction Handoffs</h2><span class="ev-notice">cross-state routing queue (Item 4)</span><span id="handoff-count" class="pill info"></span></div>
-        <div id="handoff-panel" class="muted">loading…</div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Money Trail — Terminal Cash-Out Graph <span class="ev-notice">(graph centrality + anomaly signal)</span></h2></div>
-        <div class="table-scroll"><table id="mule-graph-table" class="data-table">
-          <thead><tr><th>#</th><th>Account</th><th>Terminal Risk</th><th>In-Degree</th><th>Out-Degree</th><th>Inflow (INR)</th><th>Chain Depth</th><th></th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-        <div id="mule-graph-detail" class="muted"></div>
-      </section>
+      <button class="drawer-close" onclick="document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('atm-drawer').classList.remove('open');">&times;</button>
     </div>
-  </main>
+    <div class="drawer-body" id="drawer-body"></div>
+    <div class="drawer-footer" id="drawer-footer"></div>
+  </div>
 
-  <!-- Alert evidence modal (3-field panel) -->
-  <div id="evidence-modal" class="modal hidden">
-    <div class="modal-card wide">
+  <!-- ==================== EVIDENCE MODAL ==================== -->
+  <div id="evidence-modal" class="modal-overlay hidden">
+    <div class="modal-card">
       <div class="modal-head">
-        <h2>Alert Evidence <span class="pill info" id="ev-alert-id"></span></h2>
+        <h2>Alert Evidence <span class="pill" id="ev-alert-id"></span></h2>
         <span id="ev-audit"></span>
-        <button class="btn ghost" id="ev-close">✕ Close</button>
+        <button class="btn btn-sm btn-ghost" id="ev-close">&times; Close</button>
       </div>
       <div id="ev-body"></div>
     </div>
   </div>
 
-  <footer>
-    <span>CashGuard AI · Smart India Hackathon · I4C · NCRP · CFCFRMS</span>
-    <span class="banner-warn">Hackathon Prototype — Synthetic Data. Locations are fictionalized for demonstration.</span>
-    <span class="banner-warn">Advisory only — no automated enforcement; audited human decision required.</span>
+  <!-- ==================== FOOTER ==================== -->
+  <footer style="text-align:center;color:var(--text-muted);font-size:11px;padding:12px;display:none;">
+    <span>CashGuard AI &bull; Smart India Hackathon 2026 &bull; I4C &bull; Synthetic Demonstration Environment &bull; Advisory Only</span>
   </footer>
 
+  <!-- Toast container -->
   <div id="toast" class="toast hidden"></div>
-  <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn ghost small" aria-label="Dismiss">✕</button></div>
+  <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn btn-sm btn-ghost" aria-label="Dismiss">&times;</button></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
