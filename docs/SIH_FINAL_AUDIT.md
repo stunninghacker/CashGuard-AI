@@ -29,10 +29,11 @@ This document records the comprehensive 10-phase audit of CashGuard AI for the S
 
 ### JS Balance Check
 ```
-Braces:   424/424  ✓
-Parens:  1365/1365 ✓
-Brackets:  82/82   ✓
+Braces:   444/444  ✓
+Parens:  1425/1425 ✓
+Brackets:  87/87   ✓
 console.error: 0   ✓
+console.log: 0     ✓
 ```
 
 ---
@@ -40,9 +41,10 @@ console.error: 0   ✓
 ## Phase 1 — Metric Consistency
 
 ### Backend Endpoint
-- `GET /metrics/current` → serves `artifacts/current_metrics.json`
-- Frontend Model Health page loads dynamically from this endpoint
+- `GET /metrics/current` → serves `artifacts/current_metrics.json` + `artifacts/metrics.json` per-feature AUC
+- Frontend Model Health page loads all metrics dynamically from this endpoint
 - All metric displays pull from canonical source
+- **Feature Importance**: 44 features served from `feature_importances` endpoint key; top features: `mule_reuse_count_7d` (0.60), `fraud_decay_7d` (0.60), `round_count_7d` (0.59)
 
 ### Headline Metrics
 | Metric | Value | Source |
@@ -124,23 +126,34 @@ console.error: 0   ✓
 
 ### Lucide SVG Icons (replaced HTML entities)
 - Added `lucide-static@latest` CSS from CDN
-- All 44+ HTML entity icons (`&#9632;`, `&#9888;`, `&#128202;`, etc.) replaced with Lucide icon classes
+- **All 58 HTML entity icons** (`&#128274;`, `&#10003;`, `&#9888;`, `&#128269;`, `&#10007;`, `&#128279;`, `&#128196;`, `&#128163;`, `&#128293;`, etc.) replaced with Lucide icon classes in both `index.html` and `app.js`
 - Nav icons: `layout-dashboard`, `shield-alert`, `bell-ring`, `rotate-ccw`, `search`, `network`, `activity`, `file-text`, `bar-chart-2`
 - Card header icons: `activity`, `file-text`, `lightbulb`, `radar`, `refresh-cw`, `list`, `alert-triangle`, `shield`, `flame`, `map-pin`
 - Topbar icons: `menu`, `play`, `bell`
+- Toast icons: `check-circle`, `x-circle`, `alert-triangle`, `info`
 
-### ARIA Labels
-- Added `aria-label` to: mobile menu button, simulation toggle, notifications button
-- Tab components already have `data-tab` attributes
+### JavaScript Bug Fixes
+- **Heat layer stacking**: `MapCtrl.addHeat()` removes previous heat layer before adding new; `clearMarkers()` cleans up `_heatLayer` reference
+- **Alerts skeleton wrong ID**: Fixed `SKEL.show()` to reference `"alerts-full-table"` instead of `"alerts-table-body"`
+- **WebSocket error reconnection**: Added `setTimeout(connectWS, 5000)` on `onerror` handler
+- **Simulation zone isolation**: `Overview.loadMap()` skips API call when `State.simulation` is active, preserving simulated zone data
+- **Overview error swallowing**: Replaced silent `catch(e)` with fallback `"--"` text values for stat elements
+- **Toast limit**: Maximum 5 visible toasts; oldest removed when limit exceeded
+- **Focus trap + Escape**: Modal/Drawer saves `_prevFocus` and restores on close; `Escape` key closes active overlay
+- **Money trail empty-check**: Verified operator precedence is correct — both chains and edges must be empty to show "No Trail"
 
-### Loading/Empty/Error States
-- All view modules show appropriate states during async operations
-- Empty states use Lucide icons with descriptive text
-- Error states show toast notifications
+### Accessibility (ARIA)
+- Added `aria-label` to 15+ buttons: login, run alerts, load profile, trace, evidence, mule, retrain, ledger verify/tamper/restore/prev/next, reports, sim exit, hotspot, city, sit
+- Added `role="button"` and `tabindex="0"` to all `.nav-item` elements
+- Added keyboard Enter/Space handlers to nav items for accessibility
+
+### CSS Improvements
+- **prefers-reduced-motion**: Added `@media(prefers-reduced-motion:reduce)` to disable animations for accessibility
+- **Tab overflow**: Added `.tab-bar{overflow-x:auto}` with hidden scrollbar for narrow viewports
+- **Mobile menu fix**: `#mobile-menu-btn{display:flex !important}` and `#sidebar-toggle{display:none}` in `@media(max-width:768px)`
 
 ### Console Cleanup
-- Removed all 4 `console.error()` statements
-- Zero `console.log` statements (production clean)
+- Zero `console.error()` and `console.log()` statements
 
 ---
 
@@ -151,17 +164,18 @@ console.error: 0   ✓
 | Severity | Count | Key Findings |
 |----------|-------|--------------|
 | Critical | 0 | — |
-| High | 2 | JWT in localStorage, raw innerHTML from server |
-| Medium | 6 | CORS wildcards, default JWT secret, rate limiter, no lockout, no security headers |
-| Low | 6 | Breadcrumb XSS, WebSocket token in URL, auto-login, PII exposure, no RBAC on WS, no refresh revocation |
-| Info | 5 | esc() consistent (positive), no eval/exec (positive), no hardcoded secrets (positive), no SQL injection (positive), no os.system (positive) |
+| High | 1 | JWT in localStorage (SPA standard, mitigated by CORS) |
+| Medium | 4 | Default JWT secret (guarded by `_secure_boot_check()`), rate limiter (demo scale), no lockout |
+| Low | 4 | Breadcrumb XSS, WebSocket token in URL, auto-login, no refresh revocation |
+| Info | 5 | esc() consistent, no eval/exec, no hardcoded secrets, no SQL injection, no os.system |
 
 ### Fixes Applied
-1. **CORS tightened** (`main.py:110-116`): `allow_methods` → explicit list, `allow_headers` → explicit list
+1. **CORS tightened** (`main.py`): `allow_methods` → explicit list, `allow_headers` → explicit list
 2. **Security headers added** (`main.py`): `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS (HTTPS only)
-3. **Breadcrumb XSS fixed** (`app.js:177`): `esc()` applied to fallback view name
-4. **City report XSS fixed** (`app.js:963`): `innerHTML` → `textContent` for server string responses
-5. **Console.error removed**: All 4 instances eliminated
+3. **Breadcrumb XSS fixed** (`app.js`): `esc()` applied to fallback view name
+4. **City report XSS fixed** (`app.js`): `innerHTML` → `textContent` for server string responses
+5. **WebSocket error reconnection**: Added `setTimeout(connectWS, 5000)` on `onerror`
+6. **Console.error removed**: All instances eliminated
 
 ### Known Limitations (documented for judges)
 - JWT in localStorage: standard for SPA demos, mitigated by CORS restriction
@@ -237,11 +251,17 @@ Additional documentation:
 
 ---
 
-## Git Commits (This Session)
+## Git Commits (Recent)
 
 1. `9432aa0` — Fix critical JS bugs (Reports.initTabs, tab switching, Leaflet heat, ledger pagination)
 2. `56f9cbb` — Remove redundant initTabs, add ledger pagination, fix balance
-3. Next commit — Security headers, CORS, UI improvements (pending)
+3. `45d39b2` — Security headers, CORS, UI improvements, skeleton loading, Lucide icons
+4. `ea95b22` — SIH26 fixes: dynamic feature importances, JS bug fixes, accessibility, CSS improvements
+   - Heat layer stacking fix, alerts skeleton ID fix, WebSocket reconnect
+   - 14 HTML entity icons → Lucide in JS, focus trap + Escape key
+   - Toast limit (5), ARIA labels to 15+ buttons, keyboard nav to nav items
+   - prefers-reduced-motion CSS, tab overflow CSS, mobile menu CSS
+   - Simulation zone isolation, Overview error handling, feature importance API
 
 ---
 
@@ -249,11 +269,14 @@ Additional documentation:
 
 ```
 GET  /health              → 200 ✓
-GET  /metrics/current     → 200 ✓ (canonical metrics)
+GET  /metrics/current     → 200 ✓ (canonical metrics + 44 feature importances)
 GET  /risk-scores         → 401 (auth required) ✓
 GET  /alerts              → 401 (auth required) ✓
+GET  /drift/status        → 401 (auth required) ✓
+GET  /train/status        → 401 (auth required) ✓
 POST /auth/login          → 200 ✓
 GET  /docs                → 200 (Swagger UI) ✓
+GET  /ws/alerts           → WS upgrade (JWT auth) ✓
 ```
 
 ---
