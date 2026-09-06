@@ -48,6 +48,7 @@ def risk_scores(
     cached = services.read_demo_cache("risk-scores")
     if cached is not None:
         rows = cached if not city else [r for r in cached if r["city"] == city]
+        rows = services._scope_risk_scores(rows, user)
         return rows
     ref = services.resolve_as_of(db, as_of)
     # Select model appropriate for the requested horizon

@@ -45,6 +45,7 @@ def list_alerts(
             rows = [r for r in rows if r["atm_id"] == atm_id]
         if city:
             rows = [r for r in rows if r["city"] == city]
+        rows = services._scope_alerts(rows, user)
         return rows[:limit]
     return repo.list_alerts(db, status=status, atm_id=atm_id, city=city, limit=limit, offset=offset, user=user)
 

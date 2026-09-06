@@ -59,6 +59,34 @@ def _invalidate_score_cache() -> None:
     _score_cache["expires_at"] = None
 
 
+def _scope_risk_scores(scores: list[dict], user=None) -> list[dict]:
+    """Apply RBAC scope filter to a list of risk score dicts."""
+    if user is None:
+        return scores
+    from .database import SessionLocal
+    db = SessionLocal()
+    try:
+        allowed = repo.list_atms(db, limit=5000, user=user)
+        allowed_ids = {a.atm_id for a in allowed}
+        return [s for s in scores if s["atm_id"] in allowed_ids]
+    finally:
+        db.close()
+
+
+def _scope_alerts(alerts: list[dict], user=None) -> list[dict]:
+    """Apply RBAC scope filter to a list of alert dicts."""
+    if user is None:
+        return alerts
+    from .database import SessionLocal
+    db = SessionLocal()
+    try:
+        allowed = repo.list_atms(db, limit=5000, user=user)
+        allowed_ids = {a.atm_id for a in allowed}
+        return [a for a in alerts if a.get("atm_id") in allowed_ids]
+    finally:
+        db.close()
+
+
 def get_risk_scores(db: Session, as_of: datetime | None = None, city: str | None = None, user=None, horizon: int = 24) -> list[dict]:
     """Compute P(fraud withdrawal in next N hours) for every ATM, as of `as_of`.
     RBAC: scores are row-scoped to the caller's jurisdiction (repo layer).
