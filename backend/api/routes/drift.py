@@ -23,6 +23,9 @@ from ...security import require_auth
 
 router = APIRouter(prefix="/drift", tags=["drift-monitor"])
 
+# Module-level singleton so the 600s cache persists across requests
+_drift_monitor = drift.DriftMonitor()
+
 
 class ReferenceIn(BaseModel):
     as_of: str | None = None
@@ -34,8 +37,7 @@ def status(
     user=Depends(require_auth("I4C_ADMIN", "POLICE_STATE", "POLICE_DISTRICT")),
     db: Session = Depends(get_db),
 ):
-    mon = drift.DriftMonitor()
-    return mon.status(db, refresh=refresh)
+    return _drift_monitor.status(db, refresh=refresh)
 
 
 @router.post("/capture-reference")
@@ -68,4 +70,4 @@ def check(
     if not drift.reference_exists():
         return {"status": "PENDING_REFERENCE",
                 "note": "Capture a reference snapshot first (POST /drift/capture-reference)."}
-    return drift.DriftMonitor().check_and_alert(db, actor=f"{user.user_id} ({user.role})")
+    return _drift_monitor.check_and_alert(db, actor=f"{user.user_id} ({user.role})")

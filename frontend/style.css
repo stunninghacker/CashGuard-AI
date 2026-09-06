@@ -2,6 +2,7 @@
    CashGuard AI — Government Intelligence Platform Design System
    Proactive Cybercrime Intelligence Command Platform
    ============================================================================ */
+/* CashGuard AI — v17 — system font stack, GPU-optimized transitions */
 
 /* ==================== DESIGN TOKENS ==================== */
 :root {
@@ -57,8 +58,8 @@
   --shadow-xl: 0 16px 48px rgba(0,0,0,0.5);
 
   /* Typography */
-  --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-num: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-num: 'SFMono-Regular', 'Cascadia Code', Consolas, 'Liberation Mono', monospace;
   --fs-xs: 11px;
   --fs-sm: 12px;
   --fs-base: 13px;

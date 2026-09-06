@@ -4,18 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CashGuard AI — Proactive Cybercrime Intelligence</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="style.css?v=16" />
+  <link rel="stylesheet" href="style.css?v=17" />
   <script>
     window.__cashguardReady = false;
     window.addEventListener('error', function(e) {
       var el = document.getElementById('js-error-banner');
       if (!el) { el = document.createElement('div'); el.id = 'js-error-banner'; document.body.prepend(el); }
       el.textContent = 'Frontend script error — press Ctrl+F5 to reload.';
-      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c44040;color:#fff;padding:10px;text-align:center;font:600 13px IBM Plex Sans,sans-serif;';
+      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c44040;color:#fff;padding:10px;text-align:center;font:600 13px system-ui,sans-serif;';
       e.preventDefault();
     });
   </script>

@@ -31,6 +31,7 @@ def mule_network(
     user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "BANK", "I4C_ADMIN")),
     db: Session = Depends(get_db),
 ):
+    # Use cached build_mule_network — RBAC scoping for non-I4C is done in-place
     payload = mule_network_mod.build_mule_network(db, atm_id=atm_id, depth=depth, include_phone=include_phone)
     if "error" in payload:
         from fastapi import HTTPException
@@ -40,14 +41,14 @@ def mule_network(
     # Role scoping: narrow-role users only see accounts in scope AND their
     # connected subgraph (drop out-of-scope account nodes + dangling edges).
     if user.role != "I4C_ADMIN":
-        in_scope = repo.accounts_in_user_scope(db, user)
+        in_scope = set(repo.accounts_in_user_scope(db, user))
+        # Shallow copy nodes/edges to avoid mutating cache
+        payload = {**payload, "nodes": list(payload["nodes"]), "edges": list(payload["edges"])}
         scoped_ids = {n["id"] for n in payload["nodes"] if n["type"] == "account" and n["id"] in in_scope}
         scoped_ids |= {n["id"] for n in payload["nodes"] if n["type"] != "account"}
-        keep = {n["id"] for n in payload["nodes"] if n["type"] == "account" and n["id"] in in_scope}
-        keep |= {n["id"] for n in payload["nodes"] if n["type"] != "account"}
-        ids_keep = set(keep)
+        ids_keep = set(scoped_ids)
         for e in payload["edges"]:
-            if e["to"] in keep or e["from"] in keep:
+            if e["to"] in ids_keep or e["from"] in ids_keep:
                 ids_keep.add(e["from"]); ids_keep.add(e["to"])
         payload["nodes"] = [n for n in payload["nodes"] if n["id"] in ids_keep]
         payload["edges"] = [e for e in payload["edges"] if e["from"] in ids_keep and e["to"] in ids_keep]

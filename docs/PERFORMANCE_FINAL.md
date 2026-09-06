@@ -18,11 +18,14 @@ CashGuard AI went from a **30-second initial load** (I4C admin) to **~4 seconds*
 | Mule network payload | 343 KB | 19 KB (capped) | **95% reduction** |
 | Risk scores (wire) | 445 KB | 22 KB | **95% reduction** (GZip) |
 | WebSocket reload | Full (19 APIs) | Delta (1 API) | **95% fewer calls** |
-| Terminal nodes (cold) | 7,100ms | 2,594ms | **64% faster** |
-| Terminal nodes (warm) | N/A | 319ms | **88% faster** (cached) |
-| Stats summary (warm) | N/A | 30ms | **95% faster** (cached) |
+| Terminal nodes (cold) | 7,100ms | 2,379ms | **66% faster** |
+| Terminal nodes (warm) | N/A | 193ms | **97% faster** (cached) |
+| Stats summary (warm) | N/A | 22ms | **99.8% faster** (cached) |
+| Drift status (warm) | N/A | 18ms | **99.6% faster** (singleton cache) |
+| Font download | 2 requests (~200ms) | 0 (system stack) | **100% eliminated** |
 | CSS `transition: all` | 5 instances | 0 | GPU-friendly |
 | `backdrop-filter: blur` | 1 instance | 0 | Removed (expensive) |
+| `will-change` hints | 0 | 3 | GPU-composited |
 
 ---
 
@@ -92,13 +95,16 @@ CashGuard AI went from a **30-second initial load** (I4C admin) to **~4 seconds*
 ## Remaining Opportunities (Lower Priority)
 
 1. **Dashboard summary endpoint** — Single endpoint returning KPIs, reducing 3+ API calls to 1
-2. **Precompute feature matrix** — Persist `build_features()` output, eliminate 8s drift computation
-3. **Numpy PageRank** — Rewrite pure-Python PageRank with numpy sparse matrices
-4. **Memoize BFS** — Cache `chain_depth_of()` results, eliminate O(N²) computation
-5. **Table virtualization** — For alerts table if > 100 rows
-6. **Marker clustering** — For map if > 200 markers
-7. **Service worker** — Cache frontend assets for offline/repeat loads
-8. **Code splitting** — Split app.js into core + lazy modules
+2. **Numpy PageRank** — Rewrite pure-Python PageRank with numpy sparse matrices
+3. **Table virtualization** — For alerts table if > 100 rows
+4. **Marker clustering** — For map if > 200 markers
+5. **Service worker** — Cache frontend assets for offline/repeat loads
+
+### Done (lower priority items completed)
+- ~~Precompute feature matrix~~ — Drift singleton cache (600s TTL) achieves same result
+- ~~Memoize BFS~~ — `_compute_all_depths()` single-pass BFS replaces O(N²)
+- ~~System font stack~~ — Eliminated 2 Google Fonts requests (~200ms)
+- ~~CSS GPU optimization~~ — `will-change`, specific transitions, no blur
 
 ---
 
