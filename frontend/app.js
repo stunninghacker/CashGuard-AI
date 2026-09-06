@@ -593,17 +593,6 @@ var Investigations = {
   complaints: [],
   load: async function() {
     await this.loadComplaints();
-    this.initTabs();
-  },
-  initTabs: function() {
-    document.querySelectorAll("#investigation-tabs .tab-item").forEach(function(tab){
-      tab.onclick = function(){
-        document.querySelectorAll("#investigation-tabs .tab-item").forEach(function(t){t.classList.remove("active");});
-        document.querySelectorAll("#view-investigations .tab-content").forEach(function(c){c.classList.remove("active");});
-        tab.classList.add("active");
-        $(tab.dataset.tab).classList.add("active");
-      };
-    });
   },
   loadComplaints: async function() {
     try {
@@ -853,7 +842,8 @@ var Ledger = {
   load: async function() { await Promise.all([this.loadEntries(),this.verify()]); },
   loadEntries: async function() {
     try {
-      var data = await API.get("/ledger?limit=30");
+      var offset = State.ledger.page * 30;
+      var data = await API.get("/ledger?limit=30&offset=" + offset);
       if (data._forbidden) { $("ledger-entries").innerHTML='<div class="table-empty">Access restricted</div>';return; }
       State.ledger.entries=data&&data.records||[]; State.ledger.total=data&&data.total||0;
       this.render();
@@ -862,6 +852,10 @@ var Ledger = {
   render: function() {
     var entries=State.ledger.entries, container=$("ledger-entries");
     $("ledger-total-entries").textContent=fmtNum(State.ledger.total);
+    var totalPages = Math.max(1, Math.ceil(State.ledger.total / 30));
+    $("ledger-page-info").textContent = "Page " + (State.ledger.page + 1) + " of " + totalPages;
+    $("btn-ledger-prev").disabled = State.ledger.page <= 0;
+    $("btn-ledger-next").disabled = State.ledger.page >= totalPages - 1;
     if (!entries.length) { container.innerHTML='<div class="table-empty">No ledger entries</div>';return; }
     container.innerHTML=entries.map(function(e){
       return '<div class="ledger-block"><span class="ledger-idx">#'+e.index+'</span><span class="ledger-actor">'+esc(e.actor)+'</span><span style="color:var(--accent-gold);font-weight:600;font-size:12px">'+esc(e.event_type)+'</span><span class="ledger-hash">'+esc(e.entity_id||e.payload_hash||"--")+'</span><span class="ledger-time">'+fmtDate(e.created_at)+'</span></div>';
@@ -882,15 +876,6 @@ var Ledger = {
 
 /* ═══ REPORTS ═══ */
 var Reports = {
-  initTabs: function() {
-    document.querySelectorAll("#report-tabs .tab-item").forEach(function(tab){
-      tab.onclick = function(){
-        document.querySelectorAll("#report-tabs .tab-item").forEach(function(t){t.classList.remove("active");});
-        document.querySelectorAll("#view-reports .tab-content").forEach(function(c){c.classList.remove("active");});
-        tab.classList.add("active"); $(tab.dataset.tab).classList.add("active");
-      };
-    });
-  },
   generateSituational: async function() {
     try {
       var data = await API.post("/reports/situational");
@@ -1016,6 +1001,8 @@ function setupUI() {
   });
 
   $("btn-ledger-verify")?.addEventListener("click",function(){ Ledger.verify(); });
+  $("btn-ledger-prev")?.addEventListener("click",function(){ if(State.ledger.page>0){State.ledger.page--;Ledger.loadEntries();} });
+  $("btn-ledger-next")?.addEventListener("click",function(){ var totalPages=Math.ceil(State.ledger.total/30); if(State.ledger.page<totalPages-1){State.ledger.page++;Ledger.loadEntries();} });
   $("btn-ledger-tamper")?.addEventListener("click",async function(){
     try {
       var r = await API.post("/ledger/tamper-demo");
