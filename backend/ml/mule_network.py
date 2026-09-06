@@ -26,8 +26,12 @@ Honest scope:
 from __future__ import annotations
 
 from collections import defaultdict
-
+import time
 import networkx as nx
+
+# In-memory cache for mule network builds (avoid recomputing for same params)
+_network_cache: dict[tuple, tuple[float, dict]] = {}
+_NETWORK_CACHE_TTL = 300  # 5 minutes
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -62,6 +66,14 @@ def build_mule_network(
     at MAX_NODES (highest-fraud-volume accounts first).
     """
     depth = max(1, min(int(depth), MAX_COMPONENT_DEPTH))
+
+    # Check cache (5-min TTL)
+    cache_key = (atm_id, depth, include_phone)
+    now = time.time()
+    if cache_key in _network_cache:
+        cached_time, cached_data = _network_cache[cache_key]
+        if now - cached_time < _NETWORK_CACHE_TTL:
+            return cached_data
 
     # ---- 1. Seed nodes ---------------------------------------------------
     atm_nodes: dict[str, dict] = {}
@@ -280,6 +292,8 @@ def build_mule_network(
         "flagged_mules_by_component": {str(k): v for k, v in fraud_accounts_by_comp.items()},
         "honest": True,
     }
+    _network_cache[cache_key] = (now, result)
+    return result
 
 
 def _short(token: str) -> str:

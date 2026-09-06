@@ -31,21 +31,14 @@ def terminal_nodes(
     # Scope filtering via repo: the repo layer returns only accounts in user's scope
     in_scope = repo.accounts_in_user_scope(db, user)
 
-    # Build graph from last 30 days of transfers (trailing window)
     from datetime import datetime, timedelta
-    as_of = services.resolve_as_of(db)  # simulated "now" or demo cache anchor
-    window_start = as_of - timedelta(days=30)
+    as_of = services.resolve_as_of(db)
 
     from ...database import engine
-    df = mule_graph.load_transfers(engine, as_of, window_days=30)
-    if df.empty:
+    graph, ranks, risk = mule_graph._get_or_build_graph(engine, as_of, window_days=30)
+    if not graph:
         return {"nodes": [], "note": "no transfers in window"}
 
-    graph = mule_graph.build_graph(df)
-    ranks = mule_graph.pagerank(graph)
-    risk = mule_graph.terminal_cashout_risk(graph, ranks)
-
-    # Filter to in-scope accounts
     scoped_risk = {acc: risk.get(acc, 0.0) for acc in in_scope if acc in risk}
     top = sorted(scoped_risk.items(), key=lambda kv: -kv[1])[:k]
 

@@ -1234,8 +1234,21 @@ from .data.synthetic_data import CITIES as CITIES_STATE  # noqa: E402  (state lo
 
 
 # -------------------------------- Statistics --------------------------------
+_summary_cache: dict[str, tuple[float, dict]] = {}
+_SUMMARY_CACHE_TTL = 30  # seconds
+
 def summary_stats(db: Session, k: int = 20, user=None) -> dict:
+    import time
     from .config import DEMO_MODE
+
+    # Cache key includes user role for RBAC correctness
+    cache_key = f"{getattr(user, 'role', 'anon')}:{getattr(user, 'scope', '')}"
+    now_ts = time.time()
+    if cache_key in _summary_cache:
+        cached_time, cached_data = _summary_cache[cache_key]
+        if now_ts - cached_time < _SUMMARY_CACHE_TTL:
+            return cached_data
+
 
     if DEMO_MODE:
         cached = read_demo_cache("risk-scores")
@@ -1253,7 +1266,7 @@ def summary_stats(db: Session, k: int = 20, user=None) -> dict:
         if s["risk_score"] >= RISK_THRESHOLD:
             high_by_city[s["city"]] = high_by_city.get(s["city"], 0) + 1
 
-    return {
+    result = {
         "generated_at": now,
         "total_complaints": repo.count_complaints(db),
         "complaints_24h": repo.count_complaints(db, since=h24),
@@ -1272,3 +1285,5 @@ def summary_stats(db: Session, k: int = 20, user=None) -> dict:
         "high_risk_atms_by_city": high_by_city,
         "hotspots": hotspots,
     }
+    _summary_cache[cache_key] = (now_ts, result)
+    return result

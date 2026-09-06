@@ -226,7 +226,7 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
   padding: 8px 16px; border-radius: var(--radius-md); font-size: var(--fs-sm);
   font-weight: 500; font-family: var(--font-sans); cursor: pointer;
   border: 1px solid var(--border); background: var(--surface); color: var(--text);
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .btn:hover { border-color: var(--accent); background: var(--surface-2); }
@@ -271,7 +271,7 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
   display: flex; align-items: center; gap: var(--sp-3); text-align: left;
   cursor: pointer; background: var(--bg-2); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 10px 12px; color: var(--text);
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .role-chip:hover { border-color: var(--accent); background: var(--surface); }
@@ -337,7 +337,7 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
 .nav-item {
   display: flex; align-items: center; gap: var(--sp-3); padding: 8px 12px;
   border-radius: var(--radius-md); color: var(--text-secondary); font-size: var(--fs-sm);
-  cursor: pointer; transition: all var(--transition-fast); text-decoration: none;
+  cursor: pointer; transition: background var(--transition-fast), color var(--transition-fast); text-decoration: none;
   margin-bottom: 2px;
 }
 
@@ -398,7 +398,7 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
 
 .status-dot {
   width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
-  animation: pulse 2s infinite;
+  animation: pulse 2s infinite; will-change: opacity;
 }
 
 .status-dot.warning { background: var(--warn); }
@@ -587,7 +587,7 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
   padding: 4px 12px; border-radius: 16px; font-size: var(--fs-xs);
   cursor: pointer; border: 1px solid var(--border); background: var(--bg-2);
   color: var(--text-secondary); font-family: var(--font-sans);
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .chip:hover { border-color: var(--accent); color: var(--text); }
@@ -720,7 +720,7 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
   width: 28px; height: 28px; border-radius: var(--radius-md);
   background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  font-size: 14px; transition: all var(--transition-fast);
+  font-size: 14px; transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .drawer-close:hover { background: var(--bg-2); color: var(--text); }
@@ -942,9 +942,8 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
 
 /* ==================== EVIDENCE MODAL ==================== */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
   z-index: 9000; display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
 }
 
 .modal-card {
@@ -1028,6 +1027,8 @@ h4 { font-size: var(--fs-md); font-weight: 600; color: var(--text); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+.toast { will-change: transform, opacity; }
+
 /* ==================== NOTICE ==================== */
 .notice {
   position: fixed; top: var(--sp-4); left: 50%; transform: translateX(-50%);
@@ -1090,7 +1091,7 @@ body.sim-active .modal-overlay, body.sim-active .modal-card { z-index: 21000; }
 .skeleton {
   background: linear-gradient(90deg, var(--bg-2) 25%, var(--surface-2) 50%, var(--bg-2) 75%);
   background-size: 200% 100%; animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm); will-change: background-position;
 }
 
 @keyframes shimmer {
