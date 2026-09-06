@@ -1,472 +1,665 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CashGuard AI — Proactive Cybercrime Intelligence</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="CashGuard AI — Cybercrime Intelligence Command Center" />
+  <title>CashGuard AI</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-  <link rel="stylesheet" href="style.css?v=18" />
-  <script>
-    window.__cashguardReady = false;
-    window.addEventListener('error', function(e) {
-      var el = document.getElementById('js-error-banner');
-      if (!el) { el = document.createElement('div'); el.id = 'js-error-banner'; document.body.prepend(el); }
-      el.textContent = 'Frontend script error — press Ctrl+F5 to reload.';
-      el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c44040;color:#fff;padding:10px;text-align:center;font:600 13px system-ui,sans-serif;';
-      e.preventDefault();
-    });
-  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- ==================== LOGIN PAGE ==================== -->
-  <div id="login-page" class="login-page">
-    <div class="login-left">
-      <div class="login-left-content">
-        <div class="login-logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
-        </div>
-        <h1>CashGuard <span>AI</span></h1>
-        <p class="login-subtitle">Proactive Cybercrime Intelligence</p>
-        <p class="login-tagline">Predictive analytics framework for forecasting likely cash withdrawal locations from cybercrime complaints, enabling actionable intelligence for timely intervention.</p>
-      </div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOGIN SCREEN
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">CashGuard AI</div>
+      <div class="login-subtitle">Cybercrime Intelligence Command Center</div>
     </div>
-    <div class="login-right">
-      <div class="login-form-header">
-        <h2>Secure Access</h2>
-        <p>I4C &bull; Cybercrime Coordination</p>
+    <form id="login-form" autocomplete="on">
+      <div class="login-field">
+        <label for="login-username">Officer ID</label>
+        <input id="login-username" type="text" placeholder="e.g. officer.statea" autocomplete="username" required />
       </div>
-      <label for="login-username" class="form-label">Username</label>
-      <input id="login-username" class="form-input" type="text" placeholder="e.g. officer.district1" autocomplete="off" />
-      <label for="login-password" class="form-label form-label-gap">Password</label>
-      <input id="login-password" class="form-input" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
-      <button id="btn-login" class="btn btn-primary btn-full btn-login">Sign In</button>
-      <p id="login-status" class="login-status">Ready &mdash; select a demo role to sign in.</p>
-      <div class="demo-roles">
-        <p class="demo-roles-label">Quick Access &mdash; Select Role</p>
-        <div class="role-grid">
-          <button type="button" class="role-chip" onclick="window.autofillDemo('officer.statea','PoliceStateA!1')" title="State-A police &mdash; national dashboard">
-            <span class="role-chip-icon police">&#x1F6E1;</span>
-            <div><div class="role-chip-name">State Police</div><div class="role-chip-user">officer.statea</div></div>
-          </button>
-          <button type="button" class="role-chip" onclick="window.autofillDemo('officer.district1','District1!1')" title="Northsagar district police">
-            <span class="role-chip-icon police">&#x1F6E1;</span>
-            <div><div class="role-chip-name">District Police</div><div class="role-chip-user">officer.district1</div></div>
-          </button>
-          <button type="button" class="role-chip" onclick="window.autofillDemo('bank.hdfc','HdfcBank!1')" title="HDFC Bank branch intelligence">
-            <span class="role-chip-icon bank">&#x1F3E6;</span>
-            <div><div class="role-chip-name">Bank</div><div class="role-chip-user">bank.hdfc</div></div>
-          </button>
-          <button type="button" class="role-chip" onclick="window.autofillDemo('i4c.admin','I4cAdmin!1')" title="National cybercrime hub &mdash; full oversight">
-            <span class="role-chip-icon i4c">&#x2696;&#xFE0F;</span>
-            <div><div class="role-chip-name">I4C Admin</div><div class="role-chip-user">i4c.admin</div></div>
-          </button>
-        </div>
+      <div class="login-field">
+        <label for="login-password">Passphrase</label>
+        <input id="login-password" type="password" placeholder="Enter passphrase" autocomplete="current-password" required />
       </div>
-      <div class="login-footer">
-        <span>Synthetic demonstration environment</span>
-        <span>Smart India Hackathon 2026</span>
-      </div>
+      <button id="btn-login" class="login-btn" type="submit">Authenticate</button>
+      <div id="login-error" class="login-error"></div>
+    </form>
+    <div class="login-disclosure">
+      Synthetic data only &mdash; No real PII. All 900 ATMs, 12,265 complaints,
+      200,001 withdrawals, 64,480 transfers are synthetically generated.
     </div>
   </div>
+</div>
 
-  <!-- ==================== APP SHELL ==================== -->
-  <div id="app-shell" class="app-shell hidden">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar">
-      <div class="sidebar-brand">
-        <div class="sidebar-logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
-        </div>
-        <div class="sidebar-brand-text">
-          <h3>CashGuard AI</h3>
-          <p>I4C &bull; Intelligence</p>
-        </div>
-        <button id="sidebar-toggle" class="sidebar-collapse-btn" title="Toggle sidebar" aria-label="Toggle sidebar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="sidebar-section">Operations</div>
-        <a class="nav-item active" data-view="overview" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2302;</span><span class="nav-label">Overview</span></a>
-        <a class="nav-item" data-view="risk" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F30D;</span><span class="nav-label">Risk Intelligence</span></a>
-        <a class="nav-item" data-view="alerts" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F6A8;</span><span class="nav-label">Alerts</span><span class="nav-badge hidden" id="sidebar-alert-badge"></span></a>
-        <a class="nav-item" data-view="investigations" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F50D;</span><span class="nav-label">Investigations</span></a>
-        <a class="nav-item" data-view="recovery" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4B0;</span><span class="nav-label">Recovery</span></a>
-        <div class="sidebar-section">Intelligence</div>
-        <a class="nav-item" data-view="mule" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F310;</span><span class="nav-label">Mule Network</span></a>
-        <a class="nav-item" data-view="ledger" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4CB;</span><span class="nav-label">Audit Trail</span></a>
-        <div class="sidebar-section">System</div>
-        <a class="nav-item" data-view="model" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x2699;&#xFE0F;</span><span class="nav-label">Model Health</span></a>
-        <a class="nav-item" data-view="reports" href="javascript:void(0)" role="button" tabindex="0"><span class="nav-icon">&#x1F4C4;</span><span class="nav-label">Reports</span></a>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="sidebar-user" id="sidebar-user">
-          <div class="sidebar-user-avatar" id="user-avatar">U</div>
-          <div class="sidebar-user-info">
-            <div class="sidebar-user-name" id="user-display-name">User</div>
-            <div class="sidebar-user-role" id="user-role-text">Role</div>
-          </div>
-        </div>
-      </div>
-    </aside>
+<!-- ═══════════════════════════════════════════════════════════════
+     APPLICATION SHELL
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="app-shell">
 
-    <!-- Main content area -->
-    <div class="main-area">
-      <!-- Top bar -->
-      <header class="topbar">
-        <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open navigation">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-        <span class="topbar-title" id="topbar-view-title">Overview</span>
-        <div class="topbar-spacer"></div>
-        <div class="topbar-status">
-          <span class="pill pill-warn" id="mode-pill">DEMO</span>
-          <span class="pill" id="as-of-pill">Forecast: &mdash;</span>
-          <span class="pill" id="scope-pill">Jurisdiction: &mdash;</span>
-        </div>
-        <div class="topbar-actions">
-          <select id="i18n-select" class="i18n-select" aria-label="Language" title="Dashboard language"></select>
-          <button id="btn-sim-load" class="btn btn-sm btn-warn" title="Load scripted scenario for demonstration.">&#x1F9EA; Demo</button>
-          <button id="btn-sim-exit" class="btn btn-sm btn-ghost hidden" title="Return to live view">&#x2716; Exit</button>
-          <button id="btn-cycle" class="btn btn-sm btn-accent" title="Run alert engine">&#x26A1; Run Cycle</button>
-          <button id="btn-refresh" class="btn btn-sm btn-ghost" title="Refresh data">&#x27F3;</button>
-          <button id="btn-switch" class="btn btn-sm btn-ghost" title="Sign out">&#x2192; Logout</button>
-        </div>
-      </header>
-
-      <!-- Workspace -->
-      <div class="workspace" id="workspace">
-        <div class="workspace-scroll">
-
-          <!-- Sim banner + watermark -->
-          <div id="sim-banner" class="sim-banner hidden"><span><b>SIMULATED SCENARIO</b> &mdash; Scripted demonstration data, NOT live model output. <button id="btn-sim-banner-exit" class="btn btn-sm btn-ok">Exit</button></span></div>
-          <div id="sim-watermark" class="sim-watermark hidden"></div>
-          <input type="hidden" id="asof-date" />
-
-          <!-- ========== OVERVIEW VIEW ========== -->
-          <div id="view-overview" class="view-panel">
-            <div class="stats-row" id="overview-stats"></div>
-            <div class="panel mb-4">
-              <div class="panel-header">
-                <h2>Priority Actions</h2>
-                <span class="pill pill-accent" id="priority-count"></span>
-              </div>
-              <div id="priority-actions" class="alert-feed"></div>
-            </div>
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Risk Intelligence Map</h2>
-                <div class="map-legend" id="map-legend">
-                  <span class="map-legend-item"><span class="map-legend-dot low"></span> Low</span>
-                  <span class="map-legend-item"><span class="map-legend-dot medium"></span> Medium</span>
-                  <span class="map-legend-item"><span class="map-legend-dot high"></span> High</span>
-                  <span class="map-legend-item"><span class="map-legend-dot critical"></span> Critical</span>
-                </div>
-              </div>
-              <div class="filter-bar" id="map-filter-bar">
-                <div class="filter-group">
-                  <span class="filter-label">State</span>
-                  <select id="dd-state" class="filter-select"><option value="All">All</option></select>
-                </div>
-                <div class="filter-divider"></div>
-                <div class="filter-group">
-                  <span class="filter-label">City</span>
-                  <select id="dd-city" class="filter-select"><option value="All">All</option></select>
-                </div>
-                <div class="filter-divider"></div>
-                <div class="filter-group">
-                  <span class="filter-label">Bank</span>
-                  <select id="dd-bank" class="filter-select"><option value="All">All</option></select>
-                </div>
-                <div class="filter-divider"></div>
-                <div class="filter-group">
-                  <span class="filter-label">Crime</span>
-                  <div class="city-chips" id="category-chips" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
-                </div>
-                <div class="filter-divider"></div>
-                <div class="filter-group">
-                  <span class="filter-label">Horizon</span>
-                  <select id="dd-horizon" class="filter-select"><option value="24">24h</option><option value="2">2h</option><option value="6">6h</option><option value="12">12h</option><option value="48">48h</option></select>
-                  <span class="pill pill-accent" id="horizon-confidence">&mdash;</span>
-                </div>
-                <div class="filter-divider"></div>
-                <button id="btn-replay" class="btn btn-sm">&#x27F2; Replay</button>
-                <button id="btn-live" class="btn btn-sm btn-ghost">Live</button>
-                <div class="filter-divider"></div>
-                <label class="chip" id="toggle-heat-chip"><input type="checkbox" id="toggle-heat" checked style="margin-right:4px;" /> Heat</label>
-                <label class="chip" id="toggle-forecast-chip"><input type="checkbox" id="toggle-forecast" checked style="margin-right:4px;" /> Forecast</label>
-              </div>
-              <div class="map-container">
-                <div id="map" class="map-wrapper"></div>
-              </div>
-            </div>
-            <div class="two-col mt-4">
-              <div class="panel">
-                <div class="panel-header">
-                  <h2>High-Risk ATMs</h2>
-                  <span class="pill" id="hotspot-count"></span>
-                </div>
-                <div class="table-container">
-                  <table id="hotspot-table" class="data-table">
-                    <thead><tr><th>#</th><th>ATM</th><th>Bank / Branch</th><th>City</th><th>Risk</th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="panel">
-                <div class="panel-header mt-3">
-                  <h2>Active Alerts</h2>
-                  <span class="pill pill-warn" id="alert-count"></span>
-                </div>
-                <div class="table-container">
-                  <table id="alert-table" class="data-table">
-                    <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Action</th><th>Status</th><th></th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <div class="panel mt-4">
-              <div class="panel-header">
-                <h2>Threshold Tuning</h2>
-                <span class="pill pill-accent">adjust alert sensitivity</span>
-              </div>
-              <div id="thr-explorer" class="threshold-explorer">
-                <label class="thr-slider-label">
-                  Alert threshold:
-                  <input type="range" id="thr-slider" min="50" max="95" value="70" step="5" class="thr-slider" />
-                  <b id="thr-value" class="thr-value-display">0.70</b>
-                </label>
-                <div id="thr-metrics" class="thr-metrics-text">loading...</div>
-                <div id="thr-bands" class="thr-bands"></div>
-              </div>
-            </div>
-            <div class="panel mt-4 mobile-only">
-              <div class="panel-header">
-                <h2>Nearby ATMs</h2>
-                <button id="btn-mobile-locate" class="btn btn-sm btn-accent" title="Use GPS position">&#x1F4F1; Use My Location</button>
-              </div>
-              <div id="mobile-nearby" class="empty-state">
-                <p>Click "Use My Location" to find nearby ATMs ranked by risk.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== RISK VIEW ========== -->
-          <div id="view-risk" class="view-panel hidden">
-            <div class="stats-row" id="risk-stats"></div>
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Risk Heatmap</h2>
-                <div class="map-legend" id="risk-map-legend">
-                  <span class="map-legend-item"><span class="map-legend-dot low"></span> Low</span>
-                  <span class="map-legend-item"><span class="map-legend-dot medium"></span> Medium</span>
-                  <span class="map-legend-item"><span class="map-legend-dot high"></span> High</span>
-                  <span class="map-legend-item"><span class="map-legend-dot critical"></span> Critical</span>
-                </div>
-              </div>
-              <div class="risk-view-layout">
-                <div class="risk-map-wrap">
-                  <div id="risk-map" style="width:100%;height:100%;"></div>
-                </div>
-                <div class="risk-list" id="risk-atm-list"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== ALERTS VIEW ========== -->
-          <div id="view-alerts" class="view-panel hidden">
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Alerts</h2>
-                <span class="pill pill-warn" id="alerts-view-count"></span>
-              </div>
-              <div class="table-container" style="max-height:600px;">
-                <table id="alerts-full-table" class="data-table">
-                  <thead><tr><th>Time</th><th>ATM</th><th>City</th><th>Tier</th><th>Risk</th><th>Action</th><th>Status</th><th></th></tr></thead>
-                  <tbody></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== INVESTIGATIONS VIEW ========== -->
-          <div id="view-investigations" class="view-panel hidden">
-            <div class="panel">
-              <div class="panel-header"><h2>Money Trail Analysis</h2></div>
-              <div class="table-container">
-                <table id="mule-graph-table" class="data-table">
-                  <thead><tr><th>#</th><th>Account</th><th>Risk</th><th>Connections</th><th>Inflow (INR)</th><th>Chain Depth</th><th></th></tr></thead>
-                  <tbody></tbody>
-                </table>
-              </div>
-              <div id="mule-graph-detail" class="empty-state">
-                <div class="empty-state-icon">&#x1F50D;</div>
-                <p>Select an account to view its money trail.</p>
-              </div>
-            </div>
-            <div class="panel mt-4">
-              <div class="panel-header">
-                <h2>I4C Intelligence Feed</h2>
-              </div>
-              <div id="inbox-panel" class="inbox">
-                <div class="empty-state">
-                  <div class="empty-state-icon">&#x1F4E8;</div>
-                  <p>No new intelligence items.</p>
-                </div>
-              </div>
-            </div>
-            <div class="panel mt-4">
-              <div class="panel-header">
-                <h2>Cross-State Handoffs</h2>
-                <span class="pill" id="handoff-count"></span>
-              </div>
-              <div id="handoff-panel">
-                <div class="empty-state">
-                  <div class="empty-state-icon">&#x1F310;</div>
-                  <p>No pending inter-agency handoffs.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== RECOVERY VIEW ========== -->
-          <div id="view-recovery" class="view-panel hidden">
-            <div class="panel mb-4">
-              <div class="panel-header"><h2>Recovery Funnel</h2><span class="pill" id="recovery-funnel-note">last 7 days</span></div>
-              <div id="i4c-funnel"></div>
-            </div>
-            <div class="panel mb-4">
-              <div class="panel-header"><h2>Fund-Block Recommendations</h2></div>
-              <div id="recovery-queue"></div>
-            </div>
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Closed-Loop Outcomes</h2>
-                <button id="btn-evaluate-outcomes" class="btn btn-sm btn-accent">Evaluate</button>
-                <span id="outcome-badge" class="pill"></span>
-              </div>
-              <div id="outcome-panel"></div>
-            </div>
-          </div>
-
-          <!-- ========== MULE NETWORK VIEW ========== -->
-          <div id="view-mule" class="view-panel hidden">
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Mule Network Intelligence</h2>
-                <span class="pill" id="mule-network-note">network analysis</span>
-              </div>
-              <div id="mule-network-wrap">
-                <div class="empty-state">
-                  <div class="empty-state-icon">&#x1F310;</div>
-                  <p>Loading network graph...</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== LEDGER VIEW ========== -->
-          <div id="view-ledger" class="view-panel hidden">
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Tamper-Evident Audit Trail</h2>
-                <span id="ledger-badge" class="pill pill-ok"></span>
-              </div>
-              <p class="ev-notice mb-3">Every alert, handoff, and action is immutably recorded. Verify integrity with one click.</p>
-              <div class="ledger-actions">
-                <button id="btn-ledger-verify" class="btn btn-sm btn-ok">Verify Ledger</button>
-                <button id="btn-ledger-tamper" class="btn btn-sm btn-warn">Tamper Demo</button>
-                <button id="btn-ledger-restore" class="btn btn-sm btn-ghost">Restore</button>
-              </div>
-              <div id="ledger-status"></div>
-              <div id="ledger-preview" class="empty-state">
-                <div class="empty-state-icon">&#x1F4CB;</div>
-                <p>Click "Verify Ledger" to check integrity.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== MODEL HEALTH VIEW ========== -->
-          <div id="view-model" class="view-panel hidden">
-            <div class="panel mb-4">
-              <div class="panel-header">
-                <h2>Model Health</h2>
-                <span id="i4c-audit" class="pill pill-ok"></span>
-              </div>
-              <div class="model-health-grid" id="model-health-grid"></div>
-            </div>
-            <div class="panel mb-4">
-              <div class="panel-header"><h2>Performance Metrics</h2></div>
-              <div id="model-metrics"></div>
-            </div>
-            <div class="panel mb-4">
-              <div class="panel-header">
-                <h2>Feature Drift Monitor</h2>
-                <span id="drift-badge"></span>
-              </div>
-              <div id="drift-panel">
-                <div class="empty-state">
-                  <div class="empty-state-icon">&#x2699;&#xFE0F;</div>
-                  <p>Running drift analysis...</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========== REPORTS VIEW ========== -->
-          <div id="view-reports" class="view-panel hidden">
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Intelligence Reports</h2>
-                <button id="btn-sit-report" class="btn btn-sm btn-accent">Generate Report (PDF)</button>
-              </div>
-              <div id="reports-panel">
-                <div class="empty-state">
-                  <div class="empty-state-icon">&#x1F4C4;</div>
-                  <h3>No Reports Generated</h3>
-                  <p>Click "Generate Report" to create a situational intelligence summary for your jurisdiction. Reports include risk assessments, active alerts, and recommended actions.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div><!-- workspace-scroll -->
-      </div><!-- workspace -->
-    </div><!-- main-area -->
-  </div><!-- app-shell -->
-
-  <!-- ==================== INTELLIGENCE DRAWER ==================== -->
-  <div id="drawer-overlay" class="drawer-overlay"></div>
-  <div id="atm-drawer" class="drawer">
-    <div class="drawer-header">
-      <div class="drawer-title">
-        <h3 id="drawer-atm-id">ATM</h3>
-        <p id="drawer-atm-meta">Risk Intelligence</p>
-      </div>
-      <button class="drawer-close" onclick="window.closeDrawer()">&times;</button>
+  <!-- ── Sidebar ──────────────────────────────────────────────── -->
+  <nav id="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-header">
+      <span class="sidebar-brand">CashGuard AI</span>
+      <span class="sidebar-brand-sub">Command</span>
+      <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">&#9776;</button>
     </div>
-    <div class="drawer-body" id="drawer-body"></div>
-    <div class="drawer-footer" id="drawer-footer"></div>
-  </div>
 
-  <!-- ==================== EVIDENCE MODAL ==================== -->
-  <div id="evidence-modal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2>Alert Evidence <span class="pill" id="ev-alert-id"></span></h2>
-        <span id="ev-audit"></span>
-        <button class="btn btn-sm btn-ghost" id="ev-close">&times; Close</button>
+    <div class="sidebar-nav" id="sidebar-nav">
+      <!-- COMMAND -->
+      <div class="nav-section">
+        <span class="nav-section-label">Command</span>
       </div>
-      <div id="ev-body"></div>
+      <div class="nav-item active" data-view="overview">
+        <span class="nav-icon">&#9632;</span>
+        <span class="nav-label">Overview</span>
+      </div>
+      <div class="nav-item" data-view="risk">
+        <span class="nav-icon">&#9650;</span>
+        <span class="nav-label">Risk Intelligence</span>
+      </div>
+      <div class="nav-item" data-view="alerts">
+        <span class="nav-icon">&#9888;</span>
+        <span class="nav-label">Alert Operations</span>
+        <span id="nav-alert-count" class="nav-badge" style="display:none">0</span>
+      </div>
+
+      <!-- OPERATIONS -->
+      <div class="nav-section">
+        <span class="nav-section-label">Operations</span>
+      </div>
+      <div class="nav-item" data-view="recovery">
+        <span class="nav-icon">&#8634;</span>
+        <span class="nav-label">Recovery Center</span>
+      </div>
+      <div class="nav-item" data-view="investigations">
+        <span class="nav-icon">&#128269;</span>
+        <span class="nav-label">Investigations</span>
+      </div>
+      <div class="nav-item" data-view="mule-network">
+        <span class="nav-icon">&#128279;</span>
+        <span class="nav-label">Mule Network</span>
+      </div>
+
+      <!-- INTELLIGENCE -->
+      <div class="nav-section">
+        <span class="nav-section-label">Intelligence</span>
+      </div>
+      <div class="nav-item" data-view="model-health">
+        <span class="nav-icon">&#9881;</span>
+        <span class="nav-label">Model Health</span>
+      </div>
+      <div class="nav-item" data-view="ledger">
+        <span class="nav-icon">&#128203;</span>
+        <span class="nav-label">Audit Trail</span>
+      </div>
+      <div class="nav-item" data-view="reports">
+        <span class="nav-icon">&#128196;</span>
+        <span class="nav-label">Reports</span>
+      </div>
     </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="sidebar-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-display-name">--</div>
+          <div class="sidebar-user-role" id="user-role-text">--</div>
+        </div>
+      </div>
+      <div class="nav-item" id="btn-logout" data-tip="Sign Out">
+        <span class="nav-icon">&#10140;</span>
+        <span class="nav-label">Sign Out</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Mobile sidebar overlay ───────────────────────────────── -->
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- ── Top Bar ──────────────────────────────────────────────── -->
+  <header id="topbar">
+    <button id="mobile-menu-btn" class="topbar-btn" style="display:none" aria-label="Open menu">&#9776;</button>
+    <div class="topbar-breadcrumb" id="breadcrumb"><strong>Overview</strong></div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-status" id="topbar-conn-status">
+      <span class="dot"></span>
+      <span id="conn-status-text">Connected</span>
+    </div>
+    <div class="topbar-role-badge" id="topbar-role-badge">I4C ADMIN</div>
+    <button id="btn-sim-toggle" class="topbar-btn" data-tip="Load Simulated Scenario">&#9654;</button>
+    <button id="btn-notifications" class="topbar-btn" data-tip="Notifications">&#128276;<span id="notif-dot" class="notif-dot" style="display:none"></span></button>
+  </header>
+
+  <!-- ── Workspace ────────────────────────────────────────────── -->
+  <main id="workspace" role="main">
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <div id="view-overview" class="workspace-view active">
+      <div id="sim-banner">
+        <span class="sim-label">&#9888; Simulated Scenario</span>
+        <span id="sim-banner-text">Scripted cash-out spree across 4 states</span>
+        <span class="sim-spacer"></span>
+        <button id="btn-sim-exit" class="btn btn-sm btn-secondary">Exit Simulation</button>
+      </div>
+      <div class="stats-strip" id="overview-stats">
+        <div class="stat-card">
+          <div class="stat-label">Total ATMs</div>
+          <div class="stat-value gold" id="stat-atms">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Alerts</div>
+          <div class="stat-value critical" id="stat-alerts">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">High Risk ATMs</div>
+          <div class="stat-value high" id="stat-risk">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Complaints (7d)</div>
+          <div class="stat-value" id="stat-complaints-7d">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Fraud Withdrawals (7d)</div>
+          <div class="stat-value" id="stat-fraud-7d">--</div>
+        </div>
+      </div>
+
+      <div class="grid-2-1" style="margin-bottom:14px">
+        <div class="map-wrap">
+          <div class="map-container" id="main-map-container">
+            <div id="main-map"></div>
+          </div>
+          <div class="map-legend">
+            <div class="map-legend-item"><span class="map-legend-dot critical"></span> Critical</div>
+            <div class="map-legend-item"><span class="map-legend-dot high"></span> High</div>
+            <div class="map-legend-item"><span class="map-legend-dot medium"></span> Medium</div>
+            <div class="map-legend-item"><span class="map-legend-dot low"></span> Low</div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="card">
+            <div class="card-header"><span class="card-title">&#9888; Priority Actions</span></div>
+            <div class="card-body" id="priority-actions">
+              <div class="empty-state">
+                <div class="empty-icon">&#10003;</div>
+                <div class="empty-title">All Clear</div>
+                <div class="empty-desc">No priority actions at this time.</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">&#128202; Recent Alerts</span></div>
+            <div class="card-body" id="recent-alerts-list" style="max-height:200px;overflow-y:auto">
+              <div class="table-empty">Loading alerts...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RISK INTELLIGENCE ═══ -->
+    <div id="view-risk" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Risk Intelligence</div>
+          <div class="view-subtitle">ATM risk scores with threshold filtering</div>
+        </div>
+        <div class="view-actions">
+          <select id="risk-horizon" style="padding:6px 28px 6px 10px">
+            <option value="2">2h</option>
+            <option value="6">6h</option>
+            <option value="12">12h</option>
+            <option value="24" selected>24h</option>
+            <option value="48">48h</option>
+            <option value="72">72h</option>
+          </select>
+          <select id="risk-city-filter">
+            <option value="">All Cities</option>
+          </select>
+          <button id="btn-run-alerts" class="btn btn-primary btn-sm">Run Alert Cycle</button>
+        </div>
+      </div>
+      <div class="map-wrap" style="margin-bottom:14px">
+        <div class="map-container" style="height:400px">
+          <div id="risk-map"></div>
+        </div>
+      </div>
+      <div class="stats-strip" id="risk-stats">
+        <div class="stat-card"><div class="stat-label">Total ATMs</div><div class="stat-value gold" id="risk-total-atms">--</div></div>
+        <div class="stat-card"><div class="stat-label">Critical</div><div class="stat-value critical" id="risk-critical-count">--</div></div>
+        <div class="stat-card"><div class="stat-label">High</div><div class="stat-value high" id="risk-high-count">--</div></div>
+        <div class="stat-card"><div class="stat-label">Medium</div><div class="stat-value medium" id="risk-medium-count">--</div></div>
+        <div class="stat-card"><div class="stat-label">Low</div><div class="stat-value low" id="risk-low-count">--</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">&#128202; ATM Risk Scores</span></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>ATM ID</th><th>Bank</th><th>City</th><th>District</th><th>State</th><th>Risk</th><th>Level</th><th></th></tr>
+              </thead>
+              <tbody id="risk-atm-table">
+                <tr><td colspan="8" class="table-empty">Loading risk scores...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ALERT OPERATIONS ═══ -->
+    <div id="view-alerts" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Alert Operations</div>
+          <div class="view-subtitle">Active alerts with lifecycle management</div>
+        </div>
+        <div class="view-actions">
+          <select id="alerts-status-filter">
+            <option value="">All Statuses</option>
+            <option value="new">New</option>
+            <option value="actioned">Actioned</option>
+            <option value="dispatched">Dispatched</option>
+            <option value="dismissed">Dismissed</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <button id="btn-run-alerts-2" class="btn btn-primary btn-sm">Run Alert Cycle</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">&#9888; Active Alerts</span></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Alert ID</th><th>ATM</th><th>City</th><th>Risk</th><th>Tier</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="alerts-full-table">
+                <tr><td colspan="8" class="table-empty">Loading alerts...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ INVESTIGATIONS ═══ -->
+    <div id="view-investigations" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Investigations</div>
+          <div class="view-subtitle">Complaint analysis, ATM profiling, and money trail reconstruction</div>
+        </div>
+        <div class="view-actions">
+          <input id="investigation-search" type="text" placeholder="Search complaints..." style="width:240px" />
+        </div>
+      </div>
+      <div class="tab-bar" id="investigation-tabs">
+        <div class="tab-item active" data-tab="inv-complaints">Complaints</div>
+        <div class="tab-item" data-tab="inv-atm-profile">ATM Profile</div>
+        <div class="tab-item" data-tab="inv-money-trail">Money Trail</div>
+        <div class="tab-item" data-tab="inv-evidence">Evidence</div>
+      </div>
+      <div id="inv-complaints" class="tab-content active">
+        <div class="card">
+          <div class="card-body" style="padding:0">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Complaint ID</th><th>City</th><th>Amount</th><th>Type</th><th>Date</th><th></th></tr>
+                </thead>
+                <tbody id="complaints-table">
+                  <tr><td colspan="6" class="table-empty">Loading complaints...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="inv-atm-profile" class="tab-content">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Select an ATM from Risk Intelligence or enter ID</span></div>
+          <div class="card-body">
+            <input id="inv-atm-id-input" type="text" placeholder="e.g. ATM-NOR0001" style="width:240px;margin-right:8px" />
+            <button id="btn-load-atm-profile" class="btn btn-primary btn-sm">Load Profile</button>
+            <div id="inv-atm-profile-content" style="margin-top:16px"></div>
+          </div>
+        </div>
+      </div>
+      <div id="inv-money-trail" class="tab-content">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Money Trail</span></div>
+          <div class="card-body">
+            <input id="inv-account-input" type="text" placeholder="Account token" style="width:280px;margin-right:8px" />
+            <button id="btn-load-trail" class="btn btn-primary btn-sm">Trace</button>
+            <div id="money-trail-output" class="money-trail" style="margin-top:16px">
+              <div class="empty-state">
+                <div class="empty-icon">&#128279;</div>
+                <div class="empty-title">Enter an account token</div>
+                <div class="empty-desc">Load a complaint or enter an account token to trace the money flow.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="inv-evidence" class="tab-content">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Evidence Viewer</span></div>
+          <div class="card-body">
+            <input id="inv-evidence-alert-id" type="text" placeholder="Alert ID (e.g. ALT-...)" style="width:280px;margin-right:8px" />
+            <button id="btn-load-evidence" class="btn btn-primary btn-sm">Load Evidence</button>
+            <div id="evidence-output" style="margin-top:16px">
+              <div class="empty-state">
+                <div class="empty-icon">&#128196;</div>
+                <div class="empty-title">Enter an Alert ID</div>
+                <div class="empty-desc">Load evidence for a specific alert to view SHAP explanation and related data.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MULE NETWORK ═══ -->
+    <div id="view-mule-network" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Mule Network</div>
+          <div class="view-subtitle">Money mule network graph analysis</div>
+        </div>
+        <div class="view-actions">
+          <select id="mule-depth">
+            <option value="1">Depth 1</option>
+            <option value="2" selected>Depth 2</option>
+            <option value="3">Depth 3</option>
+            <option value="4">Depth 4</option>
+          </select>
+          <input id="mule-atm-id" type="text" placeholder="ATM ID (optional)" style="width:180px" />
+          <button id="btn-load-mule" class="btn btn-primary btn-sm">Load Network</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">&#128279; Network Graph</span></div>
+        <div class="card-body">
+          <div id="mule-network-viz" style="height:500px;background:var(--bg-deep);border-radius:var(--radius-md);position:relative;overflow:hidden">
+            <canvas id="mule-canvas" style="width:100%;height:100%"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-header"><span class="card-title">&#128202; Terminal Nodes</span></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Account Token</th><th>Terminal Risk</th><th></th></tr>
+              </thead>
+              <tbody id="mule-terminal-table">
+                <tr><td colspan="3" class="table-empty">Click "Load Network" to start</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RECOVERY CENTER ═══ -->
+    <div id="view-recovery" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Recovery Center</div>
+          <div class="view-subtitle">Account freeze recommendations and recovery tracking</div>
+        </div>
+      </div>
+      <div class="stats-strip" id="recovery-stats">
+        <div class="stat-card"><div class="stat-label">Total Recommendations</div><div class="stat-value gold" id="rec-total">--</div></div>
+        <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value critical" id="rec-flagged">--</div></div>
+        <div class="stat-card"><div class="stat-label">Hold Placed</div><div class="stat-value high" id="rec-held">--</div></div>
+        <div class="stat-card"><div class="stat-label">Recovered</div><div class="stat-value low" id="rec-recovered">--</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">&#8634; Recovery Queue</span></div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Rec ID</th><th>Account</th><th>Bank</th><th>Amount</th><th>Suspected ATM</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="recovery-table">
+                <tr><td colspan="7" class="table-empty">Loading recovery data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MODEL HEALTH ═══ -->
+    <div id="view-model-health" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Model Health</div>
+          <div class="view-subtitle">ML model performance, drift monitoring, and synthetic data disclosure</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><span class="card-title">&#128200; Performance Metrics</span></div>
+        <div class="card-body">
+          <div class="metric-grid" id="model-metrics">
+            <div class="metric-card">
+              <div class="metric-label">ROC-AUC</div>
+              <div class="metric-value gold" id="m-roc-auc">0.6456</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Precision @ 20</div>
+              <div class="metric-value" id="m-prec-20">0.70</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Recall @ 20</div>
+              <div class="metric-value" id="m-rec-20">0.35</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">AP @ 50</div>
+              <div class="metric-value" id="m-ap-50">0.1169</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">RBA Lift</div>
+              <div class="metric-value" id="m-rba-lift">12.06</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Ensemble</div>
+              <div class="metric-value" id="m-ensemble">RF + GB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header">
+          <span class="card-title">&#128196; Synthetic Data Disclosure</span>
+        </div>
+        <div class="card-body">
+          <div class="report-output" style="border-left:3px solid var(--accent-gold)">
+            <p><strong>Honest Model Performance:</strong> ROC-AUC = 0.6456 (5-fold stratified CV, 95% CI: [0.6350, 0.6463])</p>
+            <p><strong>Previous invalid result (0.927)</strong> was caused by label leakage — complaints table included <code>atm_id</code>, creating direct feature-to-label mapping. Fixed by using only temporal and geographic features.</p>
+            <p>All data in this system is <strong>synthetically generated</strong> for demonstration purposes. No real PII or financial data is used.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:14px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">&#128161; Feature Impact</span></div>
+          <div class="card-body">
+            <div class="feature-bars" id="feature-impact-bars">
+              <div class="feature-bar"><span class="feature-bar-name">complaints_30d</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:85%"></div></div><span class="feature-bar-value">0.42</span></div>
+              <div class="feature-bar"><span class="feature-bar-name">fraud_ratio_30d</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:72%"></div></div><span class="feature-bar-value">0.35</span></div>
+              <div class="feature-bar"><span class="feature-bar-name">withdrawals_30d</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:60%"></div></div><span class="feature-bar-value">0.29</span></div>
+              <div class="feature-bar"><span class="feature-bar-name">avg_complaint_amount</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:45%"></div></div><span class="feature-bar-value">0.22</span></div>
+              <div class="feature-bar"><span class="feature-bar-name">city_fraud_rate</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:38%"></div></div><span class="feature-bar-value">0.18</span></div>
+              <div class="feature-bar"><span class="feature-bar-name">distance_to_border</span><div class="feature-bar-track"><div class="feature-bar-fill negative" style="width:30%"></div></div><span class="feature-bar-value">-0.15</span></div>
+              <div class="feature-bar"><span class="feature-bar-name">atm_age_days</span><div class="feature-bar-track"><div class="feature-bar-fill negative" style="width:22%"></div></div><span class="feature-bar-value">-0.11</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">&#128163; Drift Monitoring</span></div>
+          <div class="card-body" id="drift-status-content">
+            <div class="table-empty">Loading drift data...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">&#128295; Model Retraining</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button id="btn-retrain" class="btn btn-primary btn-sm">Retrain Model</button>
+            <span id="train-status" style="font-size:12px;color:var(--text-secondary)"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ AUDIT TRAIL ═══ -->
+    <div id="view-ledger" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Audit Trail</div>
+          <div class="view-subtitle">Tamper-proof blockchain ledger with integrity verification</div>
+        </div>
+        <div class="view-actions">
+          <button id="btn-ledger-verify" class="btn btn-secondary btn-sm">Verify Chain</button>
+          <button id="btn-ledger-tamper" class="btn btn-danger btn-sm">Tamper Demo</button>
+          <button id="btn-ledger-restore" class="btn btn-primary btn-sm">Restore</button>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:14px">
+        <div class="stat-card">
+          <div class="stat-label">Chain Status</div>
+          <div class="stat-value" id="ledger-chain-status">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Entries</div>
+          <div class="stat-value gold" id="ledger-total-entries">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Verification</div>
+          <div class="stat-value" id="ledger-verify-result">--</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">&#128203; Ledger Entries</span></div>
+        <div class="card-body" style="padding:0">
+          <div class="ledger-chain" id="ledger-entries">
+            <div class="table-empty">Loading ledger entries...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button id="btn-ledger-prev" class="btn btn-ghost btn-sm" disabled>Previous</button>
+          <span id="ledger-page-info" style="font-size:12px;color:var(--text-muted)">Page 1</span>
+          <button id="btn-ledger-next" class="btn btn-ghost btn-sm">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ REPORTS ═══ -->
+    <div id="view-reports" class="workspace-view">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Reports</div>
+          <div class="view-subtitle">Situational, hotspot, and city-level reports</div>
+        </div>
+      </div>
+      <div class="tab-bar" id="report-tabs">
+        <div class="tab-item active" data-tab="rpt-situational">Situational Report</div>
+        <div class="tab-item" data-tab="rpt-hotspot">Hotspot Report</div>
+        <div class="tab-item" data-tab="rpt-city">City Report</div>
+      </div>
+      <div id="rpt-situational" class="tab-content active">
+        <div class="card">
+          <div class="card-header"><span class="card-title">&#128196; National Situational Report</span></div>
+          <div class="card-body">
+            <p style="color:var(--text-secondary);margin-bottom:12px">Generates a national-level situational awareness report for I4C administration.</p>
+            <button id="btn-sit-report" class="btn btn-primary btn-sm">Generate Report</button>
+            <div id="report-output" class="report-output" style="margin-top:16px;display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="rpt-hotspot" class="tab-content">
+        <div class="card">
+          <div class="card-header"><span class="card-title">&#128293; Hotspot Analysis</span></div>
+          <div class="card-body">
+            <p style="color:var(--text-secondary);margin-bottom:12px">Identify geographic concentrations of high-risk ATMs.</p>
+            <button id="btn-hotspot-report" class="btn btn-primary btn-sm">Load Hotspots</button>
+            <div id="hotspot-output" style="margin-top:16px"></div>
+          </div>
+        </div>
+      </div>
+      <div id="rpt-city" class="tab-content">
+        <div class="card">
+          <div class="card-header"><span class="card-title">&#127961; City Report</span></div>
+          <div class="card-body">
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <input id="city-report-input" type="text" placeholder="City name" style="width:240px" />
+              <button id="btn-city-report" class="btn btn-primary btn-sm">Generate</button>
+            </div>
+            <div id="city-report-output" class="report-output" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══ DRAWER ═══ -->
+<div id="drawer-overlay"></div>
+<div id="drawer" role="dialog" aria-label="Details">
+  <div class="drawer-header">
+    <span class="drawer-title" id="drawer-title">Details</span>
+    <button class="drawer-close" id="drawer-close" aria-label="Close">&times;</button>
   </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-footer" id="drawer-footer"></div>
+</div>
 
-  <!-- Toast container -->
-  <div id="toast" class="toast hidden"></div>
-  <div id="notice" class="notice hidden"><span id="notice-text"></span><button id="notice-close" class="btn btn-sm btn-ghost" aria-label="Dismiss">&times;</button></div>
+<!-- ═══ MODAL ═══ -->
+<div id="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Confirm</span>
+      <button class="drawer-close" id="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
 
-  <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="app.js?v=17"></script>
+<!-- ═══ TOAST CONTAINER ═══ -->
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- ═══ SIMULATION WATERMARK ═══ -->
+<div id="sim-watermark">SIMULATED SCENARIO</div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
