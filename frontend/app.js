@@ -1035,7 +1035,19 @@ function setupUI() {
   $("btn-sit-report")?.addEventListener("click",function(){ Reports.generateSituational(); });
   $("btn-hotspot-report")?.addEventListener("click",function(){ Reports.loadHotspots(); });
   $("btn-city-report")?.addEventListener("click",function(){ Reports.generateCity(); });
-  Reports.initTabs();
+  document.querySelectorAll(".tab-bar").forEach(function(bar){
+    bar.querySelectorAll(".tab-item[data-tab]").forEach(function(tab){
+      tab.addEventListener("click",function(){
+        bar.querySelectorAll(".tab-item").forEach(function(t){t.classList.remove("active");});
+        tab.classList.add("active");
+        var target=tab.dataset.tab;
+        var parent=bar.parentElement;
+        parent.querySelectorAll(":scope > .tab-content").forEach(function(tc){
+          tc.classList.toggle("active",tc.id===target);
+        });
+      });
+    });
+  });
 
   $("btn-sim-toggle")?.addEventListener("click",function(){ if(State.simulation)Simulation.exit();else Simulation.load(); });
   $("btn-sim-exit")?.addEventListener("click",function(){ Simulation.exit(); });
@@ -1061,7 +1073,7 @@ function enterApp() {
   var user = State.user;
   if (user) {
     $("user-display-name").textContent=user.display_name||user.username;
-    $("user-role-text").textContent=(user.role||"").replace("_"," ");
+    $("user-role-text").textContent=(user.role||"").replace(/_/g," ");
     $("user-avatar").textContent=(user.username||"A").charAt(0).toUpperCase();
     var roleMap={"I4C_ADMIN":"I4C Admin","POLICE_STATE":"State Police","POLICE_DISTRICT":"District Police","BANK":"Bank"};
     $("topbar-role-badge").textContent=roleMap[user.role]||user.role;
