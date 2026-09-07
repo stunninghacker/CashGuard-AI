@@ -40,6 +40,7 @@ from .routes import (
     mule_graph,
     realtime_routes,
     recovery,
+    replay,
     reports,
     risk,
     routing,
@@ -142,7 +143,7 @@ async def cache_headers(request, call_next):
         response.headers["Cache-Control"] = "no-store"
     elif any(path.startswith(p) for p in ["/atms/banks", "/i18n/locales", "/train/status", "/drift/status"]):
         response.headers["Cache-Control"] = "public, max-age=60"
-    elif any(path.startswith(p) for p in ["/risk-scores", "/alerts", "/stats/", "/hotspots", "/horizons"]):
+    elif any(path.startswith(p) for p in ["/risk-scores", "/alerts", "/stats/", "/hotspots", "/horizons", "/model/status", "/replay/"]):
         response.headers["Cache-Control"] = "private, max-age=10"
     return response
 
@@ -188,6 +189,7 @@ app.include_router(reports.router)
 app.include_router(ledger.router)
 app.include_router(mobile.router)
 app.include_router(recovery.router)
+app.include_router(replay.router)
 app.include_router(routing.router)
 app.include_router(simulated.router)
 app.include_router(realtime_routes.router)

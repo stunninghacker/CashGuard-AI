@@ -49,7 +49,7 @@ def resolve_as_of(db: Session, as_of: str | None = None) -> datetime:
 # thread computes while the others wait for the shared result.
 import threading as _threading
 
-_score_cache: dict = {"key": None, "payload": None, "expires_at": None}
+_score_cache: dict = {"key": None, "payload": None, "expires_at": None, "computed_at": None}
 _score_cache_lock = _threading.Lock()
 
 
@@ -57,6 +57,7 @@ def _invalidate_score_cache() -> None:
     _score_cache["key"] = None
     _score_cache["payload"] = None
     _score_cache["expires_at"] = None
+    _score_cache["computed_at"] = None
 
 
 def _scope_risk_scores(scores: list[dict], user=None) -> list[dict]:
@@ -107,6 +108,7 @@ def get_risk_scores(db: Session, as_of: datetime | None = None, city: str | None
                 _score_cache["key"] = key
                 _score_cache["payload"] = cached
                 _score_cache["expires_at"] = now + timedelta(seconds=SCORE_CACHE_SECONDS)
+                _score_cache["computed_at"] = now
             else:
                 cached = _score_cache["payload"]
     scores = [dict(s) for s in cached]  # copy: callers may mutate
@@ -127,6 +129,62 @@ def get_hotspots(db: Session, k: int = 20, city: str | None = None, as_of: datet
     scores = get_risk_scores(db, as_of=as_of, city=city)
     scores.sort(key=lambda s: s["risk_score"], reverse=True)
     return scores[:k]
+
+
+def get_model_status(db: Session, user=None, horizon: int = 24, as_of: str | None = None) -> dict:
+    """Read-only observability snapshot for the dashboard Model Status strip.
+
+    Surfaces when inference last ran, how many ATMs were scored (RBAC-scoped),
+    and the current max/median risk so a legitimately calm day renders as a
+    legible state instead of dead air. Uses the same cached scoring path the
+    dashboards already use — no separate model run, no methodology change.
+    `as_of` re-points the snapshot at a historical instant (replay mode).
+    """
+    demo_rows = read_demo_cache("risk-scores")
+    if demo_rows is not None and not as_of:
+        rows = _scope_risk_scores(demo_rows, user)
+        source = "demo_cache"
+        computed_at = None
+        cache_expires_at = None
+        as_of_ref = max((r.get("as_of") for r in demo_rows if r.get("as_of")), default=None)
+    else:
+        ref = datetime.fromisoformat(as_of) if as_of else resolve_as_of(db)
+        rows = get_risk_scores(db, as_of=ref, user=user, horizon=horizon)
+        source = "live_inference"
+        computed_at = _score_cache.get("computed_at")
+        cache_expires_at = _score_cache.get("expires_at")
+        as_of_ref = ref
+
+    scores = sorted(float(s.get("risk_score") or 0.0) for s in rows)
+    n = len(scores)
+    median = scores[n // 2] if n % 2 else (scores[n // 2 - 1] + scores[n // 2]) / 2
+    p90 = scores[min(n - 1, max(0, int(round(0.9 * (n - 1)))))] if n else 0.0
+    max_risk = scores[-1] if scores else 0.0
+    above = sum(1 for v in scores if v >= RISK_THRESHOLD)
+
+    def _iso(v):
+        return v.isoformat() if isinstance(v, datetime) else (v if isinstance(v, str) else None)
+
+    return {
+        "status": "ok",
+        "source": source,
+        "demo_mode": DEMO_MODE,
+        "as_of": _iso(as_of_ref),
+        "horizon_hours": horizon,
+        "threshold": RISK_THRESHOLD,
+        "atms_scored": n,
+        "max_risk": round(max_risk, 4),
+        "median_risk": round(median, 4),
+        "p90_risk": round(p90, 4),
+        "above_threshold": above,
+        "calm_day": n > 0 and max_risk < RISK_THRESHOLD,
+        "levels": {
+            lvl: sum(1 for s in rows if _risk_level(float(s.get("risk_score") or 0.0)) == lvl)
+            for lvl in ("CRITICAL", "HIGH", "MEDIUM", "LOW")
+        },
+        "computed_at": _iso(computed_at),
+        "cache_expires_at": _iso(cache_expires_at),
+    }
 
 
 def _risk_level(score: float) -> str:

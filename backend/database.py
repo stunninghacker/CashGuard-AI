@@ -11,17 +11,38 @@ query goes through backend/repositories.py so that a future swap from
 """
 from __future__ import annotations
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from .config import DATABASE_URL
 
 # SQLite needs check_same_thread=False because FastAPI serves requests from a
 # thread pool while the APScheduler alert job may run on another thread.
-_connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+_is_sqlite = DATABASE_URL.startswith("sqlite")
+_connect_args = {"check_same_thread": False, "timeout": 30} if _is_sqlite else {}
 
-engine = create_engine(DATABASE_URL, connect_args=_connect_args, future=True)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=_connect_args,
+    future=True,
+)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+
+
+if _is_sqlite:
+
+    @event.listens_for(engine, "connect")
+    def _sqlite_pragmas(dbapi_conn, _record):
+        """Per-connection pragmas: WAL (readers never block the writer) and a
+        30s busy timeout instead of an immediate OperationalError — this is what
+        keeps the live demo from dying with "database is locked" when the
+        scheduler's alert cycle, a webhook-triggered request, and a dashboard
+        poll overlap on the single SQLite file."""
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA journal_mode=WAL")
+        cur.execute("PRAGMA busy_timeout=30000")
+        cur.execute("PRAGMA synchronous=NORMAL")
+        cur.close()
 
 
 class Base(DeclarativeBase):

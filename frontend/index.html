@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -8,15 +8,13 @@
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     LOGIN SCREEN
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ LOGIN ═══════════════════════════════════════════════ -->
 <div id="login-page">
   <div class="login-card">
     <div class="login-header">
@@ -33,7 +31,7 @@
         <input id="login-password" type="password" placeholder="Enter passphrase" autocomplete="current-password" required />
       </div>
       <button id="btn-login" class="login-btn" type="submit" aria-label="Authenticate">Authenticate</button>
-      <div id="login-error" class="login-error"></div>
+      <div id="login-error" class="login-error" role="alert"></div>
     </form>
     <div class="login-disclosure">
       Synthetic data only &mdash; No real PII. All 900 ATMs, 12,265 complaints,
@@ -42,12 +40,10 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     APPLICATION SHELL
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ APP SHELL ════════════════════════════════════════════ -->
 <div id="app-shell">
 
-  <!-- ── Sidebar ──────────────────────────────────────────────── -->
+  <!-- ── Sidebar ──────────────────────────────────────────── -->
   <nav id="sidebar" role="navigation" aria-label="Main navigation">
     <div class="sidebar-header">
       <span class="sidebar-brand">CashGuard AI</span>
@@ -56,54 +52,45 @@
     </div>
 
     <div class="sidebar-nav" id="sidebar-nav">
-      <!-- COMMAND -->
-      <div class="nav-section">
-        <span class="nav-section-label">Command</span>
-      </div>
-      <div class="nav-item active" data-view="overview">
+      <div class="nav-section"><span class="nav-section-label">Command</span></div>
+      <div class="nav-item active" data-view="overview" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-layout-dashboard"></span>
         <span class="nav-label">Overview</span>
       </div>
-      <div class="nav-item" data-view="risk">
+      <div class="nav-item" data-view="risk" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-shield-alert"></span>
         <span class="nav-label">Risk Intelligence</span>
       </div>
-      <div class="nav-item" data-view="alerts">
+      <div class="nav-item" data-view="alerts" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-bell-ring"></span>
         <span class="nav-label">Alert Operations</span>
         <span id="nav-alert-count" class="nav-badge" style="display:none">0</span>
       </div>
 
-      <!-- OPERATIONS -->
-      <div class="nav-section">
-        <span class="nav-section-label">Operations</span>
-      </div>
-      <div class="nav-item" data-view="recovery">
+      <div class="nav-section"><span class="nav-section-label">Operations</span></div>
+      <div class="nav-item" data-view="recovery" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-rotate-ccw"></span>
         <span class="nav-label">Recovery Center</span>
       </div>
-      <div class="nav-item" data-view="investigations">
+      <div class="nav-item" data-view="investigations" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-search"></span>
         <span class="nav-label">Investigations</span>
       </div>
-      <div class="nav-item" data-view="mule-network">
+      <div class="nav-item" data-view="mule-network" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-network"></span>
         <span class="nav-label">Mule Network</span>
       </div>
 
-      <!-- INTELLIGENCE -->
-      <div class="nav-section">
-        <span class="nav-section-label">Intelligence</span>
-      </div>
-      <div class="nav-item" data-view="model-health">
+      <div class="nav-section"><span class="nav-section-label">Intelligence</span></div>
+      <div class="nav-item" data-view="model-health" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-activity"></span>
         <span class="nav-label">Model Health</span>
       </div>
-      <div class="nav-item" data-view="ledger">
+      <div class="nav-item" data-view="ledger" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-file-text"></span>
         <span class="nav-label">Audit Trail</span>
       </div>
-      <div class="nav-item" data-view="reports">
+      <div class="nav-item" data-view="reports" role="button" tabindex="0">
         <span class="nav-icon lucide lucide-bar-chart-2"></span>
         <span class="nav-label">Reports</span>
       </div>
@@ -117,77 +104,89 @@
           <div class="sidebar-user-role" id="user-role-text">--</div>
         </div>
       </div>
-      <div class="nav-item" id="btn-logout" data-tip="Sign Out">
+      <div class="nav-item" id="btn-logout" data-tip="Sign Out" role="button" tabindex="0">
         <span class="nav-icon"><span class="lucide lucide-arrow-right"></span></span>
         <span class="nav-label">Sign Out</span>
       </div>
     </div>
   </nav>
 
-  <!-- ── Mobile sidebar overlay ───────────────────────────────── -->
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-  <!-- ── Top Bar ──────────────────────────────────────────────── -->
+  <!-- ── Top Bar ──────────────────────────────────────────── -->
   <header id="topbar">
     <button id="mobile-menu-btn" class="topbar-btn" style="display:none" aria-label="Open menu"><span class="lucide lucide-menu"></span></button>
     <div class="topbar-breadcrumb" id="breadcrumb"><strong>Overview</strong></div>
     <div class="topbar-spacer"></div>
     <div class="topbar-status" id="topbar-conn-status">
       <span class="dot"></span>
-      <span id="conn-status-text">Connected</span>
+      <span id="conn-status-text">Connecting…</span>
     </div>
-    <div class="topbar-role-badge" id="topbar-role-badge">I4C ADMIN</div>
-    <button id="btn-sim-toggle" class="topbar-btn" data-tip="Load Simulated Scenario" aria-label="Toggle simulation"><span class="lucide lucide-play"></span></button>
-    <button id="btn-notifications" class="topbar-btn" data-tip="Notifications" aria-label="Notifications"><span class="lucide lucide-bell"></span><span id="notif-dot" class="notif-dot" style="display:none"></span></button>
+    <!-- P2: role + scope permanently visible, not just at login -->
+    <div class="topbar-role-chip" id="topbar-role-chip" aria-label="Your role and jurisdiction scope">
+      <span class="role-name" id="topbar-role-name">—</span>
+      <span class="role-scope mono" id="topbar-role-scope"></span>
+    </div>
+    <button id="btn-replay-day-top" class="topbar-btn text-btn" data-tip="Replay a real historical high-risk day (live model)" aria-label="Replay Historical High-Risk Day"><span class="lucide lucide-history"></span><span class="topbar-btn-text">Replay</span></button>
+    <button id="btn-sim-toggle" class="topbar-btn text-btn" data-tip="Load SCRIPTED simulated scenario" aria-label="Toggle simulation"><span class="lucide lucide-play"></span><span class="topbar-btn-text">Scripted</span></button>
+    <button id="btn-notifications" class="topbar-btn topbar-alert-badge" data-tip="Notifications" aria-label="Notifications">
+      <span class="lucide lucide-bell"></span>
+      <span id="notif-count" class="badge-count" style="display:none" aria-live="polite">0</span>
+    </button>
   </header>
 
-  <!-- ── Workspace ────────────────────────────────────────────── -->
+  <!-- ── Workspace ────────────────────────────────────────── -->
   <main id="workspace" role="main">
 
-    <!-- ═══ OVERVIEW ═══ -->
+    <!-- ═══ OVERVIEW — command deck ═══ -->
     <div id="view-overview" class="workspace-view active">
-      <div id="sim-banner">
+      <div id="sim-banner" role="status">
         <span class="sim-label"><span class="lucide lucide-alert-triangle"></span> Simulated Scenario</span>
         <span id="sim-banner-text">Scripted cash-out spree across 4 states</span>
         <span class="sim-spacer"></span>
         <button id="btn-sim-exit" class="btn btn-sm btn-secondary" aria-label="Exit Simulation">Exit Simulation</button>
       </div>
-      <div class="stats-strip" id="overview-stats">
-        <div class="stat-card">
-          <div class="stat-label">Total ATMs</div>
-          <div class="stat-value gold" id="stat-atms">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Active Alerts</div>
-          <div class="stat-value critical" id="stat-alerts">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">High Risk ATMs</div>
-          <div class="stat-value high" id="stat-risk">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Complaints (7d)</div>
-          <div class="stat-value" id="stat-complaints-7d">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Fraud Withdrawals (7d)</div>
-          <div class="stat-value" id="stat-fraud-7d">--</div>
-        </div>
+      <div id="replay-banner" role="status">
+        <span class="sim-label"><span class="lucide lucide-history"></span> Historical Replay</span>
+        <span id="replay-banner-text">Live model scoring a real historical high-risk day</span>
+        <span class="sim-spacer"></span>
+        <button id="btn-replay-exit" class="btn btn-sm btn-secondary" aria-label="Exit Replay">Exit Replay</button>
       </div>
 
-      <div class="grid-2-1" style="margin-bottom:14px">
-        <div class="map-wrap">
-          <div class="map-container" id="main-map-container">
-            <div id="main-map"></div>
+      <!-- P1: Model Status strip -->
+      <div class="card" id="model-status-strip">
+        <div class="card-body model-status-body">
+          <div class="ms-ident">
+            <span class="ms-dot ms-dot-down" id="ms-dot" aria-hidden="true"></span>
+            <span class="ms-title">Model Status</span>
+            <span class="chip chip-gold" id="ms-source-chip">LIVE MODEL</span>
           </div>
-          <div class="map-legend">
-            <div class="map-legend-item"><span class="map-legend-dot critical"></span> Critical</div>
-            <div class="map-legend-item"><span class="map-legend-dot high"></span> High</div>
-            <div class="map-legend-item"><span class="map-legend-dot medium"></span> Medium</div>
-            <div class="map-legend-item"><span class="map-legend-dot low"></span> Low</div>
+          <div class="ms-metrics" aria-live="polite">
+            <div class="ms-metric"><span class="ms-k">Last inference</span><span class="ms-v" id="ms-computed">--</span></div>
+            <div class="ms-metric"><span class="ms-k">ATMs scored</span><span class="ms-v" id="ms-atms">--</span></div>
+            <div class="ms-metric"><span class="ms-k">Max risk</span><span class="ms-v" id="ms-max">--</span></div>
+            <div class="ms-metric"><span class="ms-k">Median risk</span><span class="ms-v" id="ms-median">--</span></div>
+          </div>
+          <button id="btn-replay-day" class="btn btn-secondary btn-sm" aria-label="Replay Historical High-Risk Day"><span class="lucide lucide-history"></span> Replay High-Risk Day</button>
+        </div>
+        <div class="ms-note" id="ms-note">Loading model status…</div>
+      </div>
+
+      <!-- P2: map hero + collapsible side rail -->
+      <div class="command-deck" id="command-deck">
+        <div class="map-hero">
+          <div class="map-hud">
+            <span class="hud-pill live" id="map-hud-mode"><span class="lucide lucide-radio"></span> LIVE RISK MAP</span>
+          </div>
+          <div class="map-container"><div id="main-map"></div></div>
+          <div class="map-legend" aria-label="Risk level legend">
+            <div class="map-legend-item"><span class="map-legend-dot critical"></span> <span class="lvl-word">Critical</span> &ge;85%</div>
+            <div class="map-legend-item"><span class="map-legend-dot high"></span> <span class="lvl-word">High</span> 70&ndash;85%</div>
+            <div class="map-legend-item"><span class="map-legend-dot medium"></span> <span class="lvl-word">Medium</span> 40&ndash;70%</div>
+            <div class="map-legend-item"><span class="map-legend-dot low"></span> <span class="lvl-word">Low</span> &lt;40%</div>
           </div>
         </div>
-        <div class="stack">
+        <div class="deck-rail" id="deck-rail">
           <div class="card">
             <div class="card-header"><span class="card-title"><span class="lucide lucide-alert-triangle"></span> Priority Actions</span></div>
             <div class="card-body" id="priority-actions">
@@ -199,12 +198,26 @@
             </div>
           </div>
           <div class="card">
-            <div class="card-header"><span class="card-title"><span class="lucide lucide-bell"></span> Recent Alerts</span></div>
-            <div class="card-body" id="recent-alerts-list" style="max-height:200px;overflow-y:auto">
-              <div class="table-empty">Loading alerts...</div>
+            <div class="card-header"><span class="card-title"><span class="lucide lucide-bell"></span> Live Alert Feed</span><span class="chip chip-gold" id="feed-counter" style="display:none">0 new</span></div>
+            <div class="card-body" id="recent-alerts-list" style="max-height:240px;overflow-y:auto">
+              <div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title"><span class="lucide lucide-flame"></span> Top Hotspots Now</span></div>
+            <div class="card-body" id="top-hotspots-list" style="max-height:220px;overflow-y:auto">
+              <div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div>
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="stats-strip" id="overview-stats">
+        <div class="stat-card"><div class="stat-label">Total ATMs</div><div class="stat-value gold" id="stat-atms">--</div></div>
+        <div class="stat-card"><div class="stat-label">Active Alerts</div><div class="stat-value critical" id="stat-alerts">--</div></div>
+        <div class="stat-card"><div class="stat-label" id="stat-risk-label">High Risk ATMs</div><div class="stat-value high" id="stat-risk">--</div></div>
+        <div class="stat-card"><div class="stat-label">Complaints (7d)</div><div class="stat-value" id="stat-complaints-7d">--</div></div>
+        <div class="stat-card"><div class="stat-label">Fraud Withdrawals (7d)</div><div class="stat-value" id="stat-fraud-7d">--</div></div>
       </div>
     </div>
 
@@ -213,50 +226,41 @@
       <div class="view-header">
         <div>
           <div class="view-title">Risk Intelligence</div>
-          <div class="view-subtitle">ATM risk scores with threshold filtering</div>
+          <div class="view-subtitle">Live model forecast — P(fraud cash-out) per ATM for the selected horizon</div>
         </div>
         <div class="view-actions">
-          <select id="risk-horizon" style="padding:6px 28px 6px 10px">
-            <option value="2">2h</option>
-            <option value="6">6h</option>
-            <option value="12">12h</option>
-            <option value="24" selected>24h</option>
-            <option value="48">48h</option>
-            <option value="72">72h</option>
+          <select id="risk-horizon" aria-label="Forecast horizon">
+            <option value="2">2h</option><option value="6">6h</option><option value="12">12h</option>
+            <option value="24" selected>24h</option><option value="48">48h</option><option value="72">72h</option>
           </select>
-          <select id="risk-state-filter">
-            <option value="">All States</option>
-          </select>
-          <select id="risk-city-filter">
-            <option value="">All Cities</option>
-          </select>
-          <select id="risk-bank-filter">
-            <option value="">All Banks</option>
-          </select>
-          <select id="risk-level-filter">
+          <select id="risk-city-filter" aria-label="Filter by city"><option value="">All Cities</option></select>
+          <select id="risk-bank-filter" aria-label="Filter by bank"><option value="">All Banks</option></select>
+          <select id="risk-level-filter" aria-label="Filter by risk level">
             <option value="">All Levels</option>
-            <option value="CRITICAL">Critical</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
+            <option value="CRITICAL">Critical</option><option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option><option value="LOW">Low</option>
           </select>
           <button id="btn-run-alerts" class="btn btn-primary btn-sm" aria-label="Run Alert Cycle">Run Alert Cycle</button>
         </div>
       </div>
-      <div class="map-wrap" style="margin-bottom:14px">
-        <div class="map-container" style="height:400px">
-          <div id="risk-map"></div>
+      <div class="map-hero" style="margin-bottom:16px">
+        <div class="map-container" style="height:46vh;min-height:340px"><div id="risk-map"></div></div>
+        <div class="map-legend" aria-label="Risk level legend">
+          <div class="map-legend-item"><span class="map-legend-dot critical"></span> <span class="lvl-word">Critical</span> &ge;85%</div>
+          <div class="map-legend-item"><span class="map-legend-dot high"></span> <span class="lvl-word">High</span> 70&ndash;85%</div>
+          <div class="map-legend-item"><span class="map-legend-dot medium"></span> <span class="lvl-word">Medium</span> 40&ndash;70%</div>
+          <div class="map-legend-item"><span class="map-legend-dot low"></span> <span class="lvl-word">Low</span> &lt;40%</div>
         </div>
       </div>
       <div class="stats-strip" id="risk-stats">
-        <div class="stat-card"><div class="stat-label">Total ATMs</div><div class="stat-value gold" id="risk-total-atms">--</div></div>
-        <div class="stat-card"><div class="stat-label">Critical</div><div class="stat-value critical" id="risk-critical-count">--</div></div>
-        <div class="stat-card"><div class="stat-label">High</div><div class="stat-value high" id="risk-high-count">--</div></div>
-        <div class="stat-card"><div class="stat-label">Medium</div><div class="stat-value medium" id="risk-medium-count">--</div></div>
-        <div class="stat-card"><div class="stat-label">Low</div><div class="stat-value low" id="risk-low-count">--</div></div>
+        <div class="stat-card"><div class="stat-label">ATMs in scope</div><div class="stat-value gold" id="risk-total-atms">--</div></div>
+        <div class="stat-card"><div class="stat-label">Critical (&ge;85%)</div><div class="stat-value critical" id="risk-critical-count">--</div></div>
+        <div class="stat-card"><div class="stat-label">High (70&ndash;85%)</div><div class="stat-value high" id="risk-high-count">--</div></div>
+        <div class="stat-card"><div class="stat-label">Medium (40&ndash;70%)</div><div class="stat-value medium" id="risk-medium-count">--</div></div>
+        <div class="stat-card"><div class="stat-label">Low (&lt;40%)</div><div class="stat-value low" id="risk-low-count">--</div></div>
       </div>
       <div class="card">
-        <div class="card-header"><span class="card-title"><span class="lucide lucide-list"></span> ATM Risk Scores</span></div>
+        <div class="card-header"><span class="card-title"><span class="lucide lucide-list"></span> ATM Risk Scores</span><span class="chip chip-info" id="risk-scoped-note" style="display:none">Scoped to your jurisdiction</span></div>
         <div class="card-body" style="padding:0">
           <div class="table-wrap">
             <table>
@@ -264,7 +268,7 @@
                 <tr><th>ATM ID</th><th>Bank</th><th>City</th><th>District</th><th>State</th><th>Risk</th><th>Level</th><th></th></tr>
               </thead>
               <tbody id="risk-atm-table">
-                <tr><td colspan="8" class="table-empty">Loading risk scores...</td></tr>
+                <tr><td colspan="8" class="table-empty">Loading risk scores…</td></tr>
               </tbody>
             </table>
           </div>
@@ -277,22 +281,24 @@
       <div class="view-header">
         <div>
           <div class="view-title">Alert Operations</div>
-          <div class="view-subtitle">Active alerts with lifecycle management</div>
+          <div class="view-subtitle">Alert lifecycle — acknowledge, action, dismiss, escalate (every action is ledger-logged)</div>
         </div>
         <div class="view-actions">
-          <select id="alerts-status-filter">
+          <select id="alerts-status-filter" aria-label="Filter by status">
             <option value="">All Statuses</option>
             <option value="new">New</option>
+            <option value="acknowledged">Acknowledged</option>
             <option value="actioned">Actioned</option>
-            <option value="dispatched">Dispatched</option>
+            <option value="monitoring">Monitoring</option>
+            <option value="review_requested">Review Requested</option>
+            <option value="escalated">Escalated</option>
             <option value="dismissed">Dismissed</option>
-            <option value="resolved">Resolved</option>
           </select>
           <button id="btn-run-alerts-2" class="btn btn-primary btn-sm" aria-label="Run Alert Cycle">Run Alert Cycle</button>
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><span class="card-title"><span class="lucide lucide-alert-triangle"></span> Active Alerts</span></div>
+        <div class="card-header"><span class="card-title"><span class="lucide lucide-alert-triangle"></span> Alerts</span><span class="chip chip-gold" id="alerts-count-chip" style="display:none">0</span></div>
         <div class="card-body" style="padding:0">
           <div class="table-wrap">
             <table>
@@ -300,7 +306,7 @@
                 <tr><th>Alert ID</th><th>ATM</th><th>City</th><th>Risk</th><th>Tier</th><th>Status</th><th>Created</th><th>Actions</th></tr>
               </thead>
               <tbody id="alerts-full-table">
-                <tr><td colspan="8" class="table-empty">Loading alerts...</td></tr>
+                <tr><td colspan="8" class="table-empty">Loading alerts…</td></tr>
               </tbody>
             </table>
           </div>
@@ -316,7 +322,7 @@
           <div class="view-subtitle">Complaint analysis, ATM profiling, and money trail reconstruction</div>
         </div>
         <div class="view-actions">
-          <input id="investigation-search" type="text" placeholder="Search complaints..." style="width:240px" />
+          <input id="investigation-search" type="text" placeholder="Search complaints…" style="width:240px" aria-label="Search complaints" />
         </div>
       </div>
       <div class="tab-bar" id="investigation-tabs">
@@ -330,12 +336,8 @@
           <div class="card-body" style="padding:0">
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr><th>Complaint ID</th><th>City</th><th>Amount</th><th>Type</th><th>Date</th><th></th></tr>
-                </thead>
-                <tbody id="complaints-table">
-                  <tr><td colspan="6" class="table-empty">Loading complaints...</td></tr>
-                </tbody>
+                <thead><tr><th>Complaint ID</th><th>City</th><th>Amount</th><th>Type</th><th>Date</th><th></th></tr></thead>
+                <tbody id="complaints-table"><tr><td colspan="6" class="table-empty">Loading complaints…</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -343,11 +345,15 @@
       </div>
       <div id="inv-atm-profile" class="tab-content">
         <div class="card">
-          <div class="card-header"><span class="card-title">Select an ATM from Risk Intelligence or enter ID</span></div>
+          <div class="card-header"><span class="card-title">ATM Profile</span></div>
           <div class="card-body">
-            <input id="inv-atm-id-input" type="text" placeholder="e.g. ATM-NOR0001" style="width:240px;margin-right:8px" />
-            <button id="btn-load-atm-profile" class="btn btn-primary btn-sm" aria-label="Load ATM Profile">Load Profile</button>
-            <div id="inv-atm-profile-content" style="margin-top:16px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+              <input id="inv-atm-id-input" type="text" placeholder="e.g. ATM-NOR0001" style="width:240px" aria-label="ATM ID" />
+              <button id="btn-load-atm-profile" class="btn btn-primary btn-sm" aria-label="Load ATM Profile">Load Profile</button>
+            </div>
+            <div id="inv-atm-profile-content">
+              <div class="empty-state"><div class="empty-icon"><span class="lucide lucide-search"></span></div><div class="empty-title">No ATM loaded</div><div class="empty-desc">Enter an ATM ID above, or click Details on any ATM in Risk Intelligence.</div></div>
+            </div>
           </div>
         </div>
       </div>
@@ -355,14 +361,12 @@
         <div class="card">
           <div class="card-header"><span class="card-title">Money Trail</span></div>
           <div class="card-body">
-            <input id="inv-account-input" type="text" placeholder="Account token" style="width:280px;margin-right:8px" />
-            <button id="btn-load-trail" class="btn btn-primary btn-sm" aria-label="Trace Money Trail">Trace</button>
-            <div id="money-trail-output" class="money-trail" style="margin-top:16px">
-              <div class="empty-state">
-                <div class="empty-icon"><span class="lucide lucide-network"></span></div>
-                <div class="empty-title">Enter an account token</div>
-                <div class="empty-desc">Load a complaint or enter an account token to trace the money flow.</div>
-              </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+              <input id="inv-account-input" type="text" placeholder="Account token" style="width:280px" aria-label="Account token" />
+              <button id="btn-load-trail" class="btn btn-primary btn-sm" aria-label="Trace Money Trail">Trace</button>
+            </div>
+            <div id="money-trail-output" class="money-trail">
+              <div class="empty-state"><div class="empty-icon"><span class="lucide lucide-network"></span></div><div class="empty-title">Enter an account token</div><div class="empty-desc">Load a complaint or enter an account token to trace the money flow.</div></div>
             </div>
           </div>
         </div>
@@ -371,14 +375,12 @@
         <div class="card">
           <div class="card-header"><span class="card-title">Evidence Viewer</span></div>
           <div class="card-body">
-            <input id="inv-evidence-alert-id" type="text" placeholder="Alert ID (e.g. ALT-...)" style="width:280px;margin-right:8px" />
-            <button id="btn-load-evidence" class="btn btn-primary btn-sm" aria-label="Load Evidence">Load Evidence</button>
-            <div id="evidence-output" style="margin-top:16px">
-              <div class="empty-state">
-                <div class="empty-icon"><span class="lucide lucide-file-text"></span></div>
-                <div class="empty-title">Enter an Alert ID</div>
-                <div class="empty-desc">Load evidence for a specific alert to view SHAP explanation and related data.</div>
-              </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+              <input id="inv-evidence-alert-id" type="text" placeholder="Alert ID (e.g. ALT-…)" style="width:280px" aria-label="Alert ID" />
+              <button id="btn-load-evidence" class="btn btn-primary btn-sm" aria-label="Load Evidence">Load Evidence</button>
+            </div>
+            <div id="evidence-output">
+              <div class="empty-state"><div class="empty-icon"><span class="lucide lucide-file-text"></span></div><div class="empty-title">Enter an Alert ID</div><div class="empty-desc">Load evidence for a specific alert to view the plain-language summary, the 3-field evidence, and the SHAP explanation.</div></div>
             </div>
           </div>
         </div>
@@ -393,13 +395,11 @@
           <div class="view-subtitle">Money mule network graph analysis</div>
         </div>
         <div class="view-actions">
-          <select id="mule-depth">
-            <option value="1">Depth 1</option>
-            <option value="2" selected>Depth 2</option>
-            <option value="3">Depth 3</option>
-            <option value="4">Depth 4</option>
+          <select id="mule-depth" aria-label="Graph depth">
+            <option value="1">Depth 1</option><option value="2" selected>Depth 2</option>
+            <option value="3">Depth 3</option><option value="4">Depth 4</option>
           </select>
-          <input id="mule-atm-id" type="text" placeholder="ATM ID (optional)" style="width:180px" />
+          <input id="mule-atm-id" type="text" placeholder="ATM ID (optional)" style="width:180px" aria-label="ATM ID" />
           <button id="btn-load-mule" class="btn btn-primary btn-sm" aria-label="Load Mule Network">Load Network</button>
         </div>
       </div>
@@ -411,17 +411,13 @@
           </div>
         </div>
       </div>
-      <div class="card" style="margin-top:14px">
+      <div class="card" style="margin-top:16px">
         <div class="card-header"><span class="card-title"><span class="lucide lucide-git-branch"></span> Terminal Nodes</span></div>
         <div class="card-body" style="padding:0">
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Account Token</th><th>Terminal Risk</th><th></th></tr>
-              </thead>
-              <tbody id="mule-terminal-table">
-                <tr><td colspan="3" class="table-empty">Click "Load Network" to start</td></tr>
-              </tbody>
+              <thead><tr><th>Account Token</th><th>Terminal Risk</th><th></th></tr></thead>
+              <tbody id="mule-terminal-table"><tr><td colspan="3" class="table-empty">Click "Load Network" to start</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -433,12 +429,12 @@
       <div class="view-header">
         <div>
           <div class="view-title">Recovery Center</div>
-          <div class="view-subtitle">Account freeze recommendations and recovery tracking</div>
+          <div class="view-subtitle">CFCFRMS fund-freeze recommendations and recovery tracking</div>
         </div>
       </div>
       <div class="stats-strip" id="recovery-stats">
         <div class="stat-card"><div class="stat-label">Total Recommendations</div><div class="stat-value gold" id="rec-total">--</div></div>
-        <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value critical" id="rec-flagged">--</div></div>
+        <div class="stat-card"><div class="stat-label">Freeze Requested</div><div class="stat-value critical" id="rec-flagged">--</div></div>
         <div class="stat-card"><div class="stat-label">Hold Placed</div><div class="stat-value high" id="rec-held">--</div></div>
         <div class="stat-card"><div class="stat-label">Recovered</div><div class="stat-value low" id="rec-recovered">--</div></div>
       </div>
@@ -447,12 +443,8 @@
         <div class="card-body" style="padding:0">
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Rec ID</th><th>Account</th><th>Bank</th><th>Amount</th><th>Suspected ATM</th><th>Status</th><th>Actions</th></tr>
-              </thead>
-              <tbody id="recovery-table">
-                <tr><td colspan="7" class="table-empty">Loading recovery data...</td></tr>
-              </tbody>
+              <thead><tr><th>Rec ID</th><th>Account</th><th>Bank</th><th>Amount</th><th>Suspected ATM</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="recovery-table"><tr><td colspan="7" class="table-empty">Loading recovery data…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -464,108 +456,85 @@
       <div class="view-header">
         <div>
           <div class="view-title">Model Health</div>
-          <div class="view-subtitle">Performance metrics, generalization, baseline comparison, drift — sourced from canonical metrics</div>
+          <div class="view-subtitle">Canonical metrics, generalization, baseline superiority, drift — sourced from artifacts/current_metrics.json</div>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header"><span class="card-title">Performance Metrics</span></div>
-        <div class="card-body">
-          <div class="metric-grid" id="model-metrics">
-            <div class="metric-card">
-              <div class="metric-label">ROC-AUC</div>
-              <div class="metric-value gold" id="m-roc-auc">--</div>
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Headline Performance</span></div>
+          <div class="card-body">
+            <div class="metric-grid" id="model-metrics">
+              <div class="metric-card"><div class="metric-label">ROC-AUC</div><div class="metric-value gold" id="m-roc-auc">--</div></div>
+              <div class="metric-card"><div class="metric-label">Precision@20</div><div class="metric-value" id="m-prec-20">--</div></div>
+              <div class="metric-card"><div class="metric-label">Precision@100</div><div class="metric-value" id="m-prec-100">--</div></div>
+              <div class="metric-card"><div class="metric-label">Recall@100</div><div class="metric-value" id="m-rec-100">--</div></div>
+              <div class="metric-card"><div class="metric-label">Brier Score</div><div class="metric-value" id="m-brier">--</div></div>
+              <div class="metric-card"><div class="metric-label">Lead Time (median)</div><div class="metric-value" id="m-lead-time">--</div></div>
             </div>
-            <div class="metric-card">
-              <div class="metric-label">Precision@20</div>
-              <div class="metric-value" id="m-prec-20">--</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Baseline Superiority @ P100</span></div>
+          <div class="card-body">
+            <div class="baseline-bars" id="baseline-bars">
+              <div class="baseline-row hero"><span class="b-name"><b>CashGuard</b> (P@100 0.71)</span><div class="b-track"><div class="b-fill" style="width:100%"></div></div><span class="b-val">1.0×</span></div>
+              <div class="baseline-row"><span class="b-name">vs Random</span><div class="b-track"><div class="b-fill" style="width:12.7%"></div></div><span class="b-val" id="b-val-random">--</span></div>
+              <div class="baseline-row"><span class="b-name">vs Historical Hotspot</span><div class="b-track"><div class="b-fill" style="width:31%"></div></div><span class="b-val" id="b-val-hist">--</span></div>
+              <div class="baseline-row"><span class="b-name">vs Complaint Volume</span><div class="b-track"><div class="b-fill" style="width:11.3%"></div></div><span class="b-val" id="b-val-compvol">--</span></div>
+              <div class="baseline-row"><span class="b-name">vs Complaint Proximity</span><div class="b-track"><div class="b-fill" style="width:12.7%"></div></div><span class="b-val" id="b-val-prox">--</span></div>
             </div>
-            <div class="metric-card">
-              <div class="metric-label">Precision@100</div>
-              <div class="metric-value" id="m-prec-100">--</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Recall@100</div>
-              <div class="metric-value" id="m-rec-100">--</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Brier Score</div>
-              <div class="metric-value" id="m-brier">--</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Lead Time</div>
-              <div class="metric-value" id="m-lead-time">--</div>
-            </div>
+            <p style="font-size:10.5px;color:var(--text-muted);margin-top:10px;line-height:1.55">
+              Bar length = the multiple of intervention capacity needed to match CashGuard's precision@100 —
+              baselines need <span id="b-note-random">7.9</span>× (random) / <span id="b-note-hist">3.2</span>× (historical) more reviews to reach the same precision.
+              Source: <span class="mono">/metrics/current</span> (canonical artifacts). Controlled synthetic evaluation.
+            </p>
           </div>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-header"><span class="card-title">Statistical Confidence</span></div>
-        <div class="card-body">
-          <div class="metric-grid">
-            <div class="metric-card">
-              <div class="metric-label">5-Fold CV AUC</div>
-              <div class="metric-value" id="m-cv-auc">--</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">95% CI</div>
-              <div class="metric-value" id="m-ci">--</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Dispatch Precision</div>
-              <div class="metric-value" id="m-disp-prec">--</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Dispatch Alerts</div>
-              <div class="metric-value" id="m-disp-alerts">--</div>
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Statistical Confidence</span></div>
+          <div class="card-body">
+            <div class="metric-grid">
+              <div class="metric-card"><div class="metric-label">5-Fold CV AUC</div><div class="metric-value" id="m-cv-auc">--</div></div>
+              <div class="metric-card"><div class="metric-label">95% CI</div><div class="metric-value" id="m-ci">--</div></div>
+              <div class="metric-card"><div class="metric-label">Dispatch Precision (0.70)</div><div class="metric-value" id="m-disp-prec">--</div></div>
+              <div class="metric-card"><div class="metric-label">Dispatch Alerts</div><div class="metric-value" id="m-disp-alerts">--</div></div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="grid-2" style="margin-bottom:14px">
         <div class="card">
           <div class="card-header"><span class="card-title">Generalization Splits</span></div>
           <div class="card-body">
             <div class="metric-grid">
-              <div class="metric-card">
-                <div class="metric-label">Time-Forward AUC</div>
-                <div class="metric-value" id="m-tf-auc">--</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">Cold-ATM AUC</div>
-                <div class="metric-value" id="m-cold-atm">--</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">New-Hotspot AUC</div>
-                <div class="metric-value" id="m-new-hotspot">--</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Baseline Lift</span></div>
-          <div class="card-body">
-            <div class="metric-grid">
-              <div class="metric-card">
-                <div class="metric-label">vs Random @P100</div>
-                <div class="metric-value gold" id="m-lift-random">--</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">vs Historical @P100</div>
-                <div class="metric-value" id="m-lift-hist">--</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">CashGuard P@100</div>
-                <div class="metric-value" id="m-cg-p100">--</div>
-              </div>
+              <div class="metric-card"><div class="metric-label">Time-Forward AUC</div><div class="metric-value" id="m-tf-auc">--</div></div>
+              <div class="metric-card"><div class="metric-label">Cold-ATM AUC</div><div class="metric-value" id="m-cold-atm">--</div></div>
+              <div class="metric-card"><div class="metric-label">New-Hotspot AUC</div><div class="metric-value" id="m-new-hotspot">--</div></div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Feature Impact (global)</span></div>
+          <div class="card-body">
+            <div class="feature-bars" id="feature-impact-bars">
+              <div class="table-empty">Loading feature importances…</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Drift Monitoring</span></div>
+          <div class="card-body" id="drift-status-content">
+            <div class="table-empty">Loading drift data…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
         <div class="card-header"><span class="card-title">Synthetic Data Disclosure</span></div>
         <div class="card-body">
           <div class="report-output" style="border-left:3px solid var(--accent-gold)">
@@ -576,33 +545,10 @@
         </div>
       </div>
 
-      <div class="grid-2" style="margin-bottom:14px">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Feature Impact</span></div>
-          <div class="card-body">
-            <div class="feature-bars" id="feature-impact-bars">
-              <div class="feature-bar"><span class="feature-bar-name">complaints_30d</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:85%"></div></div><span class="feature-bar-value">0.42</span></div>
-              <div class="feature-bar"><span class="feature-bar-name">fraud_ratio_30d</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:72%"></div></div><span class="feature-bar-value">0.35</span></div>
-              <div class="feature-bar"><span class="feature-bar-name">withdrawals_30d</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:60%"></div></div><span class="feature-bar-value">0.29</span></div>
-              <div class="feature-bar"><span class="feature-bar-name">avg_complaint_amount</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:45%"></div></div><span class="feature-bar-value">0.22</span></div>
-              <div class="feature-bar"><span class="feature-bar-name">city_fraud_rate</span><div class="feature-bar-track"><div class="feature-bar-fill positive" style="width:38%"></div></div><span class="feature-bar-value">0.18</span></div>
-              <div class="feature-bar"><span class="feature-bar-name">distance_to_border</span><div class="feature-bar-track"><div class="feature-bar-fill negative" style="width:30%"></div></div><span class="feature-bar-value">-0.15</span></div>
-              <div class="feature-bar"><span class="feature-bar-name">atm_age_days</span><div class="feature-bar-track"><div class="feature-bar-fill negative" style="width:22%"></div></div><span class="feature-bar-value">-0.11</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Drift Monitoring</span></div>
-          <div class="card-body" id="drift-status-content">
-            <div class="table-empty">Loading drift data...</div>
-          </div>
-        </div>
-      </div>
-
       <div class="card">
         <div class="card-header"><span class="card-title">Model Retraining</span></div>
         <div class="card-body">
-          <div style="display:flex;align-items:center;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <button id="btn-retrain" class="btn btn-primary btn-sm" aria-label="Retrain Model">Retrain Model</button>
             <span id="train-status" style="font-size:12px;color:var(--text-secondary)"></span>
           </div>
@@ -615,41 +561,30 @@
       <div class="view-header">
         <div>
           <div class="view-title">Audit Trail</div>
-          <div class="view-subtitle">Tamper-proof blockchain ledger with integrity verification</div>
+          <div class="view-subtitle">Tamper-evident hash-chain ledger with integrity verification</div>
         </div>
         <div class="view-actions">
           <button id="btn-ledger-verify" class="btn btn-secondary btn-sm" aria-label="Verify Chain">Verify Chain</button>
-          <button id="btn-ledger-tamper" class="btn btn-danger btn-sm" aria-label="Tamper Demo">Tamper Demo</button>
-          <button id="btn-ledger-restore" class="btn btn-primary btn-sm" aria-label="Restore">Restore</button>
         </div>
       </div>
 
-      <div class="grid-3" style="margin-bottom:14px">
-        <div class="stat-card">
-          <div class="stat-label">Chain Status</div>
-          <div class="stat-value" id="ledger-chain-status">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Entries</div>
-          <div class="stat-value gold" id="ledger-total-entries">--</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Verification</div>
-          <div class="stat-value" id="ledger-verify-result">--</div>
-        </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-card"><div class="stat-label">Chain Status</div><div class="stat-value" id="ledger-chain-status">--</div></div>
+        <div class="stat-card"><div class="stat-label">Total Entries</div><div class="stat-value gold" id="ledger-total-entries">--</div></div>
+        <div class="stat-card"><div class="stat-label">Verification</div><div class="stat-value" id="ledger-verify-result">--</div></div>
       </div>
 
       <div class="card">
         <div class="card-header"><span class="card-title"><span class="lucide lucide-file-text"></span> Ledger Entries</span></div>
         <div class="card-body" style="padding:0">
-          <div class="ledger-chain" id="ledger-entries">
-            <div class="table-empty">Loading ledger entries...</div>
+          <div class="ledger-chain" id="ledger-entries" style="padding:14px">
+            <div class="table-empty">Loading ledger entries…</div>
           </div>
         </div>
         <div class="card-footer">
-            <button id="btn-ledger-prev" class="btn btn-ghost btn-sm" disabled aria-label="Previous Page">Previous</button>
+          <button id="btn-ledger-prev" class="btn btn-ghost btn-sm" disabled aria-label="Previous Page">Previous</button>
           <span id="ledger-page-info" style="font-size:12px;color:var(--text-muted)">Page 1</span>
-            <button id="btn-ledger-next" class="btn btn-ghost btn-sm" aria-label="Next Page">Next</button>
+          <button id="btn-ledger-next" class="btn btn-ghost btn-sm" aria-label="Next Page">Next</button>
         </div>
       </div>
     </div>
@@ -659,7 +594,7 @@
       <div class="view-header">
         <div>
           <div class="view-title">Reports</div>
-          <div class="view-subtitle">Situational, hotspot, and city-level reports</div>
+          <div class="view-subtitle">Situational, hotspot, and city-level reports — anchored to the ledger</div>
         </div>
       </div>
       <div class="tab-bar" id="report-tabs">
@@ -691,8 +626,8 @@
         <div class="card">
           <div class="card-header"><span class="card-title"><span class="lucide lucide-map-pin"></span> City Report</span></div>
           <div class="card-body">
-            <div style="display:flex;gap:8px;margin-bottom:12px">
-              <input id="city-report-input" type="text" placeholder="City name" style="width:240px" />
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <input id="city-report-input" type="text" placeholder="City name" style="width:240px" aria-label="City name" />
               <button id="btn-city-report" class="btn btn-primary btn-sm" aria-label="Generate City Report">Generate</button>
             </div>
             <div id="city-report-output" class="report-output" style="display:none"></div>
@@ -703,6 +638,9 @@
 
   </main>
 </div>
+
+<!-- ═══ LIVE ALERT FEED STACK (P2) ═══ -->
+<div id="feed-stack" aria-live="polite" aria-label="Live alert feed"></div>
 
 <!-- ═══ DRAWER ═══ -->
 <div id="drawer-overlay"></div>
@@ -727,10 +665,10 @@
   </div>
 </div>
 
-<!-- ═══ TOAST CONTAINER ═══ -->
+<!-- ═══ TOASTS ═══ -->
 <div id="toast-container" aria-live="polite"></div>
 
-<!-- ═══ SIMULATION WATERMARK ═══ -->
+<!-- ═══ SCRIPTED WATERMARK ═══ -->
 <div id="sim-watermark">SIMULATED SCENARIO</div>
 
 <!-- ═══ SCRIPTS ═══ -->

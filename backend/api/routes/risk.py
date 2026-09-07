@@ -37,6 +37,19 @@ def horizons(
     return json.loads(path.read_text())
 
 
+@router.get("/model/status")
+def model_status(
+    horizon: int = Query(default=24, ge=2, le=72, description="Forecast horizon the strip reflects"),
+    as_of: str | None = Query(default=None, description="ISO datetime; set while replaying a historical day"),
+    user=Depends(require_auth("POLICE_STATE", "POLICE_DISTRICT", "BANK", "I4C_ADMIN")),
+    db: Session = Depends(get_db),
+):
+    """Model Status strip data: last inference run time, ATMs scored, current
+    max/median risk — so a calm day renders as a legible, credible state.
+    Read-only over the existing cached scoring path (no model changes)."""
+    return services.get_model_status(db, user=user, horizon=horizon, as_of=as_of)
+
+
 @router.get("/risk-scores", response_model=list[RiskScoreOut])
 def risk_scores(
     city: str | None = None,
